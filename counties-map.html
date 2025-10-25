@@ -49,6 +49,7 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 console.log("Script is running");
 var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
 console.log('Map initialized');
+map.invalidateSize(); // Force redraw
 L.marker([54.5, -3]).addTo(map).bindPopup('Leaflet is working!');
 console.log('Test marker added');
 
@@ -92,23 +93,45 @@ var countyData = {
   "Westmorland": { area: "784 sq mi", population: "220,000", link: "https://realcounties.com/westmorland" }
 };
 
-// Load GeoJSON from same folder
-fetch('./counties_simplified3.geojson')
+// Load GeoJSON
+fetch('./counties_simplified4.geojson')
   .then(res => {
-    console.log('Fetch status:', res.status);
+    console.log('Fetch status:', res.status, res.url);
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
     return res.json();
   })
   .then(data => {
     console.log('GeoJSON loaded:', data.features ? data.features.length : 'No features');
-    L.geoJSON(data, { 
+    data.features.forEach(feature => {
+      console.log(
+        'Feature:', feature.properties.NAME,
+        'Geometry type:', feature.geometry.type,
+        'Coordinates length:', feature.geometry.coordinates ? feature.geometry.coordinates.length : 'N/A',
+        'Valid bounds:', feature.geometry.coordinates && feature.geometry.coordinates.length > 0,
+        'Sample coord:', feature.geometry.coordinates && feature.geometry.coordinates.length > 0 ? feature.geometry.coordinates[0][0][0] : 'N/A'
+      );
+    });
+    var geoJsonLayer = L.geoJSON(data, { 
       filter: function(feature) {
-        return L.latLngBounds([49.5, -8.5], [60.9, 2.0]).intersects(L.geoJSON(feature).getBounds());
+        if (!feature.geometry || !feature.geometry.coordinates || feature.geometry.coordinates.length === 0) {
+          console.log('Skipping invalid feature:', feature.properties.NAME);
+          return false;
+        }
+        try {
+          var bounds = L.geoJSON(feature).getBounds();
+          var intersects = L.latLngBounds([49.5, -8.5], [60.9, 2.0]).intersects(bounds);
+          console.log('Feature:', feature.properties.NAME, 'Intersects:', intersects, 'Bounds:', bounds.toBBoxString());
+          return intersects;
+        } catch (e) {
+          console.log('Bounds error for feature:', feature.properties.NAME, e.message);
+          return false;
+        }
       },
       style: function(feature) {
         var name = feature.properties.NAME;
         var fill = countyColours[name] || "#cccccc";
-        return { color: "#333", weight: 1, fillColor: fill, fillOpacity: 0.5 };
+        console.log('Styling feature:', name, 'Color:', fill);
+        return { color: "#333", weight: 1, fillColor: fill, fillOpacity: 0.5, fillRule: 'evenodd' };
       },
       onEachFeature: function(feature, layer) {
         layer.on('click', function() {
@@ -124,7 +147,11 @@ fetch('./counties_simplified3.geojson')
           } else {
             document.getElementById('info').innerHTML = `<div class="county-card"><h3>${name}</h3><p>No extra data available yet.</p></div>`;
           }
-          map.fitBounds(layer.getBounds());
+          try {
+            map.fitBounds(layer.getBounds());
+          } catch (e) {
+            console.error('Fit bounds error for:', name, e.message);
+          }
         });
         layer.on('mouseover', function(){ layer.setStyle({ weight: 3, color: '#000' }); });
         layer.on('mouseout', function(){ layer.setStyle({ weight: 1, color: '#333' }); });
@@ -132,6 +159,12 @@ fetch('./counties_simplified3.geojson')
       }
     }).addTo(map);
     console.log('GeoJSON layer added');
+    try {
+      map.fitBounds(geoJsonLayer.getBounds()); // Zoom to valid features
+    } catch (e) {
+      console.error('Error fitting bounds:', e.message);
+    }
+    map.invalidateSize();
   })
   .catch(err => console.error('GeoJSON error:', err));
 
@@ -141,6 +174,7 @@ console.log('Geocoder added');
 </script>
 </body>
 </html>
+
 
 
 
