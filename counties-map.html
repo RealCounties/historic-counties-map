@@ -11,20 +11,9 @@
 
 <style>
 html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-serif; }
-#sidebar {
-  width: 340px;
-  background: #f7f7f7;
-  padding: 15px;
-  overflow-y: auto;
-  border-right: 1px solid #ccc;
-}
-#map { flex: 1; min-height: 100vh; }
-.county-card {
-  background: #fff;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
+#sidebar { width: 340px; background: #f7f7f7; padding: 15px; overflow-y: auto; border-right: 1px solid #ccc; }
+#map { flex: 1; height: 100vh; width: calc(100% - 340px); position: relative; z-index: 1; }
+.county-card { background: #fff; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .county-card h3 { margin-top: 0; color: #333; }
 .county-card p { margin: 4px 0; }
 .county-card a { color: #0066cc; text-decoration: none; }
@@ -174,6 +163,7 @@ console.log('Geocoder added');
 </script>
 </body>
 </html>
+
 
 
 
