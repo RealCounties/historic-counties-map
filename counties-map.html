@@ -46,6 +46,7 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 
 <script>
 // Initialize map
+console.log("Script is running");
 var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
 L.marker([54.5, -3]).addTo(map).bindPopup('Leaflet is working!');
 
@@ -133,6 +134,7 @@ L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, villag
 </script>
 </body>
 </html>
+
 
 
 
