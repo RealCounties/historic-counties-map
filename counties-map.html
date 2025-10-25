@@ -38,7 +38,6 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 console.log("Script is running");
 var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
 console.log('Map initialized');
-map.invalidateSize(); // Force redraw
 L.marker([54.5, -3]).addTo(map).bindPopup('Leaflet is working!');
 console.log('Test marker added');
 
@@ -148,12 +147,17 @@ fetch('./counties_simplified8.json')
       }
     }).addTo(map);
     console.log('GeoJSON layer added');
+    // Force map redraw with delay
+    setTimeout(function() {
+      map.invalidateSize();
+      console.log('Map redrawn after delay');
+    }, 100);
     try {
       map.fitBounds(geoJsonLayer.getBounds()); // Zoom to valid features
+      console.log('Map bounds fitted');
     } catch (e) {
       console.error('Error fitting bounds:', e.message);
     }
-    map.invalidateSize();
   })
   .catch(err => console.error('GeoJSON error:', err));
 
@@ -162,11 +166,13 @@ L.Control.geocoder({
   defaultMarkGeocode: true,
   placeholder: 'Search town, village, postcode…',
   geocoder: new L.Control.Geocoder.Nominatim(),
-  inputId: 'geocoder-input' // Add unique ID
+  inputId: 'geocoder-input'
 }).addTo(map);
+console.log('Geocoder added');
 </script>
 </body>
 </html>
+
 
 
 
