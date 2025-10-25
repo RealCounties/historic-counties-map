@@ -158,11 +158,16 @@ fetch('./counties_simplified8.json')
   .catch(err => console.error('GeoJSON error:', err));
 
 // Add search control
-L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
-console.log('Geocoder added');
+L.Control.geocoder({
+  defaultMarkGeocode: true,
+  placeholder: 'Search town, village, postcode…',
+  geocoder: new L.Control.Geocoder.Nominatim(),
+  inputId: 'geocoder-input' // Add unique ID
+}).addTo(map);
 </script>
 </body>
 </html>
+
 
 
 
