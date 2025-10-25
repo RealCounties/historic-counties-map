@@ -90,7 +90,7 @@ var countyData = {
 };
 
 // Load GeoJSON from same folder
-fetch('counties_simplified3.geojson')
+fetch('https://raw.githubusercontent.com/RealCounties/historic-counties-map/main/counties_simplified3.geojson')
   .then(res => res.json())
   .then(data => {
     L.geoJSON(data, {
@@ -134,6 +134,7 @@ L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, villag
 </script>
 </body>
 </html>
+
 
 
 
