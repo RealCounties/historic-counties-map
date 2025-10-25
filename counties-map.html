@@ -47,6 +47,8 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 <script>
 // Initialize map
 var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
+L.marker([54.5, -3]).addTo(map).bindPopup('Leaflet is working!');
+
 
 // Restrict map to British Isles
 var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
@@ -131,5 +133,6 @@ L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, villag
 </script>
 </body>
 </html>
+
 
 
