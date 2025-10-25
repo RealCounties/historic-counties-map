@@ -46,24 +46,50 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 
 <script>
 // Initialize map
+<script>
+// Log script start
 console.log("Script is running");
-var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
-L.marker([54.5, -3]).addTo(map).bindPopup('Leaflet is working!');
 
+// Initialize map
+try {
+  var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
+  console.log('Map initialized:', map);
+} catch (err) {
+  console.error('Map initialization error:', err);
+}
+
+// Add test marker
+try {
+  L.marker([54.5, -3]).addTo(map).bindPopup('Leaflet is working!');
+  console.log('Test marker added');
+} catch (err) {
+  console.error('Marker error:', err);
+}
 
 // Restrict map to British Isles
-var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
-map.setMaxBounds(ukBounds);
-map.fitBounds(ukBounds);
+try {
+  var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
+  map.setMaxBounds(ukBounds);
+  map.fitBounds(ukBounds);
+  console.log('Map bounds set');
+} catch (err) {
+  console.error('Bounds error:', err);
+}
 
-// Base OSM map
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
-  maxZoom: 19
-}).addTo(map);
+// Add OSM tiles
+try {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(map);
+  console.log('OSM tiles added');
+} catch (err) {
+  console.error('Tile layer error:', err);
+}
 
 // Sidebar element
 var infoDiv = document.getElementById('info');
+console.log('Sidebar infoDiv:', infoDiv);
 
 // County colors
 var countyColours = {
@@ -77,7 +103,7 @@ var countyColours = {
   "Westmorland": "#f032e6"
 };
 
-// County data placeholder
+// County data
 var countyData = {
   "Yorkshire": { area: "3,900 sq mi", population: "5.4 million", link: "https://realcounties.com/yorkshire" },
   "Lancashire": { area: "1,200 sq mi", population: "1.5 million", link: "https://realcounties.com/lancashire" },
@@ -89,66 +115,66 @@ var countyData = {
   "Westmorland": { area: "784 sq mi", population: "220,000", link: "https://realcounties.com/westmorland" }
 };
 
-// Load GeoJSON from same folder
-fetch('./counties_simplified3.geojson')  // Preferred: relative to your HTML file
-  .then(res => res.json())
+// Load GeoJSON
+fetch('./counties_simplified3.geojson')
+  .then(res => {
+    console.log('Fetch response status:', res.status, res.url);
+    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+    return res.json();
+  })
   .then(data => {
-    L.geoJSON(data, { 
-      filter: function(feature) {
-        return L.latLngBounds([49.5, -8.5], [60.9, 2.0]).intersects(L.geoJSON(feature).getBounds());
-      },
-      style: function(feature) {
-        var name = feature.properties.NAME;
-        var fill = {
-          "Yorkshire": "#e6194b",
-          "Lancashire": "#3cb44b",
-          "Cheshire": "#ffe119",
-          "Cornwall": "#4363d8",
-          "Kent": "#f58231",
-          "Middlesex": "#911eb4",
-          "Cumberland": "#46f0f0",
-          "Westmorland": "#f032e6"
-        }[name] || "#cccccc";
-        return { color: "#333", weight: 1, fillColor: fill, fillOpacity: 0.5 };
-      },
-      onEachFeature: function(feature, layer) {
-        layer.on('click', function() {
+    console.log('GeoJSON loaded:', data.features.length, 'features');
+    try {
+      L.geoJSON(data, {
+        filter: function(feature) {
+          var intersects = L.latLngBounds([49.5, -8.5], [60.9, 2.0]).intersects(L.geoJSON(feature).getBounds());
+          console.log('Feature:', feature.properties.NAME, 'Intersects:', intersects);
+          return intersects;
+        },
+        style: function(feature) {
           var name = feature.properties.NAME;
-          var details = {
-            "Yorkshire": { area: "3,900 sq mi", population: "5.4 million", link: "https://realcounties.com/yorkshire" },
-            "Lancashire": { area: "1,200 sq mi", population: "1.5 million", link: "https://realcounties.com/lancashire" },
-            "Cheshire": { area: "900 sq mi", population: "1 million", link: "https://realcounties.com/cheshire" },
-            "Cornwall": { area: "1,375 sq mi", population: "570,000", link: "https://realcounties.com/cornwall" },
-            "Kent": { area: "1,442 sq mi", population: "1.8 million", link: "https://realcounties.com/kent" },
-            "Middlesex": { area: "284 sq mi", population: "2.5 million", link: "https://realcounties.com/middlesex" },
-            "Cumberland": { area: "1,530 sq mi", population: "490,000", link: "https://realcounties.com/cumberland" },
-            "Westmorland": { area: "784 sq mi", population: "220,000", link: "https://realcounties.com/westmorland" }
-          }[name];
-          if(details){
-            document.getElementById('info').innerHTML = `<div class="county-card">
-              <h3>${name}</h3>
-              <p><strong>Area:</strong> ${details.area}</p>
-              <p><strong>Population:</strong> ${details.population}</p>
-              <p><a href="${details.link}" target="_blank">More about ${name}</a></p>
-            </div>`;
-          } else {
-            document.getElementById('info').innerHTML = `<div class="county-card"><h3>${name}</h3><p>No extra data available yet.</p></div>`;
-          }
-          map.fitBounds(layer.getBounds());
-        });
-        layer.on('mouseover', function(){ layer.setStyle({ weight: 3, color: '#000' }); });
-        layer.on('mouseout', function(){ layer.setStyle({ weight: 1, color: '#333' }); });
-        layer.bindPopup(feature.properties.NAME);
-      }
-    }).addTo(map);
-  });
+          var fill = countyColours[name] || '#cccccc';
+          return { color: '#333', weight: 1, fillColor: fill, fillOpacity: 0.5 };
+        },
+        onEachFeature: function(feature, layer) {
+          layer.on('click', function() {
+            var name = feature.properties.NAME;
+            var details = countyData[name];
+            if (details) {
+              document.getElementById('info').innerHTML = `<div class="county-card">
+                <h3>${name}</h3>
+                <p><strong>Area:</strong> ${details.area}</p>
+                <p><strong>Population:</strong> ${details.population}</p>
+                <p><a href="${details.link}" target="_blank">More about ${name}</a></p>
+              </div>`;
+            } else {
+              document.getElementById('info').innerHTML = `<div class="county-card"><h3>${name}</h3><p>No extra data available yet.</p></div>`;
+            }
+            map.fitBounds(layer.getBounds());
+          });
+          layer.on('mouseover', function() { layer.setStyle({ weight: 3, color: '#000' }); });
+          layer.on('mouseout', function() { layer.setStyle({ weight: 1, color: '#333' }); });
+          layer.bindPopup(feature.properties.NAME);
+        }
+      }).addTo(map);
+      console.log('GeoJSON layer added to map');
+    } catch (err) {
+      console.error('GeoJSON rendering error:', err);
+    }
+  })
+  .catch(err => console.error('Fetch or GeoJSON parse error:', err));
 
 // Add search control
-L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
-
+try {
+  L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
+  console.log('Geocoder added');
+} catch (err) {
+  console.error('Geocoder error:', err);
+}
 </script>
 </body>
 </html>
+
 
 
 
