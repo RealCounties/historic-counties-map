@@ -93,36 +93,51 @@ var countyData = {
 fetch('https://raw.githubusercontent.com/RealCounties/historic-counties-map/main/counties_simplified3.geojson')
   .then(res => res.json())
   .then(data => {
-    L.geoJSON(data, {
+    L.geoJSON(data, { 
       filter: function(feature) {
-        // Only include features that intersect UK bounds
-        return ukBounds.intersects(L.geoJSON(feature).getBounds());
+        return L.latLngBounds([49.5, -8.5], [60.9, 2.0]).intersects(L.geoJSON(feature).getBounds());
       },
       style: function(feature) {
         var name = feature.properties.NAME;
-        var fill = countyColours[name] || "#cccccc";
+        var fill = {
+          "Yorkshire": "#e6194b",
+          "Lancashire": "#3cb44b",
+          "Cheshire": "#ffe119",
+          "Cornwall": "#4363d8",
+          "Kent": "#f58231",
+          "Middlesex": "#911eb4",
+          "Cumberland": "#46f0f0",
+          "Westmorland": "#f032e6"
+        }[name] || "#cccccc";
         return { color: "#333", weight: 1, fillColor: fill, fillOpacity: 0.5 };
       },
       onEachFeature: function(feature, layer) {
         layer.on('click', function() {
           var name = feature.properties.NAME;
-          var details = countyData[name];
-          if (details) {
-            infoDiv.innerHTML = `
-              <div class="county-card">
-                <h3>${name}</h3>
-                <p><strong>Area:</strong> ${details.area}</p>
-                <p><strong>Population:</strong> ${details.population}</p>
-                <p><a href="${details.link}" target="_blank">More about ${name}</a></p>
-              </div>
-            `;
+          var details = {
+            "Yorkshire": { area: "3,900 sq mi", population: "5.4 million", link: "https://realcounties.com/yorkshire" },
+            "Lancashire": { area: "1,200 sq mi", population: "1.5 million", link: "https://realcounties.com/lancashire" },
+            "Cheshire": { area: "900 sq mi", population: "1 million", link: "https://realcounties.com/cheshire" },
+            "Cornwall": { area: "1,375 sq mi", population: "570,000", link: "https://realcounties.com/cornwall" },
+            "Kent": { area: "1,442 sq mi", population: "1.8 million", link: "https://realcounties.com/kent" },
+            "Middlesex": { area: "284 sq mi", population: "2.5 million", link: "https://realcounties.com/middlesex" },
+            "Cumberland": { area: "1,530 sq mi", population: "490,000", link: "https://realcounties.com/cumberland" },
+            "Westmorland": { area: "784 sq mi", population: "220,000", link: "https://realcounties.com/westmorland" }
+          }[name];
+          if(details){
+            document.getElementById('info').innerHTML = `<div class="county-card">
+              <h3>${name}</h3>
+              <p><strong>Area:</strong> ${details.area}</p>
+              <p><strong>Population:</strong> ${details.population}</p>
+              <p><a href="${details.link}" target="_blank">More about ${name}</a></p>
+            </div>`;
           } else {
-            infoDiv.innerHTML = `<div class="county-card"><h3>${name}</h3><p>No extra data available yet.</p></div>`;
+            document.getElementById('info').innerHTML = `<div class="county-card"><h3>${name}</h3><p>No extra data available yet.</p></div>`;
           }
           map.fitBounds(layer.getBounds());
         });
-        layer.on('mouseover', function() { layer.setStyle({ weight: 3, color: '#000' }); });
-        layer.on('mouseout', function() { layer.setStyle({ weight: 1, color: '#333' }); });
+        layer.on('mouseover', function(){ layer.setStyle({ weight: 3, color: '#000' }); });
+        layer.on('mouseout', function(){ layer.setStyle({ weight: 1, color: '#333' }); });
         layer.bindPopup(feature.properties.NAME);
       }
     }).addTo(map);
@@ -134,6 +149,7 @@ L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, villag
 </script>
 </body>
 </html>
+
 
 
 
