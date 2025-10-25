@@ -18,30 +18,21 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
   overflow-y: auto;
   border-right: 1px solid #ccc;
 }
-#map { flex: 1; }
+#map { flex: 1; min-height: 100vh; }
 .county-card {
   background: #fff;
   padding: 12px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
-.county-card h3 {
-  margin-top: 0;
-  color: #333;
-}
-.county-card p {
-  margin: 4px 0;
-}
-.county-card a {
-  color: #0066cc;
-  text-decoration: none;
-}
-.county-card a:hover {
-  text-decoration: underline;
-}
+.county-card h3 { margin-top: 0; color: #333; }
+.county-card p { margin: 4px 0; }
+.county-card a { color: #0066cc; text-decoration: none; }
+.county-card a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
+
 <div id="sidebar">
   <h2>Historic Counties</h2>
   <p>Select a county to view details.</p>
@@ -54,15 +45,15 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-// Initialize the map
+// Initialize map
 var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
 
 // Restrict map to British Isles
-var bounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
-map.setMaxBounds(bounds);
-map.fitBounds(bounds);
+var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
+map.setMaxBounds(ukBounds);
+map.fitBounds(ukBounds);
 
-// Add OSM base map
+// Base OSM map
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
   maxZoom: 19
@@ -71,7 +62,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Sidebar element
 var infoDiv = document.getElementById('info');
 
-// County colours (example)
+// County colors
 var countyColours = {
   "Yorkshire": "#e6194b",
   "Lancashire": "#3cb44b",
@@ -81,10 +72,9 @@ var countyColours = {
   "Middlesex": "#911eb4",
   "Cumberland": "#46f0f0",
   "Westmorland": "#f032e6"
-  // add all counties as needed
 };
 
-// Example county data (fill in real area/population)
+// County data placeholder
 var countyData = {
   "Yorkshire": { area: "3,900 sq mi", population: "5.4 million", link: "https://realcounties.com/yorkshire" },
   "Lancashire": { area: "1,200 sq mi", population: "1.5 million", link: "https://realcounties.com/lancashire" },
@@ -94,14 +84,17 @@ var countyData = {
   "Middlesex": { area: "284 sq mi", population: "2.5 million", link: "https://realcounties.com/middlesex" },
   "Cumberland": { area: "1,530 sq mi", population: "490,000", link: "https://realcounties.com/cumberland" },
   "Westmorland": { area: "784 sq mi", population: "220,000", link: "https://realcounties.com/westmorland" }
-  // add all counties
 };
 
-// Load GeoJSON from GitHub
+// Load GeoJSON from same folder
 fetch('counties_simplified3.geojson')
   .then(res => res.json())
   .then(data => {
     L.geoJSON(data, {
+      filter: function(feature) {
+        // Only include features that intersect UK bounds
+        return ukBounds.intersects(L.geoJSON(feature).getBounds());
+      },
       style: function(feature) {
         var name = feature.properties.NAME;
         var fill = countyColours[name] || "#cccccc";
@@ -133,11 +126,8 @@ fetch('counties_simplified3.geojson')
   });
 
 // Add search control
-L.Control.geocoder({
-  defaultMarkGeocode: true,
-  placeholder: 'Search town, village, postcode…'
-}).addTo(map);
+L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
+
 </script>
 </body>
 </html>
-
