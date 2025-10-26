@@ -186,36 +186,61 @@ fetch('./counties_simplified8.json')
         fillOpacity: 0.35,     // more transparent
         fillRule: 'evenodd'
       }),
-      onEachFeature: (feature, layer) => {
-        // Tooltip on hover
+      // Reset map bounds button
+var resetBtn = document.createElement('button');
+resetBtn.innerText = "Reset Map Bounds";
+resetBtn.style.marginTop = "10px";
+resetBtn.style.padding = "6px 12px";
+resetBtn.style.cursor = "pointer";
+resetBtn.onclick = function() {
+    map.fitBounds(ukBounds);
+};
+document.getElementById('sidebar').appendChild(resetBtn);
+
+// Load GeoJSON
+fetch('./counties_simplified8.json')
+  .then(res => res.json())
+  .then(data => {
+    var geoJsonLayer = L.geoJSON(data, { 
+      style: function(feature) {
+        var name = feature.properties.NAME;
+        return { color: "#333", weight: 1, fillColor: countyColours[name]||"#cccccc", fillOpacity: 0.5 };
+      },
+      onEachFeature: function(feature, layer) {
         const details = countyData[feature.properties.NAME];
-        const areaText = details?.area || 'Unknown area';
-        layer.bindTooltip(`${feature.properties.NAME} — ${areaText}`, {
-          permanent: false,
-          direction: 'top',
-          className: 'county-tooltip'
+
+        // Tooltip
+        layer.bindTooltip(`${feature.properties.NAME} — ${details?.area||'Unknown'} — ${details?.population||'Unknown'}`);
+
+        // Click for sidebar
+        layer.on('click', function() {
+          if(details){
+            const areaNum = parseFloat(details.area.replace(/[^0-9.]/g,'')); // numeric area
+            const popNum = parseInt(details.population.replace(/,/g,'')); // numeric population
+            const density = areaNum && popNum ? (popNum / areaNum).toFixed(1) : "N/A";
+
+            infoDiv.innerHTML = `<div class="county-card">
+              <h3>${feature.properties.NAME}</h3>
+              <p><strong>Area:</strong> ${details.area}</p>
+              <p><strong>Population:</strong> ${details.population}</p>
+              <p><strong>Population Density:</strong> ${density} per sq mi</p>
+              <p><a href="${details.link}" target="_blank">More about ${feature.properties.NAME}</a></p>
+            </div>`;
+          } else {
+            infoDiv.innerHTML = `<div class="county-card"><h3>${feature.properties.NAME}</h3><p>No extra data available yet.</p></div>`;
+          }
+          map.fitBounds(layer.getBounds());
         });
 
-        // Click updates sidebar
-        layer.on('click', () => {
-          infoDiv.innerHTML = `<div class="county-card">
-            <h3>${feature.properties.NAME}</h3>
-            <p><strong>Area:</strong> ${details?.area || 'Unknown'}</p>
-            <p><strong>Population:</strong> ${details?.population || 'Unknown'}</p>
-            ${details?.link ? `<p><a href="${details.link}" target="_blank">More about ${feature.properties.NAME}</a></p>` : ''}
-          </div>`;
-          try { map.fitBounds(layer.getBounds()); } catch(e) {}
-        });
-
-        // Subtle hover border effect
-        layer.on('mouseover', () => layer.setStyle({ weight: 2, color: '#111' }));
-        layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333' }));
+        // Hover highlighting
+        layer.on('mouseover', function(){ layer.setStyle({ weight: 2 }); });
+        layer.on('mouseout', function(){ layer.setStyle({ weight: 1 }); });
       }
     }).addTo(map);
 
-    if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
-    setTimeout(() => map.invalidateSize(), 100);
-  })
+    map.fitBounds(geoJsonLayer.getBounds());
+  });
+
   .catch(err => console.error('GeoJSON error:', err));
 
 // Add search control
@@ -228,4 +253,5 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
