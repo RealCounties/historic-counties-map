@@ -238,6 +238,10 @@ fetch('./counties_simplified8.json')
 let highlightedCounty = null;
 
 // Initialize geocoder
+<!-- Make sure Turf.js is loaded -->
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+<script>
 var geocoder = L.Control.geocoder({
   defaultMarkGeocode: false,
   placeholder: 'Search town, village, postcode…',
@@ -251,51 +255,49 @@ geocoder.on('markgeocode', function(e) {
   const lat = e.geocode.center.lat;
   const lng = e.geocode.center.lng;
 
-  // Create a Turf.js point for the searched location
-  const point = turf.point([lng, lat]);
-  let historicCounty = null;
-  let countyLayer = null;
+  // Remove previous marker
+  if (searchMarker) map.removeLayer(searchMarker);
 
-  // Check which historic county polygon contains the point
+  // Add marker for the searched location
+  searchMarker = L.marker([lat, lng]).addTo(map);
+
+  // Find the historic county polygon containing this point
+  let countyLayer = null;
   geoJsonLayer.eachLayer(function(layer) {
-    if (turf.booleanPointInPolygon(point, layer.toGeoJSON())) {
-      historicCounty = layer.feature.properties.NAME;
+    if (turf.booleanPointInPolygon(turf.point([lng, lat]), layer.toGeoJSON())) {
       countyLayer = layer;
     }
   });
 
-  // Remove previous marker
-  if (searchMarker) map.removeLayer(searchMarker);
+  if (countyLayer) {
+    const countyName = countyLayer.feature.properties.NAME;
+    const details = countyData[countyName];
 
-  // Add marker at the searched location
-  searchMarker = L.marker([lat, lng]).addTo(map);
-
-  if (historicCounty && countyData[historicCounty]) {
-    const details = countyData[historicCounty];
+    // Zoom to county bounds
+    map.fitBounds(countyLayer.getBounds());
 
     // Update sidebar
     infoDiv.innerHTML = `<div class="county-card">
-      <h3>${historicCounty}</h3>
+      <h3>${countyName}</h3>
       <p><strong>Area:</strong> ${details.area}</p>
       <p><strong>Population:</strong> ${details.population}</p>
       <p><strong>Population Density:</strong> ${(parseInt(details.population.replace(/,/g,''))/parseFloat(details.area.replace(/[^0-9.]/g,''))).toFixed(1)} per sq mi</p>
-      <p><a href="${details.link}" target="_blank">More about ${historicCounty}</a></p>
+      <p><a href="${details.link}" target="_blank">More about ${countyName}</a></p>
     </div>`;
 
-    // Zoom to the historic county polygon
-    map.fitBounds(countyLayer.getBounds());
-
-    // Bind popup showing "Town, Historic County"
-    searchMarker.bindPopup(`${e.geocode.name}, ${historicCounty}`).openPopup();
+    // Bind popup with town + historic county
+    searchMarker.bindPopup(`${e.geocode.name}, ${countyName}`).openPopup();
   } else {
-    infoDiv.innerHTML = `<div class="county-card"><h3>Location found</h3><p>${e.geocode.name} (Historic county unknown)</p></div>`;
-    searchMarker.bindPopup(e.geocode.name).openPopup();
+    // Just show marker if county not found
+    searchMarker.bindPopup(`${e.geocode.name} (Historic county unknown)`).openPopup();
     map.setView([lat, lng], 12);
+    infoDiv.innerHTML = `<div class="county-card"><h3>Location found</h3><p>${e.geocode.name} (Historic county unknown)</p></div>`;
   }
 });
 </script>
 </body>
 </html>
+
 
 
 
