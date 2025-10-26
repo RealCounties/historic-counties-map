@@ -237,11 +237,28 @@ fetch('./counties_simplified8.json')
 
     // Initialize geocoder after geoJsonLayer exists
     var geocoder = L.Control.geocoder({
-      defaultMarkGeocode: false,
-      placeholder: 'Search town, village, postcode…',
-      geocoder: new L.Control.Geocoder.Nominatim(),
-      inputId: 'geocoder-input'
-    }).addTo(map);
+  defaultMarkGeocode: false,
+  placeholder: 'Search town, village…',
+  geocoder: new L.Control.Geocoder.Nominatim({
+    countrycodes: 'gb'  // restrict to UK
+  }),
+  inputId: 'geocoder-input',
+  formatResult: function(geocode) {
+    // Only show town/village name
+    let town = geocode.name.split(',')[0];
+    let historicCounty = '';
+    if (geoJsonLayer) {
+      const lat = geocode.center.lat;
+      const lng = geocode.center.lng;
+      geoJsonLayer.eachLayer(layer => {
+        if (turf.booleanPointInPolygon(turf.point([lng, lat]), layer.toGeoJSON())) {
+          historicCounty = layer.feature.properties.NAME;
+        }
+      });
+    }
+    return town + (historicCounty ? ', ' + historicCounty : '');
+  }
+}).addTo(map);
 
     let searchMarker;
 
@@ -283,6 +300,7 @@ fetch('./counties_simplified8.json')
 </script>
 </body>
 </html>
+
 
 
 
