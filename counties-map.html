@@ -46,6 +46,8 @@ html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<!-- Turf.js for point-in-polygon -->
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <script>
 // Initialize map
@@ -63,6 +65,15 @@ map.setMaxBounds(ukBounds);
 map.fitBounds(ukBounds);
 
 var infoDiv = document.getElementById('info');
+
+// Reset map bounds button
+var resetBtn = document.createElement('button');
+resetBtn.innerText = "Reset Map Bounds";
+resetBtn.style.marginTop = "10px";
+resetBtn.style.padding = "6px 12px";
+resetBtn.style.cursor = "pointer";
+resetBtn.onclick = function() { map.fitBounds(ukBounds); };
+document.getElementById('sidebar').appendChild(resetBtn);
 
 // County data placeholder
 var countyData = {
@@ -184,7 +195,6 @@ fetch('./counties_simplified8.json')
   .then(res => res.json())
   .then(data => {
 
-    // Assign pastel colors
     data.features.forEach((feature, idx) => {
       feature.properties.color = pastelColors[idx % pastelColors.length];
     });
@@ -192,25 +202,20 @@ fetch('./counties_simplified8.json')
     var geoJsonLayer = L.geoJSON(data, { 
       filter: f => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length > 0,
       style: f => ({
-        color: "#333",         // border
-        weight: 1,             // border weight
+        color: "#333",
+        weight: 1,
         fillColor: f.properties.color,
-        fillOpacity: 0.35,     // more transparent
+        fillOpacity: 0.35,
         fillRule: 'evenodd'
       }),
       onEachFeature: function(feature, layer) {
         const details = countyData[feature.properties.NAME];
-
-        // Tooltip
         layer.bindTooltip(`${feature.properties.NAME} — ${details?.area||'Unknown'} — ${details?.population||'Unknown'}`);
-
-        // Click for sidebar
         layer.on('click', function() {
           if(details){
-            const areaNum = parseFloat(details.area.replace(/[^0-9.]/g,'')); // numeric area
-            const popNum = parseInt(details.population.replace(/,/g,'')); // numeric population
+            const areaNum = parseFloat(details.area.replace(/[^0-9.]/g,''));
+            const popNum = parseInt(details.population.replace(/,/g,''));
             const density = areaNum && popNum ? (popNum / areaNum).toFixed(1) : "N/A";
-
             infoDiv.innerHTML = `<div class="county-card">
               <h3>${feature.properties.NAME}</h3>
               <p><strong>Area:</strong> ${details.area}</p>
@@ -223,80 +228,62 @@ fetch('./counties_simplified8.json')
           }
           map.fitBounds(layer.getBounds());
         });
-
-        // Hover highlighting
         layer.on('mouseover', function(){ layer.setStyle({ weight: 2 }); });
         layer.on('mouseout', function(){ layer.setStyle({ weight: 1 }); });
       }
     }).addTo(map);
 
     map.fitBounds(geoJsonLayer.getBounds());
+
+    // Initialize geocoder after geoJsonLayer exists
+    var geocoder = L.Control.geocoder({
+      defaultMarkGeocode: false,
+      placeholder: 'Search town, village, postcode…',
+      geocoder: new L.Control.Geocoder.Nominatim(),
+      inputId: 'geocoder-input'
+    }).addTo(map);
+
+    let searchMarker;
+
+    geocoder.on('markgeocode', function(e) {
+      const lat = e.geocode.center.lat;
+      const lng = e.geocode.center.lng;
+
+      if (searchMarker) map.removeLayer(searchMarker);
+      searchMarker = L.marker([lat, lng]).addTo(map);
+
+      let countyLayer = null;
+      geoJsonLayer.eachLayer(function(layer) {
+        if (turf.booleanPointInPolygon(turf.point([lng, lat]), layer.toGeoJSON())) {
+          countyLayer = layer;
+        }
+      });
+
+      if (countyLayer) {
+        const countyName = countyLayer.feature.properties.NAME;
+        const details = countyData[countyName];
+        map.fitBounds(countyLayer.getBounds());
+        infoDiv.innerHTML = `<div class="county-card">
+          <h3>${countyName}</h3>
+          <p><strong>Area:</strong> ${details.area}</p>
+          <p><strong>Population:</strong> ${details.population}</p>
+          <p><strong>Population Density:</strong> ${(parseInt(details.population.replace(/,/g,''))/parseFloat(details.area.replace(/[^0-9.]/g,''))).toFixed(1)} per sq mi</p>
+          <p><a href="${details.link}" target="_blank">More about ${countyName}</a></p>
+        </div>`;
+        searchMarker.bindPopup(`${e.geocode.name}, ${countyName}`).openPopup();
+      } else {
+        searchMarker.bindPopup(`${e.geocode.name} (Historic county unknown)`).openPopup();
+        map.setView([lat, lng], 12);
+        infoDiv.innerHTML = `<div class="county-card"><h3>Location found</h3><p>${e.geocode.name} (Historic county unknown)</p></div>`;
+      }
+    });
+
   })
   .catch(err => console.error('GeoJSON error:', err));
-
-// Keep track of previously highlighted county
-let highlightedCounty = null;
-
-// Initialize geocoder
-<!-- Make sure Turf.js is loaded -->
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-
-<script>
-var geocoder = L.Control.geocoder({
-  defaultMarkGeocode: false,
-  placeholder: 'Search town, village, postcode…',
-  geocoder: new L.Control.Geocoder.Nominatim(),
-  inputId: 'geocoder-input'
-}).addTo(map);
-
-let searchMarker;
-
-geocoder.on('markgeocode', function(e) {
-  const lat = e.geocode.center.lat;
-  const lng = e.geocode.center.lng;
-
-  // Remove previous marker
-  if (searchMarker) map.removeLayer(searchMarker);
-
-  // Add marker for the searched location
-  searchMarker = L.marker([lat, lng]).addTo(map);
-
-  // Find the historic county polygon containing this point
-  let countyLayer = null;
-  geoJsonLayer.eachLayer(function(layer) {
-    if (turf.booleanPointInPolygon(turf.point([lng, lat]), layer.toGeoJSON())) {
-      countyLayer = layer;
-    }
-  });
-
-  if (countyLayer) {
-    const countyName = countyLayer.feature.properties.NAME;
-    const details = countyData[countyName];
-
-    // Zoom to county bounds
-    map.fitBounds(countyLayer.getBounds());
-
-    // Update sidebar
-    infoDiv.innerHTML = `<div class="county-card">
-      <h3>${countyName}</h3>
-      <p><strong>Area:</strong> ${details.area}</p>
-      <p><strong>Population:</strong> ${details.population}</p>
-      <p><strong>Population Density:</strong> ${(parseInt(details.population.replace(/,/g,''))/parseFloat(details.area.replace(/[^0-9.]/g,''))).toFixed(1)} per sq mi</p>
-      <p><a href="${details.link}" target="_blank">More about ${countyName}</a></p>
-    </div>`;
-
-    // Bind popup with town + historic county
-    searchMarker.bindPopup(`${e.geocode.name}, ${countyName}`).openPopup();
-  } else {
-    // Just show marker if county not found
-    searchMarker.bindPopup(`${e.geocode.name} (Historic county unknown)`).openPopup();
-    map.setView([lat, lng], 12);
-    infoDiv.innerHTML = `<div class="county-card"><h3>Location found</h3><p>${e.geocode.name} (Historic county unknown)</p></div>`;
-  }
-});
 </script>
 </body>
 </html>
+
 
 
 
