@@ -66,27 +66,21 @@ var countyData = {
   "Westmorland": { area: "784 sq mi", population: "220,000", link: "https://realcounties.com/westmorland" }
 };
 
-// Gradient helper functions
-const startColor = [173, 216, 230]; // lightblue
-const endColor = [0, 0, 139];       // darkblue
-
-function interpolateColor(start, end, factor) {
-  return start.map((s, i) => Math.round(s + factor * (end[i] - s)));
-}
-
-function rgbToHex(rgb) {
-  return "#" + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
-}
+// Pastel color palette
+const pastelColors = [
+  "#ffdede", "#dedefd", "#deffde", "#fff0de", "#fdefff",
+  "#dfffee", "#ffe7de", "#f0deff", "#defff5", "#fdeeee",
+  "#e6f7ff", "#f9ffe6", "#fff6e6", "#e6e6ff", "#ffe6f2"
+];
 
 // Load GeoJSON
 fetch('./counties_simplified8.json')
   .then(res => res.json())
   .then(data => {
 
-    // Assign gradient colors inside fetch
+    // Assign pastel colors to counties
     data.features.forEach((feature, idx) => {
-      var factor = idx / (data.features.length - 1);
-      feature.properties.color = rgbToHex(interpolateColor(startColor, endColor, factor));
+      feature.properties.color = pastelColors[idx % pastelColors.length];
     });
 
     var geoJsonLayer = L.geoJSON(data, { 
@@ -95,7 +89,7 @@ fetch('./counties_simplified8.json')
         color: "#333",
         weight: 1,
         fillColor: f.properties.color,
-        fillOpacity: 0.5,
+        fillOpacity: 0.6,
         fillRule: 'evenodd'
       }),
       onEachFeature: (feature, layer) => {
@@ -115,12 +109,11 @@ fetch('./counties_simplified8.json')
         });
 
         // Hover effects
-        layer.on('mouseover', () => layer.setStyle({ weight: 3, color: '#000', fillOpacity: 0.7 }));
-        layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333', fillOpacity: 0.5 }));
+        layer.on('mouseover', () => layer.setStyle({ weight: 3, color: '#000', fillOpacity: 0.9 }));
+        layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333', fillOpacity: 0.6 }));
       }
     }).addTo(map);
 
-    // Fit map to all counties
     if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
     setTimeout(() => map.invalidateSize(), 100);
   })
