@@ -1,52 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Historic Counties Interactive Map</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-
-<style>
-html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
-#container { display: flex; height: 100%; }
-#sidebar { width: 340px; background: #f7f7f7; padding: 15px; overflow-y: auto; border-right: 1px solid #ccc; }
-#map { flex: 1; }
-
-.county-card { background: #fff; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-.county-card h3 { margin-top: 0; color: #333; }
-.county-card p { margin: 4px 0; }
-.county-card a { color: #0066cc; text-decoration: none; }
-.county-card a:hover { text-decoration: underline; }
-
-/* Tooltip style */
-.leaflet-tooltip.county-tooltip {
-  background-color: rgba(255,255,255,0.9);
-  border: 1px solid #333;
-  color: #333;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-</style>
-</head>
-<body>
-
-<div id="container">
-  <div id="sidebar">
-    <h2>Historic Counties</h2>
-    <p>Select a county to view details.</p>
-    <div id="info"><em>No county selected.</em></div>
-  </div>
-  <div id="map"></div>
-</div>
-
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-<!-- Turf.js for point-in-polygon -->
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <script>
@@ -65,15 +18,6 @@ map.setMaxBounds(ukBounds);
 map.fitBounds(ukBounds);
 
 var infoDiv = document.getElementById('info');
-
-// Reset map bounds button
-var resetBtn = document.createElement('button');
-resetBtn.innerText = "Reset Map Bounds";
-resetBtn.style.marginTop = "10px";
-resetBtn.style.padding = "6px 12px";
-resetBtn.style.cursor = "pointer";
-resetBtn.onclick = function() { map.fitBounds(ukBounds); };
-document.getElementById('sidebar').appendChild(resetBtn);
 
 // County data placeholder
 var countyData = {
@@ -185,21 +129,21 @@ resetBtn.innerText = "Reset Map Bounds";
 resetBtn.style.marginTop = "10px";
 resetBtn.style.padding = "6px 12px";
 resetBtn.style.cursor = "pointer";
-resetBtn.onclick = function() {
-    map.fitBounds(ukBounds);
-};
+resetBtn.onclick = function() { map.fitBounds(ukBounds); };
 document.getElementById('sidebar').appendChild(resetBtn);
 
-// Load GeoJSON
+// Load GeoJSON and draw counties
+var geoJsonLayer; // declare globally for geocoder
 fetch('./counties_simplified8.json')
   .then(res => res.json())
   .then(data => {
 
+    // Assign pastel colors
     data.features.forEach((feature, idx) => {
       feature.properties.color = pastelColors[idx % pastelColors.length];
     });
 
-    var geoJsonLayer = L.geoJSON(data, { 
+    geoJsonLayer = L.geoJSON(data, {
       filter: f => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length > 0,
       style: f => ({
         color: "#333",
@@ -210,12 +154,17 @@ fetch('./counties_simplified8.json')
       }),
       onEachFeature: function(feature, layer) {
         const details = countyData[feature.properties.NAME];
+
+        // Tooltip
         layer.bindTooltip(`${feature.properties.NAME} — ${details?.area||'Unknown'} — ${details?.population||'Unknown'}`);
+
+        // Click for sidebar
         layer.on('click', function() {
           if(details){
             const areaNum = parseFloat(details.area.replace(/[^0-9.]/g,''));
             const popNum = parseInt(details.population.replace(/,/g,''));
             const density = areaNum && popNum ? (popNum / areaNum).toFixed(1) : "N/A";
+
             infoDiv.innerHTML = `<div class="county-card">
               <h3>${feature.properties.NAME}</h3>
               <p><strong>Area:</strong> ${details.area}</p>
@@ -228,78 +177,66 @@ fetch('./counties_simplified8.json')
           }
           map.fitBounds(layer.getBounds());
         });
+
+        // Hover highlighting
         layer.on('mouseover', function(){ layer.setStyle({ weight: 2 }); });
         layer.on('mouseout', function(){ layer.setStyle({ weight: 1 }); });
       }
     }).addTo(map);
 
     map.fitBounds(geoJsonLayer.getBounds());
-
-    // Initialize geocoder after geoJsonLayer exists
-    var geocoder = L.Control.geocoder({
-  defaultMarkGeocode: false,
-  placeholder: 'Search town, village…',
-  geocoder: new L.Control.Geocoder.Nominatim({
-    countrycodes: 'gb'  // restrict to UK
-  }),
-  inputId: 'geocoder-input',
-  formatResult: function(geocode) {
-    // Only show town/village name
-    let town = geocode.name.split(',')[0];
-    let historicCounty = '';
-    if (geoJsonLayer) {
-      const lat = geocode.center.lat;
-      const lng = geocode.center.lng;
-      geoJsonLayer.eachLayer(layer => {
-        if (turf.booleanPointInPolygon(turf.point([lng, lat]), layer.toGeoJSON())) {
-          historicCounty = layer.feature.properties.NAME;
-        }
-      });
-    }
-    return town + (historicCounty ? ', ' + historicCounty : '');
-  }
-}).addTo(map);
-
-    let searchMarker;
-
-    geocoder.on('markgeocode', function(e) {
-      const lat = e.geocode.center.lat;
-      const lng = e.geocode.center.lng;
-
-      if (searchMarker) map.removeLayer(searchMarker);
-      searchMarker = L.marker([lat, lng]).addTo(map);
-
-      let countyLayer = null;
-      geoJsonLayer.eachLayer(function(layer) {
-        if (turf.booleanPointInPolygon(turf.point([lng, lat]), layer.toGeoJSON())) {
-          countyLayer = layer;
-        }
-      });
-
-      if (countyLayer) {
-        const countyName = countyLayer.feature.properties.NAME;
-        const details = countyData[countyName];
-        map.fitBounds(countyLayer.getBounds());
-        infoDiv.innerHTML = `<div class="county-card">
-          <h3>${countyName}</h3>
-          <p><strong>Area:</strong> ${details.area}</p>
-          <p><strong>Population:</strong> ${details.population}</p>
-          <p><strong>Population Density:</strong> ${(parseInt(details.population.replace(/,/g,''))/parseFloat(details.area.replace(/[^0-9.]/g,''))).toFixed(1)} per sq mi</p>
-          <p><a href="${details.link}" target="_blank">More about ${countyName}</a></p>
-        </div>`;
-        searchMarker.bindPopup(`${e.geocode.name}, ${countyName}`).openPopup();
-      } else {
-        searchMarker.bindPopup(`${e.geocode.name} (Historic county unknown)`).openPopup();
-        map.setView([lat, lng], 12);
-        infoDiv.innerHTML = `<div class="county-card"><h3>Location found</h3><p>${e.geocode.name} (Historic county unknown)</p></div>`;
-      }
-    });
-
   })
   .catch(err => console.error('GeoJSON error:', err));
+
+// Initialize geocoder (UK-only)
+var geocoder = L.Control.geocoder({
+  defaultMarkGeocode: false,
+  placeholder: 'Search town, village, postcode…',
+  geocoder: new L.Control.Geocoder.Nominatim({ countrycodes: 'gb' }),
+  inputId: 'geocoder-input'
+}).addTo(map);
+
+let searchMarker;
+
+geocoder.on('markgeocode', function(e) {
+  const lat = e.geocode.center.lat;
+  const lng = e.geocode.center.lng;
+
+  if (searchMarker) map.removeLayer(searchMarker);
+  searchMarker = L.marker([lat, lng]).addTo(map);
+
+  let countyLayer = null;
+  geoJsonLayer.eachLayer(function(layer) {
+    if (turf.booleanPointInPolygon(turf.point([lng, lat]), layer.toGeoJSON())) {
+      countyLayer = layer;
+    }
+  });
+
+  if (countyLayer) {
+    const countyName = countyLayer.feature.properties.NAME;
+    const details = countyData[countyName];
+
+    map.fitBounds(countyLayer.getBounds());
+
+    infoDiv.innerHTML = `<div class="county-card">
+      <h3>${countyName}</h3>
+      <p><strong>Area:</strong> ${details.area}</p>
+      <p><strong>Population:</strong> ${details.population}</p>
+      <p><strong>Population Density:</strong> ${(parseInt(details.population.replace(/,/g,''))/parseFloat(details.area.replace(/[^0-9.]/g,''))).toFixed(1)} per sq mi</p>
+      <p><a href="${details.link}" target="_blank">More about ${countyName}</a></p>
+    </div>`;
+
+    searchMarker.bindPopup(`${e.geocode.name}, ${countyName}`).openPopup();
+  } else {
+    searchMarker.bindPopup(`${e.geocode.name} (Historic county unknown)`).openPopup();
+    map.setView([lat, lng], 12);
+    infoDiv.innerHTML = `<div class="county-card"><h3>Location found</h3><p>${e.geocode.name} (Historic county unknown)</p></div>`;
+  }
+});
 </script>
 </body>
 </html>
+
 
 
 
