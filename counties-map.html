@@ -237,60 +237,66 @@ fetch('./counties_simplified8.json')
 // Keep track of previously highlighted county
 let highlightedCounty = null;
 
-// Add the geocoder control
-var geocoderControl = L.Control.geocoder({
-  defaultMarkGeocode: false,   // we handle the result ourselves
+// Initialize geocoder
+var geocoder = L.Control.geocoder({
+  defaultMarkGeocode: false,
   placeholder: 'Search town, village, postcode…',
   geocoder: new L.Control.Geocoder.Nominatim(),
   inputId: 'geocoder-input'
 }).addTo(map);
 
-// Handle result selection
-geocoderControl.on('markgeocode', function(e) {
-  const center = e.geocode.center;
-  const address = e.geocode.properties.address || {};
-  
-  const place = address.town || address.village || address.city || address.hamlet || e.geocode.name;
-  const countyName = address.county || address.state_district || address.state || '';
+let searchMarker;
 
-  // Determine zoom level
-  let zoomLevel = 12;
-  if (address.postcode) zoomLevel = 15;
-  else if (address.town || address.village) zoomLevel = 13;
-  else if (address.city) zoomLevel = 12;
-  else zoomLevel = 10;
+geocoder.on('markgeocode', function(e) {
+  const lat = e.geocode.center.lat;
+  const lng = e.geocode.center.lng;
 
-  map.setView(center, zoomLevel);
+  // Create a Turf.js point for the searched location
+  const point = turf.point([lng, lat]);
+  let historicCounty = null;
+  let countyLayer = null;
 
-  // Popup showing "Place, County"
-  L.popup()
-    .setLatLng(center)
-    .setContent(`<strong>${place}</strong>${countyName ? ', ' + countyName : ''}`)
-    .openOn(map);
-
-  // Highlight the county polygon if found
-  if (countyName && geoJsonLayer) {
-    // Reset previously highlighted county
-    if (highlightedCounty) {
-      geoJsonLayer.resetStyle(highlightedCounty);
-      highlightedCounty = null;
+  // Check which historic county polygon contains the point
+  geoJsonLayer.eachLayer(function(layer) {
+    if (turf.booleanPointInPolygon(point, layer.toGeoJSON())) {
+      historicCounty = layer.feature.properties.NAME;
+      countyLayer = layer;
     }
+  });
 
-    geoJsonLayer.eachLayer(function(layer) {
-      if (layer.feature.properties.NAME === countyName) {
-        layer.setStyle({ weight: 3, color: '#ff6600' }); // highlight style
-        highlightedCounty = layer;
+  // Remove previous marker
+  if (searchMarker) map.removeLayer(searchMarker);
 
-        // Optional: zoom to the county bounds if place is outside
-        const bounds = layer.getBounds();
-        if (!bounds.contains(center)) map.fitBounds(bounds.pad(0.5));
-      }
-    });
+  // Add marker at the searched location
+  searchMarker = L.marker([lat, lng]).addTo(map);
+
+  if (historicCounty && countyData[historicCounty]) {
+    const details = countyData[historicCounty];
+
+    // Update sidebar
+    infoDiv.innerHTML = `<div class="county-card">
+      <h3>${historicCounty}</h3>
+      <p><strong>Area:</strong> ${details.area}</p>
+      <p><strong>Population:</strong> ${details.population}</p>
+      <p><strong>Population Density:</strong> ${(parseInt(details.population.replace(/,/g,''))/parseFloat(details.area.replace(/[^0-9.]/g,''))).toFixed(1)} per sq mi</p>
+      <p><a href="${details.link}" target="_blank">More about ${historicCounty}</a></p>
+    </div>`;
+
+    // Zoom to the historic county polygon
+    map.fitBounds(countyLayer.getBounds());
+
+    // Bind popup showing "Town, Historic County"
+    searchMarker.bindPopup(`${e.geocode.name}, ${historicCounty}`).openPopup();
+  } else {
+    infoDiv.innerHTML = `<div class="county-card"><h3>Location found</h3><p>${e.geocode.name} (Historic county unknown)</p></div>`;
+    searchMarker.bindPopup(e.geocode.name).openPopup();
+    map.setView([lat, lng], 12);
   }
 });
 </script>
 </body>
 </html>
+
 
 
 
