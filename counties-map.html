@@ -108,7 +108,7 @@ fetch('./counties_simplified8.json')
 
     var geoJsonLayer = L.geoJSON(data, { 
       filter: feature => feature.geometry && feature.geometry.coordinates && feature.geometry.coordinates.length > 0,
-       style: feature => ({
+      style: feature => ({
         color: "#333",
         weight: 1,
         fillColor: feature.properties.color,
@@ -159,5 +159,6 @@ console.log('Geocoder added');
 </script>
 </body>
 </html>
+
 
 
