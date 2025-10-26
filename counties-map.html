@@ -39,42 +39,20 @@ html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
 
 <script>
 // Initialize map
-console.log("Script is running");
 var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
-console.log('Map initialized');
 
 // Base OSM map
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
   maxZoom: 19
 }).addTo(map);
-console.log('OSM tiles added');
 
 // Restrict map to British Isles
 var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
 map.setMaxBounds(ukBounds);
 map.fitBounds(ukBounds);
 
-// Sidebar element
 var infoDiv = document.getElementById('info');
-
-// Gradient colors
-var startColor = [173, 216, 230]; // lightblue RGB
-var endColor = [0, 0, 139];       // darkblue RGB
-
-function interpolateColor(start, end, factor) {
-  return start.map((s, i) => Math.round(s + factor * (end[i] - s)));
-}
-
-function rgbToHex(rgb) {
-  return "#" + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
-// Assign colors to counties based on index
-data.features.forEach((feature, idx) => {
-  var factor = idx / (data.features.length - 1); // 0 → 1
-  feature.properties.color = rgbToHex(interpolateColor(startColor, endColor, factor));
-});
 
 // County data placeholder
 var countyData = {
@@ -88,43 +66,42 @@ var countyData = {
   "Westmorland": { area: "784 sq mi", population: "220,000", link: "https://realcounties.com/westmorland" }
 };
 
+// Gradient helper functions
+const startColor = [173, 216, 230]; // lightblue
+const endColor = [0, 0, 139];       // darkblue
+
+function interpolateColor(start, end, factor) {
+  return start.map((s, i) => Math.round(s + factor * (end[i] - s)));
+}
+
+function rgbToHex(rgb) {
+  return "#" + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
 // Load GeoJSON
 fetch('./counties_simplified8.json')
   .then(res => res.json())
   .then(data => {
-    console.log('GeoJSON loaded:', data.features.length);
 
-    // Gradient color setup
-    const startColor = [173, 216, 230]; // lightblue RGB
-    const endColor = [0, 0, 139];       // darkblue RGB
-
-    function interpolateColor(start, end, factor) {
-      return start.map((s, i) => Math.round(s + factor * (end[i] - s)));
-    }
-
-    function rgbToHex(rgb) {
-      return "#" + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
-    }
-
-    // Assign color to each feature
+    // Assign gradient colors inside fetch
     data.features.forEach((feature, idx) => {
-      feature.properties.color = rgbToHex(interpolateColor(startColor, endColor, idx / (data.features.length - 1)));
+      var factor = idx / (data.features.length - 1);
+      feature.properties.color = rgbToHex(interpolateColor(startColor, endColor, factor));
     });
 
-    // Add GeoJSON layer
-    const geoJsonLayer = L.geoJSON(data, {
+    var geoJsonLayer = L.geoJSON(data, { 
       filter: f => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length > 0,
       style: f => ({
         color: "#333",
         weight: 1,
-        fillColor: f.properties.color || "#cccccc",
+        fillColor: f.properties.color,
         fillOpacity: 0.5,
         fillRule: 'evenodd'
       }),
       onEachFeature: (feature, layer) => {
         layer.bindPopup(feature.properties.NAME);
 
-        // Click to update sidebar
+        // Click updates sidebar
         layer.on('click', () => {
           const name = feature.properties.NAME;
           const details = countyData[name];
@@ -134,7 +111,7 @@ fetch('./counties_simplified8.json')
             <p><strong>Population:</strong> ${details?.population || 'Unknown'}</p>
             ${details?.link ? `<p><a href="${details.link}" target="_blank">More about ${name}</a></p>` : ''}
           </div>`;
-          try { map.fitBounds(layer.getBounds()); } catch(e) { console.error(e); }
+          try { map.fitBounds(layer.getBounds()); } catch(e) {}
         });
 
         // Hover effects
@@ -143,11 +120,12 @@ fetch('./counties_simplified8.json')
       }
     }).addTo(map);
 
-    // Fit map to all features
+    // Fit map to all counties
     if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
     setTimeout(() => map.invalidateSize(), 100);
+  })
+  .catch(err => console.error('GeoJSON error:', err));
 
-  }).catch(err => console.error('GeoJSON error:', err));
 // Add search control
 L.Control.geocoder({
   defaultMarkGeocode: true,
@@ -155,9 +133,6 @@ L.Control.geocoder({
   geocoder: new L.Control.Geocoder.Nominatim(),
   inputId: 'geocoder-input'
 }).addTo(map);
-console.log('Geocoder added');
 </script>
 </body>
 </html>
-
-
