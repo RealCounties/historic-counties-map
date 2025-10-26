@@ -168,6 +168,18 @@ const pastelColors = [
 ];
 
 // Load GeoJSON
+// Reset map bounds button
+var resetBtn = document.createElement('button');
+resetBtn.innerText = "Reset Map Bounds";
+resetBtn.style.marginTop = "10px";
+resetBtn.style.padding = "6px 12px";
+resetBtn.style.cursor = "pointer";
+resetBtn.onclick = function() {
+    map.fitBounds(ukBounds);
+};
+document.getElementById('sidebar').appendChild(resetBtn);
+
+// Load GeoJSON
 fetch('./counties_simplified8.json')
   .then(res => res.json())
   .then(data => {
@@ -186,26 +198,6 @@ fetch('./counties_simplified8.json')
         fillOpacity: 0.35,     // more transparent
         fillRule: 'evenodd'
       }),
-      // Reset map bounds button
-var resetBtn = document.createElement('button');
-resetBtn.innerText = "Reset Map Bounds";
-resetBtn.style.marginTop = "10px";
-resetBtn.style.padding = "6px 12px";
-resetBtn.style.cursor = "pointer";
-resetBtn.onclick = function() {
-    map.fitBounds(ukBounds);
-};
-document.getElementById('sidebar').appendChild(resetBtn);
-
-// Load GeoJSON
-fetch('./counties_simplified8.json')
-  .then(res => res.json())
-  .then(data => {
-    var geoJsonLayer = L.geoJSON(data, { 
-      style: function(feature) {
-        var name = feature.properties.NAME;
-        return { color: "#333", weight: 1, fillColor: countyColours[name]||"#cccccc", fillOpacity: 0.5 };
-      },
       onEachFeature: function(feature, layer) {
         const details = countyData[feature.properties.NAME];
 
@@ -239,8 +231,7 @@ fetch('./counties_simplified8.json')
     }).addTo(map);
 
     map.fitBounds(geoJsonLayer.getBounds());
-  });
-
+  })
   .catch(err => console.error('GeoJSON error:', err));
 
 // Add search control
@@ -253,5 +244,6 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
 
