@@ -58,7 +58,7 @@ map.fitBounds(ukBounds);
 // Sidebar element
 var infoDiv = document.getElementById('info');
 
-// County colors
+// Predefined county colors (explicit + fallback palette)
 var countyColours = {
   "Yorkshire": "#e6194b",
   "Lancashire": "#3cb44b",
@@ -69,6 +69,12 @@ var countyColours = {
   "Cumberland": "#46f0f0",
   "Westmorland": "#f032e6"
 };
+var fallbackColours = [
+  "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c",
+  "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00",
+  "#cab2d6", "#6a3d9a", "#ffff99", "#b15928"
+];
+var fallbackIndex = 0;
 
 // County data placeholder
 var countyData = {
@@ -85,44 +91,54 @@ var countyData = {
 // Load GeoJSON
 fetch('./counties_simplified8.json')
   .then(res => {
-    console.log('Fetch status:', res.status, res.url);
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
     return res.json();
   })
   .then(data => {
-    console.log('GeoJSON loaded:', data.features ? data.features.length : 'No features');
+    console.log('GeoJSON loaded:', data.features.length);
+
+    // Assign fallback colors to counties not explicitly listed
+    data.features.forEach(feature => {
+      var name = feature.properties.NAME;
+      if (!countyColours[name]) {
+        countyColours[name] = fallbackColours[fallbackIndex % fallbackColours.length];
+        fallbackIndex++;
+      }
+    });
 
     var geoJsonLayer = L.geoJSON(data, { 
-      filter: function(feature) {
-        if (!feature.geometry || !feature.geometry.coordinates || feature.geometry.coordinates.length === 0) {
-          console.log('Skipping invalid feature:', feature.properties.NAME);
-          return false;
-        }
-        return true;
-      },
-      style: function(feature) {
+      filter: feature => feature.geometry && feature.geometry.coordinates && feature.geometry.coordinates.length > 0,
+      style: feature => {
         var name = feature.properties.NAME;
-        var fill = countyColours[name] || "#cccccc";
-        return { color: "#333", weight: 1, fillColor: fill, fillOpacity: 0.5, fillRule: 'evenodd' };
+        return { 
+          color: "#333", 
+          weight: 1, 
+          fillColor: countyColours[name] || "#cccccc", 
+          fillOpacity: 0.5,
+          fillRule: 'evenodd'
+        };
       },
       onEachFeature: function(feature, layer) {
         layer.on('click', function() {
           var name = feature.properties.NAME;
           var details = countyData[name];
-          if(details){
-            infoDiv.innerHTML = `<div class="county-card">
-              <h3>${name}</h3>
-              <p><strong>Area:</strong> ${details.area}</p>
-              <p><strong>Population:</strong> ${details.population}</p>
-              <p><a href="${details.link}" target="_blank">More about ${name}</a></p>
-            </div>`;
-          } else {
-            infoDiv.innerHTML = `<div class="county-card"><h3>${name}</h3><p>No extra data available yet.</p></div>`;
-          }
+          infoDiv.innerHTML = `<div class="county-card">
+            <h3>${name}</h3>
+            <p><strong>Area:</strong> ${details?.area || 'Unknown'}</p>
+            <p><strong>Population:</strong> ${details?.population || 'Unknown'}</p>
+            ${details?.link ? `<p><a href="${details.link}" target="_blank">More about ${name}</a></p>` : ''}
+          </div>`;
           try { map.fitBounds(layer.getBounds()); } catch (e) { console.error(e); }
         });
-        layer.on('mouseover', function(){ layer.setStyle({ weight: 3, color: '#000' }); });
-        layer.on('mouseout', function(){ layer.setStyle({ weight: 1, color: '#333' }); });
+
+        // Hover effects
+        layer.on('mouseover', function(){
+          layer.setStyle({ weight: 3, color: '#000', fillOpacity: 0.7 });
+        });
+        layer.on('mouseout', function(){
+          layer.setStyle({ weight: 1, color: '#333', fillOpacity: 0.5 });
+        });
+
         layer.bindPopup(feature.properties.NAME);
       }
     }).addTo(map);
