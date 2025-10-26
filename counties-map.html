@@ -58,23 +58,23 @@ map.fitBounds(ukBounds);
 // Sidebar element
 var infoDiv = document.getElementById('info');
 
-// Predefined county colors (explicit + fallback palette)
-var countyColours = {
-  "Yorkshire": "#e6194b",
-  "Lancashire": "#3cb44b",
-  "Cheshire": "#ffe119",
-  "Cornwall": "#4363d8",
-  "Kent": "#f58231",
-  "Middlesex": "#911eb4",
-  "Cumberland": "#46f0f0",
-  "Westmorland": "#f032e6"
-};
-var fallbackColours = [
-  "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c",
-  "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00",
-  "#cab2d6", "#6a3d9a", "#ffff99", "#b15928"
-];
-var fallbackIndex = 0;
+// Gradient colors
+var startColor = [173, 216, 230]; // lightblue RGB
+var endColor = [0, 0, 139];       // darkblue RGB
+
+function interpolateColor(start, end, factor) {
+  return start.map((s, i) => Math.round(s + factor * (end[i] - s)));
+}
+
+function rgbToHex(rgb) {
+  return "#" + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+// Assign colors to counties based on index
+data.features.forEach((feature, idx) => {
+  var factor = idx / (data.features.length - 1); // 0 → 1
+  feature.properties.color = rgbToHex(interpolateColor(startColor, endColor, factor));
+});
 
 // County data placeholder
 var countyData = {
@@ -108,15 +108,14 @@ fetch('./counties_simplified8.json')
 
     var geoJsonLayer = L.geoJSON(data, { 
       filter: feature => feature.geometry && feature.geometry.coordinates && feature.geometry.coordinates.length > 0,
-      style: feature => {
-        var name = feature.properties.NAME;
-        return { 
-          color: "#333", 
-          weight: 1, 
-          fillColor: countyColours[name] || "#cccccc", 
-          fillOpacity: 0.5,
-          fillRule: 'evenodd'
-        };
+       style: feature => ({
+        color: "#333",
+        weight: 1,
+        fillColor: feature.properties.color,
+        fillOpacity: 0.5,
+        fillRule: 'evenodd'
+      }),
+ 
       },
       onEachFeature: function(feature, layer) {
         layer.on('click', function() {
@@ -160,3 +159,4 @@ console.log('Geocoder added');
 </script>
 </body>
 </html>
+
