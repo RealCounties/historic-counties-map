@@ -10,24 +10,38 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
 <style>
-html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-serif; }
+html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+#container { display: flex; height: 100%; }
 #sidebar { width: 340px; background: #f7f7f7; padding: 15px; overflow-y: auto; border-right: 1px solid #ccc; }
-#map { flex: 1; height: 100vh; width: calc(100% - 340px); position: relative; z-index: 1; }
+#map { flex: 1; }
+
 .county-card { background: #fff; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .county-card h3 { margin-top: 0; color: #333; }
 .county-card p { margin: 4px 0; }
 .county-card a { color: #0066cc; text-decoration: none; }
 .county-card a:hover { text-decoration: underline; }
+
+/* Tooltip style */
+.leaflet-tooltip.county-tooltip {
+  background-color: rgba(255,255,255,0.9);
+  border: 1px solid #333;
+  color: #333;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>
 
-<div id="sidebar">
-  <h2>Historic Counties</h2>
-  <p>Select a county to view details.</p>
-  <div id="info"><em>No county selected.</em></div>
+<div id="container">
+  <div id="sidebar">
+    <h2>Historic Counties</h2>
+    <p>Select a county to view details.</p>
+    <div id="info"><em>No county selected.</em></div>
+  </div>
+  <div id="map"></div>
 </div>
-<div id="map"></div>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -37,47 +51,20 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 // Initialize map
 var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
 
-// Restrict map to British Isles
-var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
-map.setMaxBounds(ukBounds);
-map.fitBounds(ukBounds);
-
 // Base OSM map
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
   maxZoom: 19
 }).addTo(map);
 
-// Sidebar element
+// Restrict map to British Isles
+var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
+map.setMaxBounds(ukBounds);
+map.fitBounds(ukBounds);
+
 var infoDiv = document.getElementById('info');
 
-// Predefined pastel county colors
-var countyColours = {
-  "Aberdeenshire":"#fbb4ae","Anglesey":"#b3cde3","Angus":"#ccebc5","Antrim":"#decbe4","Argyllshire":"#fed9a6",
-  "Armagh":"#ffffcc","Ayrshire":"#e5d8bd","Banffshire":"#fddaec","Bedfordshire":"#f2f2f2","Berkshire":"#b3e2cd",
-  "Berwickshire":"#fdcdac","Brecknockshire":"#cbd5e8","Buckinghamshire":"#f4cae4","Buteshire":"#e6f5c9",
-  "Caernarfonshire":"#fff2ae","Caithness":"#f1e2cc","Cambridgeshire":"#cccccc","Cardiganshire":"#a6cee3",
-  "Carmarthenshire":"#1f78b4","Cheshire":"#b2df8a","Clackmannanshire":"#33a02c","Cornwall":"#fb9a99",
-  "Cromartyshire":"#e31a1c","Cumberland":"#fdbf6f","Denbighshire":"#ff7f00","Derbyshire":"#cab2d6",
-  "Devon":"#6a3d9a","Dorset":"#ffff99","Down":"#b15928","Dumfriesshire":"#8dd3c7","Dunbartonshire":"#ffffb3",
-  "Durham":"#bebada","East Lothian":"#fb8072","Essex":"#80b1d3","Fermanagh":"#fdb462","Fife":"#b3de69",
-  "Flintshire":"#fccde5","Glamorgan":"#d9d9d9","Gloucestershire":"#bc80bd","Hampshire":"#ccebc5",
-  "Herefordshire":"#ffed6f","Hertfordshire":"#1f78b4","Huntingdonshire":"#a6cee3","Inverness-shire":"#fbb4ae",
-  "Kent":"#b3cde3","Kincardineshire":"#ccebc5","Kinross-shire":"#decbe4","Kirkcudbrightshire":"#fed9a6",
-  "Lanarkshire":"#ffffcc","Lancashire":"#e5d8bd","Leicestershire":"#fddaec","Lincolnshire":"#f2f2f2",
-  "Londonderry":"#b3e2cd","Merionethshire":"#fdcdac","Middlesex":"#cbd5e8","Midlothian":"#f4cae4",
-  "Monmouthshire":"#e6f5c9","Montgomeryshire":"#fff2ae","Morayshire":"#f1e2cc","Nairnshire":"#cccccc",
-  "Norfolk":"#a6cee3","Northamptonshire":"#1f78b4","Northumberland":"#b2df8a","Nottinghamshire":"#33a02c",
-  "Orkney":"#fb9a99","Oxfordshire":"#e31a1c","Peeblesshire":"#fdbf6f","Pembrokeshire":"#ff7f00",
-  "Perthshire":"#cab2d6","Radnorshire":"#6a3d9a","Renfrewshire":"#ffff99","Ross-shire":"#b15928",
-  "Roxburghshire":"#8dd3c7","Rutland":"#ffffb3","Selkirkshire":"#bebada","Shetland":"#fb8072",
-  "Shropshire":"#80b1d3","Somerset":"#fccde5","Staffordshire":"#d9d9d9","Stirlingshire":"#bc80bd",
-  "Suffolk":"#ccebc5","Surrey":"#ffed6f","Sussex":"#1f78b4","Sutherland":"#a6cee3","Tyrone":"#b2df8a",
-  "Warwickshire":"#33a02c","West Lothian":"#fb9a99","Westmorland":"#e31a1c","Wigtownshire":"#fdbf6f",
-  "Wiltshire":"#ff7f00","Worcestershire":"#cab2d6","Yorkshire":"#6a3d9a"
-};
-
-// County data with area & population
+// County data placeholder
 var countyData = {
   "Aberdeenshire": { area: "1,950 sq mi", population: "380,495", link: "" },
   "Anglesey": { area: "277 sq mi", population: "69,751", link: "" },
@@ -111,77 +98,133 @@ var countyData = {
   "Dumfriesshire": { area: "1,063 sq mi", population: "77,160", link: "" },
   "Dunbartonshire": { area: "241 sq mi", population: "262,419", link: "" },
   "Durham": { area: "1,022 sq mi", population: "1,467,037", link: "" },
-// … continue all counties like above …
+  "East Lothian": { area: "267 sq mi", population: "74,882", link: "" },
+  "Essex": { area: "1,591 sq mi", population: "2,999,248", link: "" },
+  "Fermanagh": { area: "715 sq mi", population: "61,170", link: "" },
+  "Fife": { area: "504 sq mi", population: "365,493", link: "" },
+  "Flintshire": { area: "260 sq mi", population: "215,390", link: "" },
+  "Glamorgan": { area: "827 sq mi", population: "1,321,460", link: "" },
+  "Gloucestershire": { area: "1,293 sq mi", population: "1,147,106", link: "" },
+  "Hampshire": { area: "1,656 sq mi", population: "2,099,640", link: "" },
+  "Herefordshire": { area: "837 sq mi", population: "183,631", link: "" },
+  "Hertfordshire": { area: "633 sq mi", population: "1,157,166", link: "" },
+  "Huntingdonshire": { area: "366 sq mi", population: "211,776", link: "" },
+  "Inverness-shire": { area: "4,211 sq mi", population: "118,077", link: "" },
+  "Kent": { area: "1,611 sq mi", population: "2,747,715", link: "" },
+  "Kincardineshire": { area: "380 sq mi", population: "77,670", link: "" },
+  "Kinross-shire": { area: "73 sq mi", population: "11,223", link: "" },
+  "Kirkcudbrightshire": { area: "899 sq mi", population: "47,546", link: "" },
+  "Lanarkshire": { area: "879 sq mi", population: "1,008,014", link: "" },
+  "Lancashire": { area: "1,909 sq mi", population: "4,942,364", link: "" },
+  "Leicestershire": { area: "836 sq mi", population: "975,403", link: "" },
+  "Lincolnshire": { area: "2,687 sq mi", population: "1,038,510", link: "" },
+  "Londonderry": { area: "816 sq mi", population: "247,971", link: "" },
+  "Merionethshire": { area: "676 sq mi", population: "37,874", link: "" },
+  "Middlesex": { area: "285 sq mi", population: "4,000,927", link: "" },
+  "Midlothian": { area: "362 sq mi", population: "621,610", link: "" },
+  "Monmouthshire": { area: "542 sq mi", population: "514,723", link: "" },
+  "Montgomeryshire": { area: "796 sq mi", population: "61,956", link: "" },
+  "Morayshire": { area: "476 sq mi", population: "67,654", link: "" },
+  "Nairnshire": { area: "200 sq mi", population: "13,894", link: "" },
+  "Norfolk": { area: "2,057 sq mi", population: "807,721", link: "" },
+  "Northamptonshire": { area: "998 sq mi", population: "838,786", link: "" },
+  "Northumberland": { area: "2,019 sq mi", population: "797,006", link: "" },
+  "Nottinghamshire": { area: "843 sq mi", population: "1,096,617", link: "" },
+  "Orkney": { area: "376 sq mi", population: "21,349", link: "" },
+  "Oxfordshire": { area: "754 sq mi", population: "512,345", link: "" },
+  "Peeblesshire": { area: "548 sq mi", population: "19,074", link: "" },
+  "Pembrokeshire": { area: "625 sq mi", population: "122,122", link: "" },
+  "Perthshire": { area: "2,493 sq mi", population: "156,371", link: "" },
+  "Radnorshire": { area: "470 sq mi", population: "25,821", link: "" },
+  "Renfrewshire": { area: "245 sq mi", population: "508,064", link: "" },
+  "Ross-shire": { area: "3,089 sq mi", population: "69,503", link: "" },
+  "Roxburghshire": { area: "666 sq mi", population: "50,800", link: "" },
+  "Rutland": { area: "152 sq mi", population: "37,677", link: "" },
+  "Selkirkshire": { area: "267 sq mi", population: "16,010", link: "" },
+  "Shetland": { area: "551 sq mi", population: "23,167", link: "" },
+  "Shropshire": { area: "1,342 sq mi", population: "472,027", link: "" },
+  "Somerset": { area: "1,633 sq mi", population: "1,053,504", link: "" },
+  "Staffordshire": { area: "1,176 sq mi", population: "2,159,392", link: "" },
+  "Stirlingshire": { area: "447 sq mi", population: "244,092", link: "" },
+  "Suffolk": { area: "1,505 sq mi", population: "775,099", link: "" },
+  "Surrey": { area: "759 sq mi", population: "2,975,836", link: "" },
+  "Sussex": { area: "1,466 sq mi", population: "1,612,454", link: "" },
+  "Sutherland": { area: "2,028 sq mi", population: "12,803", link: "" },
+  "Tyrone": { area: "1,260 sq mi", population: "178,440", link: "" },
+  "Warwickshire": { area: "918 sq mi", population: "1,632,885", link: "" },
+  "West Lothian": { area: "120 sq mi", population: "154,830", link: "" },
+  "Westmorland": { area: "785 sq mi", population: "87,466", link: "" },
+  "Wigtownshire": { area: "487 sq mi", population: "26,618", link: "" },
+  "Wiltshire": { area: "1,374 sq mi", population: "682,380", link: "" },
+  "Worcestershire": { area: "709 sq mi", population: "1,125,037", link: "" },
   "Yorkshire": { area: "6,081 sq mi", population: "5,218,838", link: "" }
 };
 
-// Load GeoJSON
-fetch('./counties_simplified8.json')
-  .then(res => res.json())
-  .then(data => {
-    var geoJsonLayer = L.geoJSON(data, { 
-      style: function(feature) {
-        var name = feature.properties.NAME;
-        return { color: "#333", weight: 1, fillColor: countyColours[name]||"#cccccc", fillOpacity: 0.5 };
-      },
-      // Reset map bounds button
-var resetBtn = document.createElement('button');
-resetBtn.innerText = "Reset Map Bounds";
-resetBtn.style.marginTop = "10px";
-resetBtn.style.padding = "6px 12px";
-resetBtn.style.cursor = "pointer";
-resetBtn.onclick = function() {
-    map.fitBounds(ukBounds);
-};
-document.getElementById('sidebar').appendChild(resetBtn);
+// Pastel color palette
+const pastelColors = [
+  "#ffdede", "#dedefd", "#deffde", "#fff0de", "#fdefff",
+  "#dfffee", "#ffe7de", "#f0deff", "#defff5", "#fdeeee",
+  "#e6f7ff", "#f9ffe6", "#fff6e6", "#e6e6ff", "#ffe6f2"
+];
 
 // Load GeoJSON
 fetch('./counties_simplified8.json')
   .then(res => res.json())
   .then(data => {
+
+    // Assign pastel colors
+    data.features.forEach((feature, idx) => {
+      feature.properties.color = pastelColors[idx % pastelColors.length];
+    });
+
     var geoJsonLayer = L.geoJSON(data, { 
-      style: function(feature) {
-        var name = feature.properties.NAME;
-        return { color: "#333", weight: 1, fillColor: countyColours[name]||"#cccccc", fillOpacity: 0.5 };
-      },
-      onEachFeature: function(feature, layer) {
+      filter: f => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length > 0,
+      style: f => ({
+        color: "#333",         // border
+        weight: 1,             // border weight
+        fillColor: f.properties.color,
+        fillOpacity: 0.35,     // more transparent
+        fillRule: 'evenodd'
+      }),
+      onEachFeature: (feature, layer) => {
+        // Tooltip on hover
         const details = countyData[feature.properties.NAME];
-
-        // Tooltip
-        layer.bindTooltip(`${feature.properties.NAME} — ${details?.area||'Unknown'} — ${details?.population||'Unknown'}`);
-
-        // Click for sidebar
-        layer.on('click', function() {
-          if(details){
-            const areaNum = parseFloat(details.area.replace(/[^0-9.]/g,'')); // numeric area
-            const popNum = parseInt(details.population.replace(/,/g,'')); // numeric population
-            const density = areaNum && popNum ? (popNum / areaNum).toFixed(1) : "N/A";
-
-            infoDiv.innerHTML = `<div class="county-card">
-              <h3>${feature.properties.NAME}</h3>
-              <p><strong>Area:</strong> ${details.area}</p>
-              <p><strong>Population:</strong> ${details.population}</p>
-              <p><strong>Population Density:</strong> ${density} per sq mi</p>
-              <p><a href="${details.link}" target="_blank">More about ${feature.properties.NAME}</a></p>
-            </div>`;
-          } else {
-            infoDiv.innerHTML = `<div class="county-card"><h3>${feature.properties.NAME}</h3><p>No extra data available yet.</p></div>`;
-          }
-          map.fitBounds(layer.getBounds());
+        const areaText = details?.area || 'Unknown area';
+        layer.bindTooltip(`${feature.properties.NAME} — ${areaText}`, {
+          permanent: false,
+          direction: 'top',
+          className: 'county-tooltip'
         });
 
-        // Hover highlighting
-        layer.on('mouseover', function(){ layer.setStyle({ weight: 2 }); });
-        layer.on('mouseout', function(){ layer.setStyle({ weight: 1 }); });
+        // Click updates sidebar
+        layer.on('click', () => {
+          infoDiv.innerHTML = `<div class="county-card">
+            <h3>${feature.properties.NAME}</h3>
+            <p><strong>Area:</strong> ${details?.area || 'Unknown'}</p>
+            <p><strong>Population:</strong> ${details?.population || 'Unknown'}</p>
+            ${details?.link ? `<p><a href="${details.link}" target="_blank">More about ${feature.properties.NAME}</a></p>` : ''}
+          </div>`;
+          try { map.fitBounds(layer.getBounds()); } catch(e) {}
+        });
+
+        // Subtle hover border effect
+        layer.on('mouseover', () => layer.setStyle({ weight: 2, color: '#111' }));
+        layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333' }));
       }
     }).addTo(map);
 
-    map.fitBounds(geoJsonLayer.getBounds());
-  });
+    if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
+    setTimeout(() => map.invalidateSize(), 100);
+  })
+  .catch(err => console.error('GeoJSON error:', err));
 
 // Add search control
-L.Control.geocoder({ placeholder: 'Search…' }).addTo(map);
-
+L.Control.geocoder({
+  defaultMarkGeocode: true,
+  placeholder: 'Search town, village, postcode…',
+  geocoder: new L.Control.Geocoder.Nominatim(),
+  inputId: 'geocoder-input'
+}).addTo(map);
 </script>
 </body>
 </html>
