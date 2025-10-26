@@ -234,16 +234,65 @@ fetch('./counties_simplified8.json')
   })
   .catch(err => console.error('GeoJSON error:', err));
 
-// Add search control
-L.Control.geocoder({
-  defaultMarkGeocode: true,
+<script>
+// Keep track of previously highlighted county
+let highlightedCounty = null;
+
+// Add the geocoder control
+var geocoderControl = L.Control.geocoder({
+  defaultMarkGeocode: false,   // we handle the result ourselves
   placeholder: 'Search town, village, postcode…',
   geocoder: new L.Control.Geocoder.Nominatim(),
   inputId: 'geocoder-input'
 }).addTo(map);
+
+// Handle result selection
+geocoderControl.on('markgeocode', function(e) {
+  const center = e.geocode.center;
+  const address = e.geocode.properties.address || {};
+  
+  const place = address.town || address.village || address.city || address.hamlet || e.geocode.name;
+  const countyName = address.county || address.state_district || address.state || '';
+
+  // Determine zoom level
+  let zoomLevel = 12;
+  if (address.postcode) zoomLevel = 15;
+  else if (address.town || address.village) zoomLevel = 13;
+  else if (address.city) zoomLevel = 12;
+  else zoomLevel = 10;
+
+  map.setView(center, zoomLevel);
+
+  // Popup showing "Place, County"
+  L.popup()
+    .setLatLng(center)
+    .setContent(`<strong>${place}</strong>${countyName ? ', ' + countyName : ''}`)
+    .openOn(map);
+
+  // Highlight the county polygon if found
+  if (countyName && geoJsonLayer) {
+    // Reset previously highlighted county
+    if (highlightedCounty) {
+      geoJsonLayer.resetStyle(highlightedCounty);
+      highlightedCounty = null;
+    }
+
+    geoJsonLayer.eachLayer(function(layer) {
+      if (layer.feature.properties.NAME === countyName) {
+        layer.setStyle({ weight: 3, color: '#ff6600' }); // highlight style
+        highlightedCounty = layer;
+
+        // Optional: zoom to the county bounds if place is outside
+        const bounds = layer.getBounds();
+        if (!bounds.contains(center)) map.fitBounds(bounds.pad(0.5));
+      }
+    });
+  }
+});
 </script>
 </body>
 </html>
+
 
 
 
