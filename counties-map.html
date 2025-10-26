@@ -90,53 +90,51 @@ var countyData = {
 
 // Load GeoJSON
 fetch('./counties_simplified8.json')
-  .then(res => {
-    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-    return res.json();
-  })
+  .then(res => res.json())
   .then(data => {
     console.log('GeoJSON loaded:', data.features.length);
 
-    // Assign fallback colors to counties not explicitly listed
-    data.features.forEach(feature => {
-      var name = feature.properties.NAME;
-      if (!countyColours[name]) {
-        countyColours[name] = fallbackColours[fallbackIndex % fallbackColours.length];
-        fallbackIndex++;
-      }
+    // --- Gradient color assignment ---
+    var startColor = [173, 216, 230]; // lightblue RGB
+    var endColor = [0, 0, 139];       // darkblue RGB
+
+    function interpolateColor(start, end, factor) {
+      return start.map((s, i) => Math.round(s + factor * (end[i] - s)));
+    }
+
+    function rgbToHex(rgb) {
+      return "#" + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    data.features.forEach((feature, idx) => {
+      var factor = idx / (data.features.length - 1);
+      feature.properties.color = rgbToHex(interpolateColor(startColor, endColor, factor));
     });
 
+    // --- Add GeoJSON to map ---
     var geoJsonLayer = L.geoJSON(data, { 
-      filter: feature => feature.geometry && feature.geometry.coordinates && feature.geometry.coordinates.length > 0,
-      style: feature => ({
+      filter: f => f.geometry && f.geometry.coordinates.length > 0,
+      style: f => ({
         color: "#333",
         weight: 1,
-        fillColor: feature.properties.color,
+        fillColor: f.properties.color,
         fillOpacity: 0.5,
         fillRule: 'evenodd'
       }),
- 
-      },
       onEachFeature: function(feature, layer) {
         layer.on('click', function() {
           var name = feature.properties.NAME;
-          var details = countyData[name];
           infoDiv.innerHTML = `<div class="county-card">
             <h3>${name}</h3>
-            <p><strong>Area:</strong> ${details?.area || 'Unknown'}</p>
-            <p><strong>Population:</strong> ${details?.population || 'Unknown'}</p>
-            ${details?.link ? `<p><a href="${details.link}" target="_blank">More about ${name}</a></p>` : ''}
+            <p><strong>Area:</strong> ${countyData[name]?.area || 'Unknown'}</p>
+            <p><strong>Population:</strong> ${countyData[name]?.population || 'Unknown'}</p>
+            ${countyData[name]?.link ? `<p><a href="${countyData[name].link}" target="_blank">More about ${name}</a></p>` : ''}
           </div>`;
           try { map.fitBounds(layer.getBounds()); } catch (e) { console.error(e); }
         });
 
-        // Hover effects
-        layer.on('mouseover', function(){
-          layer.setStyle({ weight: 3, color: '#000', fillOpacity: 0.7 });
-        });
-        layer.on('mouseout', function(){
-          layer.setStyle({ weight: 1, color: '#333', fillOpacity: 0.5 });
-        });
+        layer.on('mouseover', () => layer.setStyle({ weight: 3, color: '#000', fillOpacity: 0.7 }));
+        layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333', fillOpacity: 0.5 }));
 
         layer.bindPopup(feature.properties.NAME);
       }
@@ -144,10 +142,8 @@ fetch('./counties_simplified8.json')
 
     if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
     setTimeout(() => map.invalidateSize(), 100);
-    console.log('GeoJSON layer added');
   })
   .catch(err => console.error('GeoJSON error:', err));
-
 // Add search control
 L.Control.geocoder({
   defaultMarkGeocode: true,
@@ -159,7 +155,4 @@ console.log('Geocoder added');
 </script>
 </body>
 </html>
-
-
-
 
