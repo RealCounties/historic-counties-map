@@ -10,9 +10,11 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
 <style>
-html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-serif; }
+html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+#container { display: flex; height: 100%; }
 #sidebar { width: 340px; background: #f7f7f7; padding: 15px; overflow-y: auto; border-right: 1px solid #ccc; }
-#map { flex: 1; height: 100vh; width: calc(100% - 340px); position: relative; z-index: 1; }
+#map { flex: 1; }
+
 .county-card { background: #fff; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .county-card h3 { margin-top: 0; color: #333; }
 .county-card p { margin: 4px 0; }
@@ -22,12 +24,14 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 </head>
 <body>
 
-<div id="sidebar">
-  <h2>Historic Counties</h2>
-  <p>Select a county to view details.</p>
-  <div id="info"><em>No county selected.</em></div>
+<div id="container">
+  <div id="sidebar">
+    <h2>Historic Counties</h2>
+    <p>Select a county to view details.</p>
+    <div id="info"><em>No county selected.</em></div>
+  </div>
+  <div id="map"></div>
 </div>
-<div id="map"></div>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -38,14 +42,6 @@ html, body { height: 100%; margin: 0; display: flex; font-family: Arial, sans-se
 console.log("Script is running");
 var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
 console.log('Map initialized');
-L.marker([54.5, -3]).addTo(map).bindPopup('Leaflet is working!');
-console.log('Test marker added');
-
-// Restrict map to British Isles
-var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
-map.setMaxBounds(ukBounds);
-map.fitBounds(ukBounds);
-console.log('Map bounds set');
 
 // Base OSM map
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -53,6 +49,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19
 }).addTo(map);
 console.log('OSM tiles added');
+
+// Restrict map to British Isles
+var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
+map.setMaxBounds(ukBounds);
+map.fitBounds(ukBounds);
 
 // Sidebar element
 var infoDiv = document.getElementById('info');
@@ -90,35 +91,18 @@ fetch('./counties_simplified8.json')
   })
   .then(data => {
     console.log('GeoJSON loaded:', data.features ? data.features.length : 'No features');
-    data.features.forEach(feature => {
-      console.log(
-        'Feature:', feature.properties.NAME,
-        'Geometry type:', feature.geometry.type,
-        'Coordinates length:', feature.geometry.coordinates ? feature.geometry.coordinates.length : 'N/A',
-        'Valid bounds:', feature.geometry.coordinates && feature.geometry.coordinates.length > 0,
-        'Sample coord:', feature.geometry.coordinates && feature.geometry.coordinates.length > 0 ? feature.geometry.coordinates[0][0][0] : 'N/A'
-      );
-    });
+
     var geoJsonLayer = L.geoJSON(data, { 
       filter: function(feature) {
         if (!feature.geometry || !feature.geometry.coordinates || feature.geometry.coordinates.length === 0) {
           console.log('Skipping invalid feature:', feature.properties.NAME);
           return false;
         }
-        try {
-          var bounds = L.geoJSON(feature).getBounds();
-          var intersects = L.latLngBounds([49.5, -8.5], [60.9, 2.0]).intersects(bounds);
-          console.log('Feature:', feature.properties.NAME, 'Intersects:', intersects, 'Bounds:', bounds.toBBoxString());
-          return intersects;
-        } catch (e) {
-          console.log('Bounds error for feature:', feature.properties.NAME, e.message);
-          return false;
-        }
+        return true;
       },
       style: function(feature) {
         var name = feature.properties.NAME;
         var fill = countyColours[name] || "#cccccc";
-        console.log('Styling feature:', name, 'Color:', fill);
         return { color: "#333", weight: 1, fillColor: fill, fillOpacity: 0.5, fillRule: 'evenodd' };
       },
       onEachFeature: function(feature, layer) {
@@ -126,38 +110,26 @@ fetch('./counties_simplified8.json')
           var name = feature.properties.NAME;
           var details = countyData[name];
           if(details){
-            document.getElementById('info').innerHTML = `<div class="county-card">
+            infoDiv.innerHTML = `<div class="county-card">
               <h3>${name}</h3>
               <p><strong>Area:</strong> ${details.area}</p>
               <p><strong>Population:</strong> ${details.population}</p>
               <p><a href="${details.link}" target="_blank">More about ${name}</a></p>
             </div>`;
           } else {
-            document.getElementById('info').innerHTML = `<div class="county-card"><h3>${name}</h3><p>No extra data available yet.</p></div>`;
+            infoDiv.innerHTML = `<div class="county-card"><h3>${name}</h3><p>No extra data available yet.</p></div>`;
           }
-          try {
-            map.fitBounds(layer.getBounds());
-          } catch (e) {
-            console.error('Fit bounds error for:', name, e.message);
-          }
+          try { map.fitBounds(layer.getBounds()); } catch (e) { console.error(e); }
         });
         layer.on('mouseover', function(){ layer.setStyle({ weight: 3, color: '#000' }); });
         layer.on('mouseout', function(){ layer.setStyle({ weight: 1, color: '#333' }); });
         layer.bindPopup(feature.properties.NAME);
       }
     }).addTo(map);
+
+    if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
+    setTimeout(() => map.invalidateSize(), 100);
     console.log('GeoJSON layer added');
-    // Force map redraw with delay
-    setTimeout(function() {
-      map.invalidateSize();
-      console.log('Map redrawn after delay');
-    }, 100);
-    try {
-      map.fitBounds(geoJsonLayer.getBounds()); // Zoom to valid features
-      console.log('Map bounds fitted');
-    } catch (e) {
-      console.error('Error fitting bounds:', e.message);
-    }
   })
   .catch(err => console.error('GeoJSON error:', err));
 
@@ -172,18 +144,3 @@ console.log('Geocoder added');
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
