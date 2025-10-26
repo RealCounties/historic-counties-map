@@ -109,8 +109,10 @@ fetch('./counties_simplified8.json')
         });
 
         // Hover effects
-        layer.on('mouseover', () => layer.setStyle({ weight: 3, color: '#000', fillOpacity: 0.9 }));
-        layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333', fillOpacity: 0.6 }));
+        // Subtle hover effect
+        layer.on('mouseover', () => layer.setStyle({ weight: 2, color: '#111' }));
+        layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333' }));
+
       }
     }).addTo(map);
 
@@ -129,3 +131,4 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
