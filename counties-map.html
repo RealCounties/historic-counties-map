@@ -151,6 +151,10 @@ var countyData = {
 
     // Initialize map
   var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
+  // Make the default Leaflet attribution open in a new tab
+document.querySelectorAll('.leaflet-control-attribution a').forEach(a => {
+  a.setAttribute('target', '_blank');
+});
 
   // Base OSM map
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -314,6 +318,7 @@ var countyData = {
 </script>
 </body>
 </html>
+
 
 
 
