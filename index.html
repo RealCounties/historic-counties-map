@@ -55,8 +55,27 @@ window.onload = function() {
 
   // County data placeholder
 var countyData = {
-  "Aberdeenshire": { area: "1,950 sq mi", population: "380,495", link: "" },
-  "Anglesey": { area: "277 sq mi", population: "69,751", link: "" },
+  var countyData = {
+  "Aberdeenshire": {
+    area: "1,950 sq mi",
+    population: "380,495",
+    shortDescription: "A county of granite, castles and Highland gates. 🏔️🏰",
+    longDescription: `Aberdeenshire is a Highland county with a long tradition of being divided into five historic districts. ...`,
+    outlineImage: "https://realcounties.wordpress.com/wp-content/uploads/2025/09/aberdeenshire-outline-1.png",
+    flagImage: "https://realcounties.wordpress.com/wp-content/uploads/2023/11/aberdeenshire-flag.png",
+    link: ""
+  },
+  "Anglesey": {
+    area: "277 sq mi",
+    population: "69,751",
+    shortDescription: "An island county of druids, castles and sea. 🌊🌿",
+    longDescription: `Anglesey is Wales’s island county, lying just across the Menai Straits ...`,
+    outlineImage: "https://realcounties.wordpress.com/wp-content/uploads/2025/09/anglesey-outline.png",
+    flagImage: "https://realcounties.wordpress.com/wp-content/uploads/2023/11/anglesey.png",
+    link: ""
+  },
+  ...
+};
   "Angus": { area: "899 sq mi", population: "264,044", link: "" },
   "Antrim": { area: "1,175 sq mi", population: "615,701", link: "" },
   "Argyllshire": { area: "3,110 sq mi", population: "64,819", link: "" },
@@ -318,6 +337,7 @@ document.querySelectorAll('.leaflet-control-attribution a').forEach(a => {
 </script>
 </body>
 </html>
+
 
 
 
