@@ -308,7 +308,7 @@ map.on('zoomend', function() {
     if (map.hasLayer(labelLayer)) map.removeLayer(labelLayer);
   }
 });
-
+})
   .catch(err => console.error('GeoJSON error:', err));
 
 // Add search control
@@ -321,6 +321,7 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
 
 
