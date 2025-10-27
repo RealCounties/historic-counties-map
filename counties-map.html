@@ -222,9 +222,9 @@ fetch('./counties_simplified8.json')
 
   geoJsonLayer.eachLayer(function(layer) {
   if (layer.feature && layer.feature.properties && layer.feature.properties.NAME) {
-    // Calculate centroid using Turf.js
-    var centroid = turf.centroid(layer.feature).geometry.coordinates; // [lng, lat]
-    var label = L.marker([centroid[1], centroid[0]], { // Leaflet uses [lat, lng]
+    // Get a point guaranteed to be inside the polygon
+    var pointInside = turf.pointOnFeature(layer.feature).geometry.coordinates; // [lng, lat]
+    var label = L.marker([pointInside[1], pointInside[0]], { // Leaflet: [lat, lng]
       icon: L.divIcon({
         className: 'county-label',
         html: layer.feature.properties.NAME,
@@ -302,6 +302,7 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
 
 
