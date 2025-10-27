@@ -106,6 +106,33 @@
 
 <script>
 window.onload = function() {
+  var sidebar = document.getElementById('sidebar');
+  var closeBtn = document.getElementById('closeSidebar');
+
+  // Add the floating toggle button
+  var toggleButton = L.control({ position: 'topright' });
+  toggleButton.onAdd = function(map) {
+    var btn = L.DomUtil.create('button', 'leaflet-bar');
+    btn.innerHTML = '📋';
+    btn.title = 'Show county info';
+    btn.style.background = 'white';
+    btn.style.border = '1px solid #999';
+    btn.style.width = '34px';
+    btn.style.height = '34px';
+    btn.style.fontSize = '18px';
+    btn.style.cursor = 'pointer';
+    btn.style.borderRadius = '4px';
+    btn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+    btn.onclick = function() {
+      sidebar.classList.toggle('visible');
+    };
+    return btn;
+  };
+  toggleButton.addTo(map);
+
+  closeBtn.onclick = function() {
+    sidebar.classList.remove('visible');
+  };
 
   // -----------------------------
   // County data
