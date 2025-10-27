@@ -219,19 +219,24 @@ document.querySelectorAll('.leaflet-control-attribution a').forEach(a => {
           });
 
           layer.on('click', () => {
-            infoDiv.innerHTML = `<div class="county-card">
-              <h3>${feature.properties.NAME}</h3>
-              <p><strong>Area:</strong> ${details?.area || 'Unknown'}</p>
-              <p><strong>Population:</strong> ${details?.population || 'Unknown'}</p>
-              ${details?.link ? `<p><a href="${details.link}" target="_blank">More about ${feature.properties.NAME}</a></p>` : ''}
-            </div>`;
-            try { map.fitBounds(layer.getBounds()); } catch(e) {}
-          });
+  const details = countyData[feature.properties.NAME];
 
-          layer.on('mouseover', () => layer.setStyle({ weight: 2, color: '#111' }));
-          layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333' }));
-        }
-      }).addTo(map);
+  infoDiv.innerHTML = `
+    <div class="county-card">
+      ${details?.outlineImage ? `<img class="aligncenter" src="${details.outlineImage}" alt="${feature.properties.NAME} Outline" />` : ''}
+      <h3 style="text-align: left">${feature.properties.NAME}</h3>
+      <p><strong>Area:</strong> ${details?.area || 'Unknown'}</p>
+      <p><strong>Population:</strong> ${details?.population || 'Unknown'}</p>
+      ${details?.shortDescription ? `<p>${details.shortDescription}</p>` : ''}
+      ${details?.longDescription ? `<details><summary class="button-primary" style="text-align:center;display:inline-block">Read More</summary>${details.longDescription}</details>` : ''}
+      ${details?.flagImage ? `<img src="${details.flagImage}" alt="${feature.properties.NAME} Flag" />` : ''}
+      ${details?.link ? `<p><a href="${details.link}" target="_blank">More about ${feature.properties.NAME}</a></p>` : ''}
+    </div>
+  `;
+
+  try { map.fitBounds(layer.getBounds()); } catch(e) {}
+});
+
 
       if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
       setTimeout(() => map.invalidateSize(), 100);
@@ -335,6 +340,7 @@ document.querySelectorAll('.leaflet-control-attribution a').forEach(a => {
 </script>
 </body>
 </html>
+
 
 
 
