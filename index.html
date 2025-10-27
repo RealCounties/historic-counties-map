@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Historic Counties Interactive Map</title>
+<title>True Counties Interactive Map</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Leaflet CSS -->
@@ -299,7 +299,7 @@ window.onload = function() {
               try { map.fitBounds(layer.getBounds()); } catch(e) {}
             
             	// Show sidebar on mobile/tablet
-  						if (window.innerWidth <= 800) {
+  						if (window.innerWidth <= 1024) {
     					sidebar.classList.add('visible');
   						}
           	});
