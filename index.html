@@ -30,6 +30,17 @@ html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+/* County label style (for toggle layer) */
+.county-label {
+  font-size: 13px;
+  font-weight: bold;
+  color: #222;
+  text-shadow: 0 0 4px rgba(255,255,255,0.8);
+  pointer-events: none;
+  white-space: nowrap;
+  text-align: center;
+}
 </style>
 </head>
 <body>
@@ -43,117 +54,119 @@ html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
   <div id="map"></div>
 </div>
 
+<!-- JS libraries -->
 <script src="https://cdn.jsdelivr.net/npm/polylabel@1.0.3/polylabel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
 window.onload = function() {
 
-  // County data placeholder
+  // -----------------------------
+  // County data
+  // -----------------------------
   var countyData = {
-    "Aberdeenshire": { area: "1,950 sq mi", population: "380,495", link: "" },
-    "Anglesey": { area: "277 sq mi", population: "69,751", link: "" },
-    "Angus": { area: "899 sq mi", population: "264,044", link: "" },
-    "Antrim": { area: "1,175 sq mi", population: "615,701", link: "" },
-    "Argyllshire": { area: "3,110 sq mi", population: "64,819", link: "" },
-    "Armagh": { area: "512 sq mi", population: "178,598", link: "" },
-    "Ayrshire": { area: "1,129 sq mi", population: "367,676", link: "" },
-    "Banffshire": { area: "641 sq mi", population: "46,537", link: "" },
-    "Bedfordshire": { area: "468 sq mi", population: "602,847", link: "" },
-    "Berkshire": { area: "722 sq mi", population: "842,804", link: "" },
-    "Berwickshire": { area: "457 sq mi", population: "26,458", link: "" },
-    "Brecknockshire": { area: "742 sq mi", population: "67,598", link: "" },
-    "Buckinghamshire": { area: "746 sq mi", population: "916,903", link: "" },
-    "Buteshire": { area: "225 sq mi", population: "12,534", link: "" },
-    "Caernarfonshire": { area: "563 sq mi", population: "139,065", link: "" },
-    "Caithness": { area: "618 sq mi", population: "26,486", link: "" },
-    "Cambridgeshire": { area: "858 sq mi", population: "460,448", link: "" },
-    "Cardiganshire": { area: "693 sq mi", population: "75,784", link: "" },
-    "Carmarthenshire": { area: "937 sq mi", population: "184,232", link: "" },
-    "Cheshire": { area: "1,035 sq mi", population: "1,668,894", link: "" },
-    "Clackmannanshire": { area: "48 sq mi", population: "50,957", link: "" },
-    "Cornwall": { area: "1,365 sq mi", population: "533,594", link: "" },
-    "Cromartyshire": { area: "370 sq mi", population: "7,074", link: "" },
-    "Cumberland": { area: "1,525 sq mi", population: "306,241", link: "" },
-    "Denbighshire": { area: "668 sq mi", population: "227,680", link: "" },
-    "Derbyshire": { area: "1,017 sq mi", population: "1,148,373", link: "" },
-    "Devon": { area: "2,621 sq mi", population: "1,133,463", link: "" },
-    "Dorset": { area: "1,005 sq mi", population: "543,296", link: "" },
-    "Down": { area: "950 sq mi", population: "528,983", link: "" },
-    "Dumfriesshire": { area: "1,063 sq mi", population: "77,160", link: "" },
-    "Dunbartonshire": { area: "241 sq mi", population: "262,419", link: "" },
-    "Durham": { area: "1,022 sq mi", population: "1,467,037", link: "" },
-    "East Lothian": { area: "267 sq mi", population: "74,882", link: "" },
-    "Essex": { area: "1,591 sq mi", population: "2,999,248", link: "" },
-    "Fermanagh": { area: "715 sq mi", population: "61,170", link: "" },
-    "Fife": { area: "504 sq mi", population: "365,493", link: "" },
-    "Flintshire": { area: "260 sq mi", population: "215,390", link: "" },
-    "Glamorgan": { area: "827 sq mi", population: "1,321,460", link: "" },
-    "Gloucestershire": { area: "1,293 sq mi", population: "1,147,106", link: "" },
-    "Hampshire": { area: "1,656 sq mi", population: "2,099,640", link: "" },
-    "Herefordshire": { area: "837 sq mi", population: "183,631", link: "" },
-    "Hertfordshire": { area: "633 sq mi", population: "1,157,166", link: "" },
-    "Huntingdonshire": { area: "366 sq mi", population: "211,776", link: "" },
-    "Inverness-shire": { area: "4,211 sq mi", population: "118,077", link: "" },
-    "Kent": { area: "1,611 sq mi", population: "2,747,715", link: "" },
-    "Kincardineshire": { area: "380 sq mi", population: "77,670", link: "" },
-    "Kinross-shire": { area: "73 sq mi", population: "11,223", link: "" },
-    "Kirkcudbrightshire": { area: "899 sq mi", population: "47,546", link: "" },
-    "Lanarkshire": { area: "879 sq mi", population: "1,008,014", link: "" },
-    "Lancashire": { area: "1,909 sq mi", population: "4,942,364", link: "" },
-    "Leicestershire": { area: "836 sq mi", population: "975,403", link: "" },
-    "Lincolnshire": { area: "2,687 sq mi", population: "1,038,510", link: "" },
-    "Londonderry": { area: "816 sq mi", population: "247,971", link: "" },
-    "Merionethshire": { area: "676 sq mi", population: "37,874", link: "" },
-    "Middlesex": { area: "285 sq mi", population: "4,000,927", link: "" },
-    "Midlothian": { area: "362 sq mi", population: "621,610", link: "" },
-    "Monmouthshire": { area: "542 sq mi", population: "514,723", link: "" },
-    "Montgomeryshire": { area: "796 sq mi", population: "61,956", link: "" },
-    "Morayshire": { area: "476 sq mi", population: "67,654", link: "" },
-    "Nairnshire": { area: "200 sq mi", population: "13,894", link: "" },
-    "Norfolk": { area: "2,057 sq mi", population: "807,721", link: "" },
-    "Northamptonshire": { area: "998 sq mi", population: "838,786", link: "" },
-    "Northumberland": { area: "2,019 sq mi", population: "797,006", link: "" },
-    "Nottinghamshire": { area: "843 sq mi", population: "1,096,617", link: "" },
-    "Orkney": { area: "376 sq mi", population: "21,349", link: "" },
-    "Oxfordshire": { area: "754 sq mi", population: "512,345", link: "" },
-    "Peeblesshire": { area: "548 sq mi", population: "19,074", link: "" },
-    "Pembrokeshire": { area: "625 sq mi", population: "122,122", link: "" },
-    "Perthshire": { area: "2,493 sq mi", population: "156,371", link: "" },
-    "Radnorshire": { area: "470 sq mi", population: "25,821", link: "" },
-    "Renfrewshire": { area: "245 sq mi", population: "508,064", link: "" },
-    "Ross-shire": { area: "3,089 sq mi", population: "69,503", link: "" },
-    "Roxburghshire": { area: "666 sq mi", population: "50,800", link: "" },
-    "Rutland": { area: "152 sq mi", population: "37,677", link: "" },
-    "Selkirkshire": { area: "267 sq mi", population: "16,010", link: "" },
-    "Shetland": { area: "551 sq mi", population: "23,167", link: "" },
-    "Shropshire": { area: "1,342 sq mi", population: "472,027", link: "" },
-    "Somerset": { area: "1,633 sq mi", population: "1,053,504", link: "" },
-    "Staffordshire": { area: "1,176 sq mi", population: "2,159,392", link: "" },
-    "Stirlingshire": { area: "447 sq mi", population: "244,092", link: "" },
-    "Suffolk": { area: "1,505 sq mi", population: "775,099", link: "" },
-    "Surrey": { area: "759 sq mi", population: "2,975,836", link: "" },
-    "Sussex": { area: "1,466 sq mi", population: "1,612,454", link: "" },
-    "Sutherland": { area: "2,028 sq mi", population: "12,803", link: "" },
-    "Tyrone": { area: "1,260 sq mi", population: "178,440", link: "" },
-    "Warwickshire": { area: "918 sq mi", population: "1,632,885", link: "" },
-    "West Lothian": { area: "120 sq mi", population: "154,830", link: "" },
-    "Westmorland": { area: "785 sq mi", population: "87,466", link: "" },
-    "Wigtownshire": { area: "487 sq mi", population: "26,618", link: "" },
-    "Wiltshire": { area: "1,374 sq mi", population: "682,380", link: "" },
-    "Worcestershire": { area: "709 sq mi", population: "1,125,037", link: "" },
-    "Yorkshire": { area: "6,081 sq mi", population: "5,218,838", link: "" } };
+  "Aberdeenshire": { area: "1,950 sq mi", population: "380,495", link: "" },
+  "Anglesey": { area: "277 sq mi", population: "69,751", link: "" },
+  "Angus": { area: "899 sq mi", population: "264,044", link: "" },
+  "Antrim": { area: "1,175 sq mi", population: "615,701", link: "" },
+  "Argyllshire": { area: "3,110 sq mi", population: "64,819", link: "" },
+  "Armagh": { area: "512 sq mi", population: "178,598", link: "" },
+  "Ayrshire": { area: "1,129 sq mi", population: "367,676", link: "" },
+  "Banffshire": { area: "641 sq mi", population: "46,537", link: "" },
+  "Bedfordshire": { area: "468 sq mi", population: "602,847", link: "" },
+  "Berkshire": { area: "722 sq mi", population: "842,804", link: "" },
+  "Berwickshire": { area: "457 sq mi", population: "26,458", link: "" },
+  "Brecknockshire": { area: "742 sq mi", population: "67,598", link: "" },
+  "Buckinghamshire": { area: "746 sq mi", population: "916,903", link: "" },
+  "Buteshire": { area: "225 sq mi", population: "12,534", link: "" },
+  "Caernarfonshire": { area: "563 sq mi", population: "139,065", link: "" },
+  "Caithness": { area: "618 sq mi", population: "26,486", link: "" },
+  "Cambridgeshire": { area: "858 sq mi", population: "460,448", link: "" },
+  "Cardiganshire": { area: "693 sq mi", population: "75,784", link: "" },
+  "Carmarthenshire": { area: "937 sq mi", population: "184,232", link: "" },
+  "Cheshire": { area: "1,035 sq mi", population: "1,668,894", link: "" },
+  "Clackmannanshire": { area: "48 sq mi", population: "50,957", link: "" },
+  "Cornwall": { area: "1,365 sq mi", population: "533,594", link: "" },
+  "Cromartyshire": { area: "370 sq mi", population: "7,074", link: "" },
+  "Cumberland": { area: "1,525 sq mi", population: "306,241", link: "" },
+  "Denbighshire": { area: "668 sq mi", population: "227,680", link: "" },
+  "Derbyshire": { area: "1,017 sq mi", population: "1,148,373", link: "" },
+  "Devon": { area: "2,621 sq mi", population: "1,133,463", link: "" },
+  "Dorset": { area: "1,005 sq mi", population: "543,296", link: "" },
+  "Down": { area: "950 sq mi", population: "528,983", link: "" },
+  "Dumfriesshire": { area: "1,063 sq mi", population: "77,160", link: "" },
+  "Dunbartonshire": { area: "241 sq mi", population: "262,419", link: "" },
+  "Durham": { area: "1,022 sq mi", population: "1,467,037", link: "" },
+  "East Lothian": { area: "267 sq mi", population: "74,882", link: "" },
+  "Essex": { area: "1,591 sq mi", population: "2,999,248", link: "" },
+  "Fermanagh": { area: "715 sq mi", population: "61,170", link: "" },
+  "Fife": { area: "504 sq mi", population: "365,493", link: "" },
+  "Flintshire": { area: "260 sq mi", population: "215,390", link: "" },
+  "Glamorgan": { area: "827 sq mi", population: "1,321,460", link: "" },
+  "Gloucestershire": { area: "1,293 sq mi", population: "1,147,106", link: "" },
+  "Hampshire": { area: "1,656 sq mi", population: "2,099,640", link: "" },
+  "Herefordshire": { area: "837 sq mi", population: "183,631", link: "" },
+  "Hertfordshire": { area: "633 sq mi", population: "1,157,166", link: "" },
+  "Huntingdonshire": { area: "366 sq mi", population: "211,776", link: "" },
+  "Inverness-shire": { area: "4,211 sq mi", population: "118,077", link: "" },
+  "Kent": { area: "1,611 sq mi", population: "2,747,715", link: "" },
+  "Kincardineshire": { area: "380 sq mi", population: "77,670", link: "" },
+  "Kinross-shire": { area: "73 sq mi", population: "11,223", link: "" },
+  "Kirkcudbrightshire": { area: "899 sq mi", population: "47,546", link: "" },
+  "Lanarkshire": { area: "879 sq mi", population: "1,008,014", link: "" },
+  "Lancashire": { area: "1,909 sq mi", population: "4,942,364", link: "" },
+  "Leicestershire": { area: "836 sq mi", population: "975,403", link: "" },
+  "Lincolnshire": { area: "2,687 sq mi", population: "1,038,510", link: "" },
+  "Londonderry": { area: "816 sq mi", population: "247,971", link: "" },
+  "Merionethshire": { area: "676 sq mi", population: "37,874", link: "" },
+  "Middlesex": { area: "285 sq mi", population: "4,000,927", link: "" },
+  "Midlothian": { area: "362 sq mi", population: "621,610", link: "" },
+  "Monmouthshire": { area: "542 sq mi", population: "514,723", link: "" },
+  "Montgomeryshire": { area: "796 sq mi", population: "61,956", link: "" },
+  "Morayshire": { area: "476 sq mi", population: "67,654", link: "" },
+  "Nairnshire": { area: "200 sq mi", population: "13,894", link: "" },
+  "Norfolk": { area: "2,057 sq mi", population: "807,721", link: "" },
+  "Northamptonshire": { area: "998 sq mi", population: "838,786", link: "" },
+  "Northumberland": { area: "2,019 sq mi", population: "797,006", link: "" },
+  "Nottinghamshire": { area: "843 sq mi", population: "1,096,617", link: "" },
+  "Orkney": { area: "376 sq mi", population: "21,349", link: "" },
+  "Oxfordshire": { area: "754 sq mi", population: "512,345", link: "" },
+  "Peeblesshire": { area: "548 sq mi", population: "19,074", link: "" },
+  "Pembrokeshire": { area: "625 sq mi", population: "122,122", link: "" },
+  "Perthshire": { area: "2,493 sq mi", population: "156,371", link: "" },
+  "Radnorshire": { area: "470 sq mi", population: "25,821", link: "" },
+  "Renfrewshire": { area: "245 sq mi", population: "508,064", link: "" },
+  "Ross-shire": { area: "3,089 sq mi", population: "69,503", link: "" },
+  "Roxburghshire": { area: "666 sq mi", population: "50,800", link: "" },
+  "Rutland": { area: "152 sq mi", population: "37,677", link: "" },
+  "Selkirkshire": { area: "267 sq mi", population: "16,010", link: "" },
+  "Shetland": { area: "551 sq mi", population: "23,167", link: "" },
+  "Shropshire": { area: "1,342 sq mi", population: "472,027", link: "" },
+  "Somerset": { area: "1,633 sq mi", population: "1,053,504", link: "" },
+  "Staffordshire": { area: "1,176 sq mi", population: "2,159,392", link: "" },
+  "Stirlingshire": { area: "447 sq mi", population: "244,092", link: "" },
+  "Suffolk": { area: "1,505 sq mi", population: "775,099", link: "" },
+  "Surrey": { area: "759 sq mi", population: "2,975,836", link: "" },
+  "Sussex": { area: "1,466 sq mi", population: "1,612,454", link: "" },
+  "Sutherland": { area: "2,028 sq mi", population: "12,803", link: "" },
+  "Tyrone": { area: "1,260 sq mi", population: "178,440", link: "" },
+  "Warwickshire": { area: "918 sq mi", population: "1,632,885", link: "" },
+  "West Lothian": { area: "120 sq mi", population: "154,830", link: "" },
+  "Westmorland": { area: "785 sq mi", population: "87,466", link: "" },
+  "Wigtownshire": { area: "487 sq mi", population: "26,618", link: "" },
+  "Wiltshire": { area: "1,374 sq mi", population: "682,380", link: "" },
+  "Worcestershire": { area: "709 sq mi", population: "1,125,037", link: "" },
+  "Yorkshire": { area: "6,081 sq mi", population: "5,218,838", link: "" }
+};
 
-  };
-
+  // -----------------------------
   // Initialize map
+  // -----------------------------
   var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
 
-  // Base OSM map
+  // Base OSM layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> contributors | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
@@ -166,20 +179,24 @@ window.onload = function() {
 
   var infoDiv = document.getElementById('info');
 
-  // Load GeoJSON
+  // -----------------------------
+  // Load GeoJSON and draw counties
+  // -----------------------------
   fetch('./counties_simplified8.json')
     .then(res => res.json())
     .then(data => {
+
       const pastelColors = [
         "#ffdede", "#dedefd", "#deffde", "#fff0de", "#fdefff",
         "#dfffee", "#ffe7de", "#f0deff", "#defff5", "#fdeeee",
         "#e6f7ff", "#f9ffe6", "#fff6e6", "#e6e6ff", "#ffe6f2"
       ];
+
       data.features.forEach((feature, idx) => {
         feature.properties.color = pastelColors[idx % pastelColors.length];
       });
 
-      // Main county polygons layer
+      // Main county polygons
       var geoJsonLayer = L.geoJSON(data, {
         filter: f => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length > 0,
         style: f => ({
@@ -192,6 +209,7 @@ window.onload = function() {
         onEachFeature: (feature, layer) => {
           const details = countyData[feature.properties.NAME];
           const areaText = details?.area || 'Unknown area';
+
           layer.bindTooltip(`${feature.properties.NAME} — ${areaText}`, {
             permanent: false,
             direction: 'top',
@@ -216,17 +234,20 @@ window.onload = function() {
       if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
       setTimeout(() => map.invalidateSize(), 100);
 
-      // County name labels
+      // -----------------------------
+      // County labels layer
+      // -----------------------------
       var labelLayer = L.layerGroup();
       geoJsonLayer.eachLayer(layer => {
-        if (layer.feature && layer.feature.properties && layer.feature.properties.NAME) {
+        if (layer.feature?.properties?.NAME) {
           var coords = layer.feature.geometry.coordinates;
           var polygons = layer.feature.geometry.type === 'MultiPolygon' ? coords : [coords];
           var largestPoly = polygons.reduce((maxPoly, poly) => {
             var area = turf.area({ type: 'Polygon', coordinates: poly });
-            return area > (maxPoly.area || 0) ? { coordinates: poly, area: area } : maxPoly;
+            return area > (maxPoly.area || 0) ? { coordinates: poly, area } : maxPoly;
           }, {});
           var labelPoint = polylabel(largestPoly.coordinates, 1.0);
+
           var label = L.marker([labelPoint[1], labelPoint[0]], {
             icon: L.divIcon({
               className: 'county-label',
@@ -238,20 +259,6 @@ window.onload = function() {
           labelLayer.addLayer(label);
         }
       });
-
-      var style = document.createElement('style');
-      style.textContent = `
-        .county-label {
-          font-size: 13px;
-          font-weight: bold;
-          color: #222;
-          text-shadow: 0 0 4px rgba(255,255,255,0.8);
-          pointer-events: none;
-          white-space: nowrap;
-          text-align: center;
-        }
-      `;
-      document.head.appendChild(style);
 
       // Toggle button for labels
       var LabelsControl = L.Control.extend({
@@ -272,18 +279,11 @@ window.onload = function() {
           button.style.cursor = 'pointer';
 
           L.DomEvent.disableClickPropagation(container);
-
           var labelsVisible = false;
           L.DomEvent.on(button, 'click', function(e) {
-            L.DomEvent.stopPropagation(e);
-            L.DomEvent.preventDefault(e);
-            if (labelsVisible) {
-              map.removeLayer(labelLayer);
-              button.style.background = 'white';
-            } else {
-              map.addLayer(labelLayer);
-              button.style.background = '#e6e6e6';
-            }
+            L.DomEvent.stopPropagation(e); L.DomEvent.preventDefault(e);
+            if (labelsVisible) { map.removeLayer(labelLayer); button.style.background='white'; }
+            else { map.addLayer(labelLayer); button.style.background='#e6e6e6'; }
             labelsVisible = !labelsVisible;
           });
 
@@ -292,7 +292,7 @@ window.onload = function() {
       });
       map.addControl(new LabelsControl());
 
-      // Auto show/hide labels on zoom
+      // Auto toggle labels based on zoom
       map.on('zoomend', function() {
         if (map.getZoom() >= 7) {
           if (!map.hasLayer(labelLayer)) map.addLayer(labelLayer);
@@ -303,18 +303,16 @@ window.onload = function() {
 
     }).catch(err => console.error('GeoJSON error:', err));
 
+  // -----------------------------
   // Search control
+  // -----------------------------
   L.Control.geocoder({
     defaultMarkGeocode: true,
     placeholder: 'Search town, village, postcode…',
-    geocoder: new L.Control.Geocoder.Nominatim(),
-    inputId: 'geocoder-input'
+    geocoder: new L.Control.Geocoder.Nominatim()
   }).addTo(map);
 
 };
 </script>
 </body>
 </html>
-
-
-
