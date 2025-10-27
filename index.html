@@ -296,6 +296,11 @@ window.onload = function() {
                 <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
               </div>`;
             try { map.fitBounds(layer.getBounds()); } catch(e) {}
+            
+            // Show sidebar on mobile/tablet
+  					if (window.innerWidth <= 800) {
+    					sidebar.classList.add('visible');
+  					}
           });
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
