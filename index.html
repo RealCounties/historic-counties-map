@@ -104,12 +104,28 @@ html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-<script>
 window.onload = function() {
   var sidebar = document.getElementById('sidebar');
   var closeBtn = document.getElementById('closeSidebar');
 
-  // Add the floating toggle button
+  // -----------------------------
+  // Initialize map FIRST
+  // -----------------------------
+  var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors | <a href="https://county-borders.co.uk">Historic County Borders Project</a>',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Restrict map to British Isles
+  var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
+  map.setMaxBounds(ukBounds);
+  map.fitBounds(ukBounds);
+
+  // -----------------------------
+  // Now add the floating toggle button
+  // -----------------------------
   var toggleButton = L.control({ position: 'topright' });
   toggleButton.onAdd = function(map) {
     var btn = L.DomUtil.create('button', 'leaflet-bar');
@@ -132,6 +148,10 @@ window.onload = function() {
 
   closeBtn.onclick = function() {
     sidebar.classList.remove('visible');
+  };
+
+  // (Then keep all your GeoJSON fetch, countyData, etc. code after this)
+};
   };
 
   // -----------------------------
