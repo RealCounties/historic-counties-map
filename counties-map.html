@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Historic Counties Interactive Map</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -220,19 +221,20 @@ fetch('./counties_simplified8.json')
   var labelLayer = L.layerGroup();
 
   geoJsonLayer.eachLayer(function(layer) {
-    if (layer.feature && layer.feature.properties && layer.feature.properties.NAME) {
-      var center = layer.getBounds().getCenter();
-      var label = L.marker(center, {
-        icon: L.divIcon({
-          className: 'county-label',
-          html: layer.feature.properties.NAME,
-          iconSize: [100, 20],
-          iconAnchor: [50, 10]
-        })
-      });
-      labelLayer.addLayer(label);
-    }
-  });
+  if (layer.feature && layer.feature.properties && layer.feature.properties.NAME) {
+    // Calculate centroid using Turf.js
+    var centroid = turf.centroid(layer.feature).geometry.coordinates; // [lng, lat]
+    var label = L.marker([centroid[1], centroid[0]], { // Leaflet uses [lat, lng]
+      icon: L.divIcon({
+        className: 'county-label',
+        html: layer.feature.properties.NAME,
+        iconSize: [100, 20],
+        iconAnchor: [50, 10]
+      })
+    });
+    labelLayer.addLayer(label);
+  }
+});
 
   // Custom label style
   var style = document.createElement('style');
@@ -300,6 +302,7 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
 
 
