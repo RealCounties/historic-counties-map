@@ -172,35 +172,35 @@ fetch('./counties_simplified8.json')
   .then(res => res.json())
   .then(data => {
   // === County name labels layer ===
-var labelLayer = L.layerGroup();
+  var labelLayer = L.layerGroup();
 
-geoJsonLayer.eachLayer(function(layer) {
-  if (layer.feature && layer.feature.properties && layer.feature.properties.NAME) {
-    var center = layer.getBounds().getCenter();
-    var label = L.marker(center, {
-      icon: L.divIcon({
-        className: 'county-label',
-        html: layer.feature.properties.NAME,
-        iconSize: [100, 20],
-        iconAnchor: [50, 10]
-      })
-    });
-    labelLayer.addLayer(label);
-  }
-});
+  geoJsonLayer.eachLayer(function(layer) {
+    if (layer.feature && layer.feature.properties && layer.feature.properties.NAME) {
+      var center = layer.getBounds().getCenter();
+      var label = L.marker(center, {
+        icon: L.divIcon({
+          className: 'county-label',
+          html: layer.feature.properties.NAME,
+          iconSize: [100, 20],
+          iconAnchor: [50, 10]
+        })
+      });
+      labelLayer.addLayer(label);
+    }
+  });
 
-// Custom label style
-var style = document.createElement('style');
-style.textContent = `
-  .county-label {
-    font-size: 13px;
-    font-weight: bold;
-    color: #222;
-    text-shadow: 0 0 4px rgba(255,255,255,0.8);
-    pointer-events: none;
-    white-space: nowrap;
-  }
-`;
+  // Custom label style
+  var style = document.createElement('style');
+  style.textContent = `
+    .county-label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #222;
+      text-shadow: 0 0 4px rgba(255,255,255,0.8);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+  `;
 document.head.appendChild(style);
 
 // === Leaflet control for toggling labels ===
@@ -298,4 +298,5 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
