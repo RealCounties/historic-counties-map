@@ -307,7 +307,7 @@ map.on('zoomend', function() {
   } else {
     if (map.hasLayer(labelLayer)) map.removeLayer(labelLayer);
   }
-});
+  });
 })
 .catch(err => console.error('GeoJSON error:', err));
 
@@ -321,6 +321,7 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
 
 
