@@ -171,7 +171,14 @@ const pastelColors = [
 fetch('./counties_simplified8.json')
   .then(res => res.json())
   .then(data => {
-  // === County name labels layer ===
+  
+    // Assign pastel colors
+    data.features.forEach((feature, idx) => {
+      feature.properties.color = pastelColors[idx % pastelColors.length];
+    });
+
+    var geoJsonLayer = L.geoJSON(data, { 
+      // === County name labels layer ===
   var labelLayer = L.layerGroup();
 
   geoJsonLayer.eachLayer(function(layer) {
@@ -241,14 +248,7 @@ var LabelsControl = L.Control.extend({
 });
 
 map.addControl(new LabelsControl());
-
-    // Assign pastel colors
-    data.features.forEach((feature, idx) => {
-      feature.properties.color = pastelColors[idx % pastelColors.length];
-    });
-
-    var geoJsonLayer = L.geoJSON(data, { 
-      filter: f => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length > 0,
+    filter: f => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length > 0,
       style: f => ({
         color: "#333",         // border
         weight: 1,             // border weight
@@ -298,5 +298,6 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
 
