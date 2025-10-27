@@ -10,8 +10,17 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
 <style>
-html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
-#container { display: flex; height: 100%; }
+html, body { 
+  height: 100%; 
+  margin: 0; 
+  font-family: Arial, sans-serif; 
+}
+
+#container { 
+  display: flex; 
+  height: 100%; 
+}
+
 #sidebar {
   width: 340px;
   background: #f7f7f7;
@@ -21,7 +30,10 @@ html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
   transition: all 0.3s ease;
   position: relative;
 }
-#map { flex: 1; }
+
+#map { 
+  flex: 1; 
+}
 
 .county-card {
   background: #fff;
@@ -104,9 +116,11 @@ html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
+<script>
 window.onload = function() {
   var sidebar = document.getElementById('sidebar');
   var closeBtn = document.getElementById('closeSidebar');
+  var infoDiv = document.getElementById('info');
 
   // -----------------------------
   // Initialize map FIRST
@@ -114,7 +128,7 @@ window.onload = function() {
   var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors | <a href="https://county-borders.co.uk">Historic County Borders Project</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> contributors | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
   }).addTo(map);
 
@@ -124,7 +138,7 @@ window.onload = function() {
   map.fitBounds(ukBounds);
 
   // -----------------------------
-  // Now add the floating toggle button
+  // Floating sidebar toggle button (📋)
   // -----------------------------
   var toggleButton = L.control({ position: 'topright' });
   toggleButton.onAdd = function(map) {
@@ -149,9 +163,6 @@ window.onload = function() {
   closeBtn.onclick = function() {
     sidebar.classList.remove('visible');
   };
-
-  // (Then keep all your GeoJSON fetch, countyData, etc. code after this)
-
 
   // -----------------------------
   // County data
@@ -252,146 +263,47 @@ window.onload = function() {
 };
 
   // -----------------------------
-  // Initialize map
-  // -----------------------------
-  var map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
-
-  // Base OSM layer
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> contributors | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
-    maxZoom: 19
-  }).addTo(map);
-
-  // Restrict map to British Isles
-  var ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
-  map.setMaxBounds(ukBounds);
-  map.fitBounds(ukBounds);
-
-  var infoDiv = document.getElementById('info');
-
-  // -----------------------------
   // Load GeoJSON and draw counties
   // -----------------------------
   fetch('./counties_simplified8.json')
     .then(res => res.json())
     .then(data => {
-
       const pastelColors = [
-        "#ffdede", "#dedefd", "#deffde", "#fff0de", "#fdefff",
-        "#dfffee", "#ffe7de", "#f0deff", "#defff5", "#fdeeee",
-        "#e6f7ff", "#f9ffe6", "#fff6e6", "#e6e6ff", "#ffe6f2"
+        "#ffdede","#dedefd","#deffde","#fff0de","#fdefff",
+        "#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee",
+        "#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"
       ];
 
       data.features.forEach((feature, idx) => {
         feature.properties.color = pastelColors[idx % pastelColors.length];
       });
 
-      // Main county polygons
       var geoJsonLayer = L.geoJSON(data, {
-        filter: f => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length > 0,
         style: f => ({
           color: "#333",
           weight: 1,
           fillColor: f.properties.color,
-          fillOpacity: 0.35,
-          fillRule: 'evenodd'
+          fillOpacity: 0.35
         }),
         onEachFeature: (feature, layer) => {
-          const details = countyData[feature.properties.NAME];
-          const areaText = details?.area || 'Unknown area';
-
-          layer.bindTooltip(`${feature.properties.NAME} — ${areaText}`, {
-            permanent: false,
-            direction: 'top',
-            className: 'county-tooltip'
-          });
-
+          const details = countyData[feature.properties.NAME] || {};
+          layer.bindTooltip(`${feature.properties.NAME}`, { className: 'county-tooltip' });
           layer.on('click', () => {
-            infoDiv.innerHTML = `<div class="county-card">
-              <h3>${feature.properties.NAME}</h3>
-              <p><strong>Area:</strong> ${details?.area || 'Unknown'}</p>
-              <p><strong>Population:</strong> ${details?.population || 'Unknown'}</p>
-              ${details?.link ? `<p><a href="${details.link}" target="_blank">More about ${feature.properties.NAME}</a></p>` : ''}
-            </div>`;
+            infoDiv.innerHTML = `
+              <div class="county-card">
+                <h3>${feature.properties.NAME}</h3>
+                <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
+                <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
+              </div>`;
             try { map.fitBounds(layer.getBounds()); } catch(e) {}
           });
-
-          layer.on('mouseover', () => layer.setStyle({ weight: 2, color: '#111' }));
-          layer.on('mouseout', () => layer.setStyle({ weight: 1, color: '#333' }));
+          layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
+          layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
         }
       }).addTo(map);
 
-      if (geoJsonLayer.getBounds().isValid()) map.fitBounds(geoJsonLayer.getBounds());
       setTimeout(() => map.invalidateSize(), 100);
-
-      // -----------------------------
-      // County labels layer
-      // -----------------------------
-      var labelLayer = L.layerGroup();
-      geoJsonLayer.eachLayer(layer => {
-        if (layer.feature?.properties?.NAME) {
-          var coords = layer.feature.geometry.coordinates;
-          var polygons = layer.feature.geometry.type === 'MultiPolygon' ? coords : [coords];
-          var largestPoly = polygons.reduce((maxPoly, poly) => {
-            var area = turf.area({ type: 'Polygon', coordinates: poly });
-            return area > (maxPoly.area || 0) ? { coordinates: poly, area } : maxPoly;
-          }, {});
-          var labelPoint = polylabel(largestPoly.coordinates, 1.0);
-
-          var label = L.marker([labelPoint[1], labelPoint[0]], {
-            icon: L.divIcon({
-              className: 'county-label',
-              html: layer.feature.properties.NAME,
-              iconSize: [100, 20],
-              iconAnchor: [50, 10]
-            })
-          });
-          labelLayer.addLayer(label);
-        }
-      });
-
-      // Toggle button for labels
-      var LabelsControl = L.Control.extend({
-        options: { position: 'topright' },
-        onAdd: function(map) {
-          var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-          var button = L.DomUtil.create('a', '', container);
-          button.href = '#';
-          button.title = 'Toggle County Names';
-          button.innerHTML = '🏷️';
-          button.style.width = '34px';
-          button.style.height = '34px';
-          button.style.lineHeight = '34px';
-          button.style.textAlign = 'center';
-          button.style.fontSize = '18px';
-          button.style.background = 'white';
-          button.style.color = '#333';
-          button.style.cursor = 'pointer';
-
-          L.DomEvent.disableClickPropagation(container);
-          var labelsVisible = false;
-          L.DomEvent.on(button, 'click', function(e) {
-            L.DomEvent.stopPropagation(e); L.DomEvent.preventDefault(e);
-            if (labelsVisible) { map.removeLayer(labelLayer); button.style.background='white'; }
-            else { map.addLayer(labelLayer); button.style.background='#e6e6e6'; }
-            labelsVisible = !labelsVisible;
-          });
-
-          return container;
-        }
-      });
-      map.addControl(new LabelsControl());
-
-      // Auto toggle labels based on zoom
-      map.on('zoomend', function() {
-        if (map.getZoom() >= 7) {
-          if (!map.hasLayer(labelLayer)) map.addLayer(labelLayer);
-        } else {
-          if (map.hasLayer(labelLayer)) map.removeLayer(labelLayer);
-        }
-      });
-
-    }).catch(err => console.error('GeoJSON error:', err));
+    });
 
   // -----------------------------
   // Search control
@@ -401,7 +313,6 @@ window.onload = function() {
     placeholder: 'Search town, village, postcode…',
     geocoder: new L.Control.Geocoder.Nominatim()
   }).addTo(map);
-
 };
 </script>
 </body>
