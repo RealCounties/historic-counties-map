@@ -13,7 +13,7 @@
 html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
 #container { display: flex; height: 100%; }
 #sidebar { width: 340px; background: #f7f7f7; padding: 15px; overflow-y: auto; border-right: 1px solid #ccc; }
-#map { flex: 1; }
+#map { flex: 1; min-height: 100%; }
 
 /* Your old county-card CSS can be removed/replaced */
 #info .county-card {
@@ -360,6 +360,7 @@ document.querySelectorAll('.leaflet-control-attribution a').forEach(a => {
 </script>
 </body>
 </html>
+
 
 
 
