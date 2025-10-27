@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <title>Historic Counties Interactive Map</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/polylabel@1.0.3/polylabel.min.js"></script>
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -44,8 +43,10 @@ html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
   <div id="map"></div>
 </div>
 
-<!-- Leaflet JS -->
+<script src="https://cdn.jsdelivr.net/npm/polylabel@1.0.3/polylabel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
@@ -322,6 +323,7 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
 
 
 
