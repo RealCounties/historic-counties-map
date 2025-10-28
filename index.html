@@ -21,6 +21,25 @@ html, body {
   height: 100%; 
 }
 
+#logo-container {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+#sidebar-logo {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Optional: scale logo on smaller screens */
+@media (max-width: 1024px) {
+  #sidebar-logo {
+    max-width: 70%;
+  }
+}
+
 #sidebar {
   width: 340px;
   background: #f2e6d2;
@@ -371,6 +390,7 @@ document.getElementById('searchBtn').addEventListener('click', () => {
 </script>
 </body>
 </html>
+
 
 
 
