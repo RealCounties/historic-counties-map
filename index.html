@@ -401,27 +401,6 @@ window.onload = function() {
     });
 
   // -----------------------------
-  // Search control
-  // -----------------------------
-  L.Control.geocoder({
-    defaultMarkGeocode: true,
-    placeholder: 'Search town, village, postcode…',
-    geocoder: new L.Control.Geocoder.Nominatim()
-  }).addTo(map);
-  // --- Load place data from CSV ---
-  fetch('https://realcounties.github.io/historic-counties-map/places_clean.csv')
-    .then(response => response.text())
-    .then(csvText => {
-      const lines = csvText.split('\n').slice(1);
-      window.places = lines.map(line => {
-        const [name, county, district, country, lat, lon] = line.split(',');
-        return { name, county, district, country, lat: parseFloat(lat), lon: parseFloat(lon) };
-      }).filter(p => p.name && !isNaN(p.lat) && !isNaN(p.lon));
-      console.log(`Loaded ${window.places.length} places`);
-    })
-    .catch(err => console.error('Places CSV error:', err));
-
-  // -----------------------------
   // Search control (Leaflet geocoder)
   // -----------------------------
   L.Control.geocoder({
@@ -429,10 +408,7 @@ window.onload = function() {
     placeholder: 'Search town, village, postcode…',
     geocoder: new L.Control.Geocoder.Nominatim()
   }).addTo(map);
-<!-- Add Fuse.js CDN before closing </body> -->
-<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
 
-<script>
   // -----------------------------
   // Load place data with Fuse.js
   // -----------------------------
@@ -485,10 +461,8 @@ window.onload = function() {
       alert('Place not found');
     }
   });
-</script>
-
 }; // 👈 this is now the ONE and ONLY closing brace for window.onload
-
 </script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
 </body>
 </html>
