@@ -338,16 +338,17 @@ window.onload = function() {
   }).addTo(map);
 };
     // --- Search function ---
-document.getElementById('searchBtn').addEventListener('click', () => {
+var searchBtn = document.getElementById('searchBtn');
+searchBtn.addEventListener('click', () => {
   const query = document.getElementById('placeSearch').value.trim().toLowerCase();
   if (!query || !window.places) return;
 
   const match = window.places.find(p => p.name.toLowerCase() === query);
   if (match) {
-    map.setView([match.lat, match.lon], 11); // zoom in
+    map.setView([match.lat, match.lon], 11);
     L.marker([match.lat, match.lon])
       .addTo(map)
-      .bindPopup(`<b>${match.name}</b><br>${match.county ? match.county : ''}`)
+      .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
       .openPopup();
   } else {
     alert('Place not found');
@@ -356,5 +357,4 @@ document.getElementById('searchBtn').addEventListener('click', () => {
 </script>
 </body>
 </html>
-
 
