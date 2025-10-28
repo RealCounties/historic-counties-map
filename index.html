@@ -223,14 +223,7 @@ window.onload = function() {
   var sidebar = document.getElementById('sidebar');
   var closeBtn = document.getElementById('closeSidebar');
   var infoDiv = document.getElementById('info');
-  // Trigger search on Enter key
-searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault(); // prevent form submission or page reload
-    searchBtn.click();  // simulate button click
-  }
-});
-
+  
   // -----------------------------
   // Initialize map FIRST
   // -----------------------------
@@ -468,6 +461,13 @@ searchInput.addEventListener('keydown', (e) => {
 const searchBtn = document.getElementById('searchBtn');
 const searchInput = document.getElementById('placeSearch');
 const searchDropdown = document.getElementById('searchDropdown');
+  // Trigger search on Enter key
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault(); // prevent form submission or page reload
+    searchBtn.click();  // simulate button click
+  }
+});
 
 searchBtn.addEventListener('click', () => {
   const query = searchInput.value.trim();
@@ -542,5 +542,6 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
 
 
