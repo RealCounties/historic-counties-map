@@ -194,6 +194,18 @@ html, body {
       <input type="text" id="placeSearch" placeholder="Search for a place...">
       <button id="searchBtn">Search</button>
     </div>
+    <!-- Add this inside your sidebar, after the search bar -->
+<div id="searchDropdown" style="
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 200px;
+    overflow-y: auto;
+    width: calc(100% - 60px); /* match input width */
+    display: none;
+    z-index: 1001;
+"></div>
+
 </div>
 
   <div id="map"></div>
@@ -211,6 +223,13 @@ window.onload = function() {
   var sidebar = document.getElementById('sidebar');
   var closeBtn = document.getElementById('closeSidebar');
   var infoDiv = document.getElementById('info');
+  // Trigger search on Enter key
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault(); // prevent form submission or page reload
+    searchBtn.click();  // simulate button click
+  }
+});
 
   // -----------------------------
   // Initialize map FIRST
@@ -445,35 +464,83 @@ window.onload = function() {
   // -----------------------------
   // Search button functionality
   // -----------------------------
-  let searchMarker = null; // store the current search marker
-
+  let searchMarker = null;
 const searchBtn = document.getElementById('searchBtn');
+const searchInput = document.getElementById('placeSearch');
+const searchDropdown = document.getElementById('searchDropdown');
+
 searchBtn.addEventListener('click', () => {
-  const query = document.getElementById('placeSearch').value.trim();
+  const query = searchInput.value.trim();
   if (!query || !window.fuse) return;
 
   const results = window.fuse.search(query);
-  if (results.length > 0) {
+  
+  // Clear previous dropdown
+  searchDropdown.innerHTML = '';
+  searchDropdown.style.display = 'none';
+
+  if (results.length === 0) {
+    alert('Place not found');
+    return;
+  }
+
+  // Remove old marker
+  if (searchMarker) {
+    map.removeLayer(searchMarker);
+    searchMarker = null;
+  }
+
+  if (results.length === 1) {
     const match = results[0].item;
-
-    // Remove previous marker if it exists
-    if (searchMarker) {
-      map.removeLayer(searchMarker);
-    }
-
-    // Add new marker
     searchMarker = L.marker([match.lat, match.lon])
       .addTo(map)
       .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
       .openPopup();
-
     map.setView([match.lat, match.lon], 11);
   } else {
-    alert('Place not found');
+    // Multiple matches – show dropdown
+    results.forEach(r => {
+      const div = document.createElement('div');
+      div.style.padding = '6px 10px';
+      div.style.cursor = 'pointer';
+      div.style.borderBottom = '1px solid #eee';
+      div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+      
+      div.addEventListener('click', () => {
+        const lat = r.item.lat;
+        const lon = r.item.lon;
+
+        if (searchMarker) map.removeLayer(searchMarker);
+
+        searchMarker = L.marker([lat, lon])
+          .addTo(map)
+          .bindPopup(`<b>${r.item.name}</b><br>${r.item.county || ''}`)
+          .openPopup();
+
+        map.setView([lat, lon], 11);
+
+        // Hide dropdown
+        searchDropdown.style.display = 'none';
+        searchDropdown.innerHTML = '';
+      });
+
+      searchDropdown.appendChild(div);
+    });
+
+    // Show dropdown
+    searchDropdown.style.display = 'block';
+  }
+});
+
+// Hide dropdown if user clicks outside
+document.addEventListener('click', e => {
+  if (!searchDropdown.contains(e.target) && e.target !== searchInput && e.target !== searchBtn) {
+    searchDropdown.style.display = 'none';
   }
 });
 }; // 👈 this is now the ONE and ONLY closing brace for window.onload
 </script>
 </body>
 </html>
+
 
