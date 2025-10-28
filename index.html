@@ -23,16 +23,17 @@ html, body {
 
 #sidebar {
   width: 340px;
-  background: #f7f7f7;
+  background: #f2e6d2;
   padding: 15px;
   overflow-y: auto;
   border-right: 1px solid #ccc;
-  transition: all 0.3s ease;
+  box-sizing: border-box; /* ensure padding doesn’t grow width */
   position: relative;
 }
 
 #map { 
-  flex: 1; 
+  flex: 1;
+  min-height: 0; /* important for flex layouts with scrolling */
 }
 
 .county-card {
@@ -356,5 +357,6 @@ searchBtn.addEventListener('click', () => {
 </script>
 </body>
 </html>
+
 
 
