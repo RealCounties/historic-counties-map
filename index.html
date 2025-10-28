@@ -420,9 +420,30 @@ window.onload = function() {
     placeholder: 'Search town, village, postcode…',
     geocoder: new L.Control.Geocoder.Nominatim()
   }).addTo(map);
-};
-     // -----------------------------
-  // Search function (now inside window.onload)
+  // --- Load place data from CSV ---
+  fetch('https://realcounties.github.io/historic-counties-map/places_clean.csv')
+    .then(response => response.text())
+    .then(csvText => {
+      const lines = csvText.split('\n').slice(1);
+      window.places = lines.map(line => {
+        const [name, county, district, country, lat, lon] = line.split(',');
+        return { name, county, district, country, lat: parseFloat(lat), lon: parseFloat(lon) };
+      }).filter(p => p.name && !isNaN(p.lat) && !isNaN(p.lon));
+      console.log(`Loaded ${window.places.length} places`);
+    })
+    .catch(err => console.error('Places CSV error:', err));
+
+  // -----------------------------
+  // Search control (Leaflet geocoder)
+  // -----------------------------
+  L.Control.geocoder({
+    defaultMarkGeocode: true,
+    placeholder: 'Search town, village, postcode…',
+    geocoder: new L.Control.Geocoder.Nominatim()
+  }).addTo(map);
+
+  // -----------------------------
+  // Search function (for sidebar search bar)
   // -----------------------------
   const searchBtn = document.getElementById('searchBtn');
   if (searchBtn) {
@@ -442,7 +463,8 @@ window.onload = function() {
       }
     });
   }
-}; // 👈 this is the final closing brace for window.onload
+}; // 👈 this is now the ONE and ONLY closing brace for window.onload
+
 </script>
 </body>
 </html>
