@@ -23,17 +23,16 @@ html, body {
 
 #sidebar {
   width: 340px;
-  background: #f2e6d2;
+  background: #f7f7f7;
   padding: 15px;
   overflow-y: auto;
   border-right: 1px solid #ccc;
-  box-sizing: border-box; /* ensure padding doesn’t grow width */
+  transition: all 0.3s ease;
   position: relative;
 }
 
 #map { 
-  flex: 1;
-  min-height: 0; /* important for flex layouts with scrolling */
+  flex: 1; 
 }
 
 .county-card {
@@ -88,7 +87,7 @@ html, body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     background: rgba(255,255,255,0.97);
     display: none; /* hidden by default */
-    z-index: 1100;
+    z-index: 1000;
   }
   #sidebar.visible {
     display: block;
@@ -100,23 +99,18 @@ html, body {
 </style>
 </head>
 <body>
+<div id="search-bar" style="position:absolute; top:10px; left:10px; z-index:1000; background:white; padding:8px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.3);">
+  <input type="text" id="placeSearch" placeholder="Search for a place..." style="width:180px; padding:4px;">
+  <button id="searchBtn">Search</button>
+</div>
 
 <div id="container">
-  <!-- SIDEBAR: Info + Search -->
   <div id="sidebar">
+    <button id="closeSidebar" title="Close">&times;</button>
     <h2>Historic Counties</h2>
     <p>Select a county to view details.</p>
-    <!-- Search Bar -->
-    <div id="search-bar" style="margin-bottom:10px;">
-      <input type="text" id="placeSearch" placeholder="Search for a place..." style="width:70%; padding:6px;">
-      <button id="searchBtn">Search</button>
-    </div>
-
-    <!-- County Info Panel -->
-    <div id="info"></div>
+    <div id="info"><em>No county selected.</em></div>
   </div>
-
-  <!-- MAP: Full width, sibling to sidebar -->
   <div id="map"></div>
 </div>
 
@@ -343,30 +337,22 @@ window.onload = function() {
     geocoder: new L.Control.Geocoder.Nominatim()
   }).addTo(map);
 };
-  // --- Search function (MOVE INSIDE onload) ---
-  document.getElementById('searchBtn').addEventListener('click', () => {
-    const query = document.getElementById('placeSearch').value.trim().toLowerCase();
-    if (!query || !window.places) {
-      alert('Place not found or data not loaded');
-      return;
-    }
+    // --- Search function ---
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const query = document.getElementById('placeSearch').value.trim().toLowerCase();
+  if (!query || !window.places) return;
 
-    const match = window.places.find(p => p.name.toLowerCase() === query);
-    if (match) {
-      map.setView([match.lat, match.lon], 12);
-      L.marker([match.lat, match.lon])
-        .addTo(map)
-        .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
-        .openPopup();
-    } else {
-      alert('Place not found');
-    }
-  });
-
+  const match = window.places.find(p => p.name.toLowerCase() === query);
+  if (match) {
+    map.setView([match.lat, match.lon], 11); // zoom in
+    L.marker([match.lat, match.lon])
+      .addTo(map)
+      .bindPopup(`<b>${match.name}</b><br>${match.county ? match.county : ''}`)
+      .openPopup();
+  } else {
+    alert('Place not found');
+  }
+});
 </script>
 </body>
 </html>
-
-
-
-
