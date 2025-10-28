@@ -345,10 +345,10 @@ window.onload = function() {
   }).addTo(map);
 };
     // --- Search function ---
-var searchBtn = document.getElementById('searchBtn');
-searchBtn.addEventListener('click', () => {
-  const query = document.getElementById('placeSearch').value.trim().toLowerCase();
-  if (!query || !window.places) return;
+  var searchBtn = document.getElementById('searchBtn');
+    searchBtn.addEventListener('click', () => {
+    const query = document.getElementById('placeSearch').value.trim().toLowerCase();
+    if (!query || !window.places) return;
 
   const match = window.places.find(p => p.name.toLowerCase() === query);
   if (match) {
