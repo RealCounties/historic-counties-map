@@ -102,13 +102,22 @@ html, body {
 <body>
 
 <div id="container">
+  <!-- SIDEBAR: Info + Search -->
   <div id="sidebar">
     <h2>Historic Counties</h2>
     <p>Select a county to view details.</p>
-      <div id="search-bar" style="margin-bottom:10px;">
-        <input type="text" id="placeSearch" placeholder="Search for a place..." style="width:70%; padding:6px;">
-        <button id="searchBtn">Search</button>
-      </div>
+
+    <!-- Search Bar -->
+    <div id="search-bar" style="margin-bottom:10px;">
+      <input type="text" id="placeSearch" placeholder="Search for a place..." style="width:70%; padding:6px;">
+      <button id="searchBtn">Search</button>
+    </div>
+
+    <!-- County Info Panel -->
+    <div id="info"></div>
+  </div>
+
+  <!-- MAP: Full width, sibling to sidebar -->
   <div id="map"></div>
 </div>
 
@@ -355,9 +364,3 @@ searchBtn.addEventListener('click', () => {
 </script>
 </body>
 </html>
-
-
-
-
-
-
