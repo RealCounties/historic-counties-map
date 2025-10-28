@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>True Counties Interactive Map</title>
+<title>Historic Counties Interactive Map</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Leaflet CSS -->
@@ -111,18 +111,21 @@ html, body {
 <body>
 <div id="container">
   <div id="sidebar">
-    <button id="closeSidebar" title="Close">&times;</button>
+    <div id="logo-container">
+      <img src="https://realcounties.wordpress.com/wp-content/uploads/2025/06/logo-full-trans-16-6-25.png" alt="Campaign for Historic Counties Logo" id="sidebar-logo">
+    </div>
+
     <h2>Historic Counties</h2>
     <p>Select a county to view details.</p>
-    
+
     <div id="info"><em>No county selected.</em></div>
-    
-    <!-- Sidebar content -->
-      <div id="search-bar">
-        <input type="text" id="placeSearch" placeholder="Search for a place...">
-        <button id="searchBtn">Search</button>
-      </div>
-   </div>
+
+    <div id="search-bar">
+      <input type="text" id="placeSearch" placeholder="Search for a place...">
+      <button id="searchBtn">Search</button>
+    </div>
+</div>
+
   <div id="map"></div>
 </div>
 
@@ -368,6 +371,7 @@ document.getElementById('searchBtn').addEventListener('click', () => {
 </script>
 </body>
 </html>
+
 
 
 
