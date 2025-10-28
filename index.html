@@ -445,24 +445,35 @@ window.onload = function() {
   // -----------------------------
   // Search button functionality
   // -----------------------------
-  const searchBtn = document.getElementById('searchBtn');
-  searchBtn.addEventListener('click', () => {
-    const query = document.getElementById('placeSearch').value.trim();
-    if (!query || !window.fuse) return;
+  let searchMarker = null; // store the current search marker
 
-    const results = window.fuse.search(query);
-    if (results.length > 0) {
-      const match = results[0].item;
-      map.setView([match.lat, match.lon], 11);
-      L.marker([match.lat, match.lon])
-        .addTo(map)
-        .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
-        .openPopup();
-    } else {
-      alert('Place not found');
+const searchBtn = document.getElementById('searchBtn');
+searchBtn.addEventListener('click', () => {
+  const query = document.getElementById('placeSearch').value.trim();
+  if (!query || !window.fuse) return;
+
+  const results = window.fuse.search(query);
+  if (results.length > 0) {
+    const match = results[0].item;
+
+    // Remove previous marker if it exists
+    if (searchMarker) {
+      map.removeLayer(searchMarker);
     }
-  });
+
+    // Add new marker
+    searchMarker = L.marker([match.lat, match.lon])
+      .addTo(map)
+      .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
+      .openPopup();
+
+    map.setView([match.lat, match.lon], 11);
+  } else {
+    alert('Place not found');
+  }
+});
 }; // 👈 this is now the ONE and ONLY closing brace for window.onload
 </script>
 </body>
 </html>
+
