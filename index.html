@@ -470,84 +470,101 @@ fetch('places_clean.csv')
   .catch(err => console.error('Places CSV error:', err));
 
 // -----------------------------
-// Search button functionality (exact match only)
+// Fuzzy search with Fuse.js
 // -----------------------------
 let searchMarker = null;
-const searchBtn = document.getElementById('searchBtn');
 const searchInput = document.getElementById('placeSearch');
 const searchDropdown = document.getElementById('searchDropdown');
 
-// Enter key triggers search
-searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    searchBtn.click();
-  }
-});
+let fuse = null; // Fuse instance
 
-searchBtn.addEventListener('click', () => {
-  const query = searchInput.value.trim().toLowerCase();
-  if (!query || !window.places.length) return;
+// Initialize Fuse after places load
+function initFuse() {
+  if (!window.places.length) return;
+  fuse = new Fuse(window.places, {
+    keys: ['name', 'county'],
+    threshold: 0.3, // fuzzy match threshold (lower = stricter)
+  });
+}
 
-  // Find exact matches (case-insensitive)
-  const results = window.places.filter(p => p.name.toLowerCase() === query);
-
-  // Clear dropdown
+// Update dropdown suggestions
+function showDropdown(results) {
   searchDropdown.innerHTML = '';
-  searchDropdown.style.display = 'none';
-
-  if (results.length === 0) {
-    alert('Place not found');
+  if (!results.length) {
+    searchDropdown.style.display = 'none';
     return;
   }
 
-  // Remove old marker
-  if (searchMarker) {
-    map.removeLayer(searchMarker);
-    searchMarker = null;
+  results.forEach(r => {
+    const div = document.createElement('div');
+    div.style.padding = '6px 10px';
+    div.style.cursor = 'pointer';
+    div.style.borderBottom = '1px solid #eee';
+    div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+
+    div.addEventListener('click', () => {
+      if (searchMarker) map.removeLayer(searchMarker);
+      searchMarker = L.marker([r.item.lat, r.item.lon])
+        .addTo(map)
+        .bindPopup(`<b>${r.item.name}</b><br>${r.item.county || ''}`)
+        .openPopup();
+      map.setView([r.item.lat, r.item.lon], 11);
+
+      searchDropdown.style.display = 'none';
+      searchDropdown.innerHTML = '';
+      searchInput.value = r.item.name;
+    });
+
+    searchDropdown.appendChild(div);
+  });
+
+  searchDropdown.style.display = 'block';
+}
+
+// Listen to input events for live suggestions
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.trim();
+  if (!query || !fuse) {
+    searchDropdown.style.display = 'none';
+    return;
   }
 
-  if (results.length === 1) {
-    const match = results[0];
-    searchMarker = L.marker([match.lat, match.lon])
-      .addTo(map)
-      .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
-      .openPopup();
-    map.setView([match.lat, match.lon], 11);
-  } else {
-    // Show dropdown for multiple identical-named matches
-    results.forEach(r => {
-      const div = document.createElement('div');
-      div.style.padding = '6px 10px';
-      div.style.cursor = 'pointer';
-      div.style.borderBottom = '1px solid #eee';
-      div.textContent = `${r.name}, ${r.county || ''}`;
+  const results = fuse.search(query).slice(0, 10); // top 10 results
+  showDropdown(results);
+});
 
-      div.addEventListener('click', () => {
-        if (searchMarker) map.removeLayer(searchMarker);
-        searchMarker = L.marker([r.lat, r.lon])
-          .addTo(map)
-          .bindPopup(`<b>${r.name}</b><br>${r.county || ''}`)
-          .openPopup();
-        map.setView([r.lat, r.lon], 11);
-        searchDropdown.style.display = 'none';
-        searchDropdown.innerHTML = '';
-      });
-      searchDropdown.appendChild(div);
-    });
-    searchDropdown.style.display = 'block';
+// Enter key triggers first result
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const results = fuse.search(searchInput.value.trim());
+    if (results.length) {
+      const r = results[0].item;
+      if (searchMarker) map.removeLayer(searchMarker);
+      searchMarker = L.marker([r.lat, r.lon])
+        .addTo(map)
+        .bindPopup(`<b>${r.name}</b><br>${r.county || ''}`)
+        .openPopup();
+      map.setView([r.lat, r.lon], 11);
+      searchDropdown.style.display = 'none';
+      searchDropdown.innerHTML = '';
+      searchInput.value = r.name;
+    } else {
+      alert('Place not found');
+    }
   }
 });
 
-  // Hide dropdown when clicking outside
-  document.addEventListener('click', e => {
-    if (!searchDropdown.contains(e.target) && e.target !== searchInput && e.target !== searchBtn) {
-      searchDropdown.style.display = 'none';
-    }
-  });
+// Hide dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
+    searchDropdown.style.display = 'none';
+  }
+});
 
 }; // ← This closes the original window.onload
 </script>
+
 
 
 
