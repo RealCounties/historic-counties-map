@@ -454,18 +454,19 @@ window.onload = function() {
     })
     .catch(err => console.error('Places CSV error:', err));
 
-  // -----------------------------
-  // Search button functionality
-  // -----------------------------
-  let searchMarker = null;
+// -----------------------------
+// Search button functionality
+// -----------------------------
+let searchMarker = null;
 const searchBtn = document.getElementById('searchBtn');
 const searchInput = document.getElementById('placeSearch');
 const searchDropdown = document.getElementById('searchDropdown');
-  // Trigger search on Enter key
+
+// Trigger search on Enter key
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
-    e.preventDefault(); // prevent form submission or page reload
-    searchBtn.click();  // simulate button click
+    e.preventDefault();
+    searchBtn.click();
   }
 });
 
@@ -474,8 +475,7 @@ searchBtn.addEventListener('click', () => {
   if (!query || !window.fuse) return;
 
   const results = window.fuse.search(query);
-  
-  // Clear previous dropdown
+
   searchDropdown.innerHTML = '';
   searchDropdown.style.display = 'none';
 
@@ -484,7 +484,6 @@ searchBtn.addEventListener('click', () => {
     return;
   }
 
-  // Remove old marker
   if (searchMarker) {
     map.removeLayer(searchMarker);
     searchMarker = null;
@@ -492,10 +491,21 @@ searchBtn.addEventListener('click', () => {
 
   if (results.length === 1) {
     const match = results[0].item;
+    const districtText = match.district ? `District: ${match.district}` : '';
+    const countyText = match.county ? `County: ${match.county}` : '';
+    const popupHtml = `
+      <div style="font-family:Arial,sans-serif;font-size:14px;">
+        <b>${match.name}</b><br>
+        ${districtText ? districtText + '<br>' : ''}
+        ${countyText}
+      </div>
+    `;
+
     searchMarker = L.marker([match.lat, match.lon])
       .addTo(map)
-      .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
+      .bindPopup(popupHtml)
       .openPopup();
+
     map.setView([match.lat, match.lon], 11);
   } else {
     // Multiple matches – show dropdown
@@ -505,32 +515,31 @@ searchBtn.addEventListener('click', () => {
       div.style.cursor = 'pointer';
       div.style.borderBottom = '1px solid #eee';
       div.textContent = `${r.item.name}, ${r.item.county || ''}`;
-      
+
       div.addEventListener('click', () => {
-        const lat = r.item.lat;
-        const lon = r.item.lon;
+        const m = r.item;
+        const lat = m.lat;
+        const lon = m.lon;
 
         if (searchMarker) map.removeLayer(searchMarker);
 
-        searchMarker = const districtText = match.district ? `District: ${match.district}` : '';
-        const countyText = match.county ? `County: ${match.county}` : '';
+        const districtText = m.district ? `District: ${m.district}` : '';
+        const countyText = m.county ? `County: ${m.county}` : '';
         const popupHtml = `
           <div style="font-family:Arial,sans-serif;font-size:14px;">
-           <b>${match.name}</b><br>
-           ${districtText ? districtText + '<br>' : ''}
-           ${countyText}
-        </div>
-`;
+            <b>${m.name}</b><br>
+            ${districtText ? districtText + '<br>' : ''}
+            ${countyText}
+          </div>
+        `;
 
-L.marker([match.lat, match.lon])
-  .addTo(map)
-  .bindPopup(popupHtml)
-  .openPopup();
-
+        searchMarker = L.marker([lat, lon])
+          .addTo(map)
+          .bindPopup(popupHtml)
+          .openPopup();
 
         map.setView([lat, lon], 11);
 
-        // Hide dropdown
         searchDropdown.style.display = 'none';
         searchDropdown.innerHTML = '';
       });
@@ -538,7 +547,6 @@ L.marker([match.lat, match.lon])
       searchDropdown.appendChild(div);
     });
 
-    // Show dropdown
     searchDropdown.style.display = 'block';
   }
 });
@@ -553,7 +561,3 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
-
-
-
-
