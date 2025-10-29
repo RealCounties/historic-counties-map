@@ -503,103 +503,87 @@ const searchBtn = document.getElementById('searchBtn');
 const searchInput = document.getElementById('placeSearch');
 const searchDropdown = document.getElementById('searchDropdown');
 
-// Create dropdown if not already in HTML
-if (!searchDropdown) {
-  const div = document.createElement('div');
-  div.id = 'searchDropdown';
-  div.style.position = 'absolute';
-  div.style.background = 'white';
-  div.style.border = '1px solid #ccc';
-  div.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-  div.style.zIndex = '2000';
-  div.style.width = '90%';
-  div.style.maxHeight = '200px';
-  div.style.overflowY = 'auto';
-  div.style.display = 'none';
-  div.style.borderRadius = '6px';
-  div.style.marginTop = '4px';
-  searchInput.parentElement.appendChild(div);
-}
-
 // Trigger search on Enter key
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
-    e.preventDefault();
-    searchBtn.click();
+    e.preventDefault(); // prevent form submission or page reload
+    searchBtn.click();  // simulate button click
   }
 });
+
+// Remove duplicates by name + county
+function uniquePlaces(places) {
+  const seen = new Set();
+  return places.filter(p => {
+    const key = `${p.PLACE15NM}|${p.CTYHISTNM}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 searchBtn.addEventListener('click', () => {
   const query = searchInput.value.trim();
   if (!query || !window.fuse) return;
 
-  const results = window.fuse.search(query);
-
-  // Clear previous dropdown
-  searchDropdown.innerHTML = '';
-  searchDropdown.style.display = 'none';
+  const results = window.fuse.search(query).map(r => r.item);
 
   if (results.length === 0) {
     alert('Place not found');
     return;
   }
 
-  // Deduplicate results by name + county + coords
-  const uniqueResults = [];
-  const seen = new Set();
-  for (const r of results) {
-    const key = `${r.item.PLACE15NM}_${r.item.CTYHISTNM}_${r.item.lat}_${r.item.lon}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      uniqueResults.push(r);
-    }
-  }
+  // Deduplicate results
+  const uniqueResults = uniquePlaces(results);
 
-  // Remove old marker if any
+  // Clear previous dropdown
+  searchDropdown.innerHTML = '';
+  searchDropdown.style.display = 'none';
+
+  // Remove old marker
   if (searchMarker) {
     map.removeLayer(searchMarker);
     searchMarker = null;
   }
 
   if (uniqueResults.length === 1) {
-    const match = uniqueResults[0].item;
-    const popupHtml = `
-      <div style="font-family:Arial,sans-serif;font-size:14px;">
-        <b>${match.PLACE15NM}</b><br>
-        ${match.CTYHISTNM || ''}<br>
-        ${match.CTRY15NM || ''}
-      </div>
-    `;
+    const match = uniqueResults[0];
+
     searchMarker = L.marker([match.lat, match.lon])
       .addTo(map)
-      .bindPopup(popupHtml)
+      .bindPopup(`
+        <div style="font-family:Arial,sans-serif;font-size:14px;">
+          <b>${match.PLACE15NM}</b><br>
+          ${match.CTYHISTNM || ''}<br>
+          ${match.CTRY15NM || ''}
+        </div>
+      `)
       .openPopup();
+
     map.setView([match.lat, match.lon], 11);
+
   } else {
-    // Multiple matches → dropdown
-    uniqueResults.forEach(r => {
+    // Multiple matches – show dropdown
+    uniqueResults.forEach(match => {
       const div = document.createElement('div');
-      div.style.padding = '8px 10px';
+      div.style.padding = '6px 10px';
       div.style.cursor = 'pointer';
       div.style.borderBottom = '1px solid #eee';
-      div.style.fontFamily = 'Arial,sans-serif';
-      div.textContent = `${r.item.PLACE15NM}, ${r.item.CTYHISTNM || ''}`;
+      div.textContent = `${match.PLACE15NM}, ${match.CTYHISTNM}`;
 
       div.addEventListener('click', () => {
-        const match = r.item;
+        // Remove old marker
         if (searchMarker) map.removeLayer(searchMarker);
-
-        const popupHtml = `
-          <div style="font-family:Arial,sans-serif;font-size:14px;">
-            <b>${match.PLACE15NM}</b><br>
-            ${match.CTYHISTNM || ''}<br>
-            ${match.CTRY15NM || ''}
-          </div>
-        `;
 
         searchMarker = L.marker([match.lat, match.lon])
           .addTo(map)
-          .bindPopup(popupHtml)
+          .bindPopup(`
+            <div style="font-family:Arial,sans-serif;font-size:14px;">
+              <b>${match.PLACE15NM}</b><br>
+              ${match.CTYHISTNM || ''}<br>
+              ${match.CTRY15NM || ''}
+            </div>
+          `)
           .openPopup();
 
         map.setView([match.lat, match.lon], 11);
@@ -607,13 +591,6 @@ searchBtn.addEventListener('click', () => {
         // Hide dropdown
         searchDropdown.style.display = 'none';
         searchDropdown.innerHTML = '';
-      });
-
-      div.addEventListener('mouseover', () => {
-        div.style.background = '#f8f8f8';
-      });
-      div.addEventListener('mouseout', () => {
-        div.style.background = 'white';
       });
 
       searchDropdown.appendChild(div);
@@ -630,10 +607,18 @@ document.addEventListener('click', e => {
     searchDropdown.style.display = 'none';
   }
 });
+
+// Hide dropdown if user clicks outside
+document.addEventListener('click', e => {
+  if (!searchDropdown.contains(e.target) && e.target !== searchInput && e.target !== searchBtn) {
+    searchDropdown.style.display = 'none';
+  }
+});
 }; // 👈 this is now the ONE and ONLY closing brace for window.onload
 </script>
 </body>
 </html>
+
 
 
 
