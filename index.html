@@ -512,10 +512,21 @@ searchBtn.addEventListener('click', () => {
 
         if (searchMarker) map.removeLayer(searchMarker);
 
-        searchMarker = L.marker([lat, lon])
-          .addTo(map)
-          .bindPopup(`<b>${r.item.name}</b><br>${r.item.county || ''}`)
-          .openPopup();
+        searchMarker = const districtText = match.district ? `District: ${match.district}` : '';
+        const countyText = match.county ? `County: ${match.county}` : '';
+        const popupHtml = `
+          <div style="font-family:Arial,sans-serif;font-size:14px;">
+           <b>${match.name}</b><br>
+           ${districtText ? districtText + '<br>' : ''}
+           ${countyText}
+        </div>
+`;
+
+L.marker([match.lat, match.lon])
+  .addTo(map)
+  .bindPopup(popupHtml)
+  .openPopup();
+
 
         map.setView([lat, lon], 11);
 
@@ -542,6 +553,7 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
 
 
 
