@@ -422,11 +422,10 @@ window.onload = function() {
     geocoder: new L.Control.Geocoder.Nominatim()
   }).addTo(map);
 
+<script>
 // -----------------------------
-// Load place data (no Fuse.js – exact match only)
+// Parse CSV line helper
 // -----------------------------
-window.places = []; // global array to store places
-
 function parseCSVLine(line) {
   const cols = [];
   let match;
@@ -436,58 +435,31 @@ function parseCSVLine(line) {
   }
   return cols;
 }
-lines.forEach(line => {
-  const cols = parseCSVLine(line);
-  console.log(cols); // Make sure DESCNM is at index 2
-});
-
-fetch('places_clean.csv')
-  .then(res => res.text())
-  .then(csvText => {
-    const lines = csvText.trim().split('\n');
-    lines.shift(); // remove header row
-
-    const locPlaces = [];
-
-    lines.forEach(line => {
-      const cols = parseCSVLine(line);
-      const name = cols[0];       // PLACE15NM
-      const desc = cols[2];       // DESCNM
-      const county = cols[3];     // CTYHISTNM
-      const country = cols[4];    // CTRY15NM
-      const lat = parseFloat(cols[6]); // LAT
-      const lon = parseFloat(cols[7]); // LONG_
-
-      // Only include LOC entries with valid lat/lon
-      if (desc !== 'LOC' || !name || isNaN(lat) || isNaN(lon)) return;
-
-      locPlaces.push({ name, county, country, lat, lon });
-    });
-
-    window.places = locPlaces;
-    console.log(`Loaded ${window.places.length} LOC places`);
-  })
-  .catch(err => console.error('Places CSV error:', err));
 
 // -----------------------------
-// Fuzzy search with Fuse.js
+// Global variables
 // -----------------------------
+window.places = [];
+let fuse = null;
 let searchMarker = null;
+
 const searchInput = document.getElementById('placeSearch');
 const searchDropdown = document.getElementById('searchDropdown');
 
-let fuse = null; // Fuse instance
-
-// Initialize Fuse after places load
+// -----------------------------
+// Initialize Fuse
+// -----------------------------
 function initFuse() {
   if (!window.places.length) return;
   fuse = new Fuse(window.places, {
     keys: ['name', 'county'],
-    threshold: 0.3, // fuzzy match threshold (lower = stricter)
+    threshold: 0.3
   });
 }
 
-// Update dropdown suggestions
+// -----------------------------
+// Show dropdown suggestions
+// -----------------------------
 function showDropdown(results) {
   searchDropdown.innerHTML = '';
   if (!results.length) {
@@ -503,16 +475,7 @@ function showDropdown(results) {
     div.textContent = `${r.item.name}, ${r.item.county || ''}`;
 
     div.addEventListener('click', () => {
-      if (searchMarker) map.removeLayer(searchMarker);
-      searchMarker = L.marker([r.item.lat, r.item.lon])
-        .addTo(map)
-        .bindPopup(`<b>${r.item.name}</b><br>${r.item.county || ''}`)
-        .openPopup();
-      map.setView([r.item.lat, r.item.lon], 11);
-
-      searchDropdown.style.display = 'none';
-      searchDropdown.innerHTML = '';
-      searchInput.value = r.item.name;
+      selectPlace(r.item);
     });
 
     searchDropdown.appendChild(div);
@@ -521,7 +484,58 @@ function showDropdown(results) {
   searchDropdown.style.display = 'block';
 }
 
-// Listen to input events for live suggestions
+// -----------------------------
+// Select a place (marker + view)
+// -----------------------------
+function selectPlace(place) {
+  if (searchMarker) map.removeLayer(searchMarker);
+
+  searchMarker = L.marker([place.lat, place.lon])
+    .addTo(map)
+    .bindPopup(`<b>${place.name}</b><br>${place.county || ''}`)
+    .openPopup();
+
+  map.setView([place.lat, place.lon], 11);
+
+  searchDropdown.style.display = 'none';
+  searchDropdown.innerHTML = '';
+  searchInput.value = place.name;
+}
+
+// -----------------------------
+// Fetch CSV and initialize Fuse
+// -----------------------------
+fetch('places_clean.csv')
+  .then(res => res.text())
+  .then(csvText => {
+    const lines = csvText.trim().split('\n');
+    lines.shift(); // remove header
+    const locPlaces = [];
+
+    lines.forEach(line => {
+      const cols = parseCSVLine(line);
+      const name = cols[0];       // PLACE15NM
+      const desc = cols[2];       // DESCNM
+      const county = cols[3];     // CTYHISTNM
+      const country = cols[4];    // CTRY15NM
+      const lat = parseFloat(cols[6]); // LAT
+      const lon = parseFloat(cols[7]); // LONG_
+
+      if (desc !== 'LOC' || !name || isNaN(lat) || isNaN(lon)) return;
+
+      locPlaces.push({ name, county, country, lat, lon });
+    });
+
+    window.places = locPlaces;
+    console.log(`Loaded ${window.places.length} LOC places`);
+
+    initFuse(); // <-- Fuse ready after CSV loaded
+  })
+  .catch(err => console.error('Places CSV error:', err));
+
+// -----------------------------
+// Input event: live suggestions
+// -----------------------------
 searchInput.addEventListener('input', () => {
   const query = searchInput.value.trim();
   if (!query || !fuse) {
@@ -529,45 +543,33 @@ searchInput.addEventListener('input', () => {
     return;
   }
 
-  const results = fuse.search(query).slice(0, 10); // top 10 results
+  const results = fuse.search(query).slice(0, 10);
   showDropdown(results);
 });
 
+// -----------------------------
 // Enter key triggers first result
-searchInput.addEventListener('keydown', (e) => {
+// -----------------------------
+searchInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
+    if (!fuse) return;
+
     const results = fuse.search(searchInput.value.trim());
     if (results.length) {
-      const r = results[0].item;
-      if (searchMarker) map.removeLayer(searchMarker);
-      searchMarker = L.marker([r.lat, r.lon])
-        .addTo(map)
-        .bindPopup(`<b>${r.name}</b><br>${r.county || ''}`)
-        .openPopup();
-      map.setView([r.lat, r.lon], 11);
-      searchDropdown.style.display = 'none';
-      searchDropdown.innerHTML = '';
-      searchInput.value = r.name;
+      selectPlace(results[0].item);
     } else {
       alert('Place not found');
     }
   }
 });
 
+// -----------------------------
 // Hide dropdown when clicking outside
+// -----------------------------
 document.addEventListener('click', e => {
   if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
     searchDropdown.style.display = 'none';
   }
 });
-
-}; // ← This closes the original window.onload
 </script>
-
-
-
-
-
-
-
