@@ -495,7 +495,6 @@ fetch('places_clean.csv')
   })
   .catch(err => console.error('Places CSV error:', err));
 
-
 // -----------------------------
 // Search button functionality
 // -----------------------------
@@ -503,6 +502,24 @@ let searchMarker = null;
 const searchBtn = document.getElementById('searchBtn');
 const searchInput = document.getElementById('placeSearch');
 const searchDropdown = document.getElementById('searchDropdown');
+
+// Create dropdown if not already in HTML
+if (!searchDropdown) {
+  const div = document.createElement('div');
+  div.id = 'searchDropdown';
+  div.style.position = 'absolute';
+  div.style.background = 'white';
+  div.style.border = '1px solid #ccc';
+  div.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+  div.style.zIndex = '2000';
+  div.style.width = '90%';
+  div.style.maxHeight = '200px';
+  div.style.overflowY = 'auto';
+  div.style.display = 'none';
+  div.style.borderRadius = '6px';
+  div.style.marginTop = '4px';
+  searchInput.parentElement.appendChild(div);
+}
 
 // Trigger search on Enter key
 searchInput.addEventListener('keydown', (e) => {
@@ -518,6 +535,7 @@ searchBtn.addEventListener('click', () => {
 
   const results = window.fuse.search(query);
 
+  // Clear previous dropdown
   searchDropdown.innerHTML = '';
   searchDropdown.style.display = 'none';
 
@@ -526,66 +544,82 @@ searchBtn.addEventListener('click', () => {
     return;
   }
 
+  // Deduplicate results by name + county + coords
+  const uniqueResults = [];
+  const seen = new Set();
+  for (const r of results) {
+    const key = `${r.item.PLACE15NM}_${r.item.CTYHISTNM}_${r.item.lat}_${r.item.lon}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueResults.push(r);
+    }
+  }
+
+  // Remove old marker if any
   if (searchMarker) {
     map.removeLayer(searchMarker);
     searchMarker = null;
   }
 
-  if (results.length === 1) {
-    const match = results[0].item;
+  if (uniqueResults.length === 1) {
+    const match = uniqueResults[0].item;
     const popupHtml = `
       <div style="font-family:Arial,sans-serif;font-size:14px;">
-        <b>${match.name}</b><br>
-        ${match.district ? `${match.district}<br>` : ''}
-        ${match.county ? `${match.county}<br>` : ''}
-        ${match.country || ''}
+        <b>${match.PLACE15NM}</b><br>
+        ${match.CTYHISTNM || ''}<br>
+        ${match.CTRY15NM || ''}
       </div>
     `;
-
     searchMarker = L.marker([match.lat, match.lon])
       .addTo(map)
       .bindPopup(popupHtml)
       .openPopup();
-
     map.setView([match.lat, match.lon], 11);
   } else {
-    // Multiple matches – show dropdown
-    results.forEach(r => {
-      const m = r.item;
+    // Multiple matches → dropdown
+    uniqueResults.forEach(r => {
       const div = document.createElement('div');
-      div.style.padding = '6px 10px';
+      div.style.padding = '8px 10px';
       div.style.cursor = 'pointer';
       div.style.borderBottom = '1px solid #eee';
-      div.textContent = `${m.name}, ${m.district || m.county || ''}`;
+      div.style.fontFamily = 'Arial,sans-serif';
+      div.textContent = `${r.item.PLACE15NM}, ${r.item.CTYHISTNM || ''}`;
 
       div.addEventListener('click', () => {
-  const match = r.item;
+        const match = r.item;
+        if (searchMarker) map.removeLayer(searchMarker);
 
-  if (searchMarker) map.removeLayer(searchMarker);
+        const popupHtml = `
+          <div style="font-family:Arial,sans-serif;font-size:14px;">
+            <b>${match.PLACE15NM}</b><br>
+            ${match.CTYHISTNM || ''}<br>
+            ${match.CTRY15NM || ''}
+          </div>
+        `;
 
-  const popupHtml = `
-    <div style="font-family:Arial,sans-serif;font-size:14px;">
-      <b>${match.PLACE15NM}</b><br>
-      ${match.CTYHISTNM || ''}<br>
-      ${match.CTRY15NM || ''}
-    </div>
-  `;
+        searchMarker = L.marker([match.lat, match.lon])
+          .addTo(map)
+          .bindPopup(popupHtml)
+          .openPopup();
 
-  searchMarker = L.marker([match.lat, match.lon])
-    .addTo(map)
-    .bindPopup(popupHtml)
-    .openPopup();
+        map.setView([match.lat, match.lon], 11);
 
-  map.setView([match.lat, match.lon], 11);
+        // Hide dropdown
+        searchDropdown.style.display = 'none';
+        searchDropdown.innerHTML = '';
+      });
 
-  // Hide dropdown
-  searchDropdown.style.display = 'none';
-  searchDropdown.innerHTML = '';
-});
+      div.addEventListener('mouseover', () => {
+        div.style.background = '#f8f8f8';
+      });
+      div.addEventListener('mouseout', () => {
+        div.style.background = 'white';
+      });
 
       searchDropdown.appendChild(div);
     });
 
+    // Show dropdown
     searchDropdown.style.display = 'block';
   }
 });
@@ -600,5 +634,6 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
 
 
