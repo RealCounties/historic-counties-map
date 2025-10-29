@@ -422,14 +422,7 @@ window.onload = function() {
     geocoder: new L.Control.Geocoder.Nominatim()
   }).addTo(map);
 
-  // -----------------------------
-  // Load place data with Fuse.js
-  // -----------------------------
-  
-window.onload = function() {
-  /* … all the code you already have up to the CSV fetch … */
-
-  // -----------------------------
+    // -----------------------------
   // Load place data with Fuse.js
   // -----------------------------
   window.places = []; // global array to store places
@@ -438,7 +431,7 @@ window.onload = function() {
     .then(csvText => {
       const lines = csvText.trim().split('\n').slice(1);
 
-      /* ---- NEW: deduplicate by name + coordinates ---- */
+      /* ---- Deduplicate by name + coordinates ---- */
       const seen = new Set();
       const uniquePlaces = [];
 
@@ -448,10 +441,10 @@ window.onload = function() {
         const lat  = cols[4];
         const lon  = cols[5];
 
-        if (!name || isNaN(lat) || isNaN(lon)) return;   // skip malformed rows
+        if (!name || isNaN(lat) || isNaN(lon)) return;
 
-        const key = `${name}|${lat}|${lon}`;   // same name + same point = duplicate
-        if (seen.has(key)) return;            // already have this exact entry
+        const key = `${name}|${lat}|${lon}`;
+        if (seen.has(key)) return;
         seen.add(key);
 
         uniquePlaces.push({
@@ -463,12 +456,11 @@ window.onload = function() {
           lon: parseFloat(lon)
         });
       });
-      /* ------------------------------------------------ */
 
       window.places = uniquePlaces;
       console.log(`Loaded ${window.places.length} unique places`);
 
-      // Initialise Fuse on the deduplicated array
+      // Initialize Fuse.js on deduplicated data
       window.fuse = new Fuse(window.places, {
         keys: ['name'],
         threshold: 0.3,
@@ -481,90 +473,79 @@ window.onload = function() {
   // Search button functionality
   // -----------------------------
   let searchMarker = null;
-const searchBtn = document.getElementById('searchBtn');
-const searchInput = document.getElementById('placeSearch');
-const searchDropdown = document.getElementById('searchDropdown');
-  // Trigger search on Enter key
-searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault(); // prevent form submission or page reload
-    searchBtn.click();  // simulate button click
-  }
-});
+  const searchBtn = document.getElementById('searchBtn');
+  const searchInput = document.getElementById('placeSearch');
+  const searchDropdown = document.getElementById('searchDropdown');
 
-searchBtn.addEventListener('click', () => {
-  const query = searchInput.value.trim();
-  if (!query || !window.fuse) return;
+  // Enter key triggers search
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      searchBtn.click();
+    }
+  });
 
-  const results = window.fuse.search(query);
-  
-  // Clear previous dropdown
-  searchDropdown.innerHTML = '';
-  searchDropdown.style.display = 'none';
+  searchBtn.addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    if (!query || !window.fuse) return;
 
-  if (results.length === 0) {
-    alert('Place not found');
-    return;
-  }
+    const results = window.fuse.search(query);
 
-  // Remove old marker
-  if (searchMarker) {
-    map.removeLayer(searchMarker);
-    searchMarker = null;
-  }
-
-  if (results.length === 1) {
-    const match = results[0].item;
-    searchMarker = L.marker([match.lat, match.lon])
-      .addTo(map)
-      .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
-      .openPopup();
-    map.setView([match.lat, match.lon], 11);
-  } else {
-    // Multiple matches – show dropdown
-    results.forEach(r => {
-      const div = document.createElement('div');
-      div.style.padding = '6px 10px';
-      div.style.cursor = 'pointer';
-      div.style.borderBottom = '1px solid #eee';
-      div.textContent = `${r.item.name}, ${r.item.county || ''}`;
-      
-      div.addEventListener('click', () => {
-        const lat = r.item.lat;
-        const lon = r.item.lon;
-
-        if (searchMarker) map.removeLayer(searchMarker);
-
-        searchMarker = L.marker([lat, lon])
-          .addTo(map)
-          .bindPopup(`<b>${r.item.name}</b><br>${r.item.county || ''}`)
-          .openPopup();
-
-        map.setView([lat, lon], 11);
-
-        // Hide dropdown
-        searchDropdown.style.display = 'none';
-        searchDropdown.innerHTML = '';
-      });
-
-      searchDropdown.appendChild(div);
-    });
-
-    // Show dropdown
-    searchDropdown.style.display = 'block';
-  }
-});
-
-// Hide dropdown if user clicks outside
-document.addEventListener('click', e => {
-  if (!searchDropdown.contains(e.target) && e.target !== searchInput && e.target !== searchBtn) {
+    // Clear dropdown
+    searchDropdown.innerHTML = '';
     searchDropdown.style.display = 'none';
-  }
-});
-}; // 👈 this is now the ONE and ONLY closing brace for window.onload
+
+    if (results.length === 0) {
+      alert('Place not found');
+      return;
+    }
+
+    // Remove old marker
+    if (searchMarker) {
+      map.removeLayer(searchMarker);
+      searchMarker = null;
+    }
+
+    if (results.length === 1) {
+      const match = results[0].item;
+      searchMarker = L.marker([match.lat, match.lon])
+        .addTo(map)
+        .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
+        .openPopup();
+      map.setView([match.lat, match.lon], 11);
+    } else {
+      // Show dropdown with unique results
+      results.forEach(r => {
+        const div = document.createElement('div');
+        div.style.padding = '6px 10px';
+        div.style.cursor = 'pointer';
+        div.style.borderBottom = '1px solid #eee';
+        div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+
+        div.addEventListener('click', () => {
+          const lat = r.item.lat;
+          const lon = r.item.lon;
+          if (searchMarker) map.removeLayer(searchMarker);
+          searchMarker = L.marker([lat, lon])
+            .addTo(map)
+            .bindPopup(`<b>${r.item.name}</b><br>${r.item.county || ''}`)
+            .openPopup();
+          map.setView([lat, lon], 11);
+          searchDropdown.style.display = 'none';
+          searchDropdown.innerHTML = '';
+        });
+        searchDropdown.appendChild(div);
+      });
+      searchDropdown.style.display = 'block';
+    }
+  });
+
+  // Hide dropdown when clicking outside
+  document.addEventListener('click', e => {
+    if (!searchDropdown.contains(e.target) && e.target !== searchInput && e.target !== searchBtn) {
+      searchDropdown.style.display = 'none';
+    }
+  });
+
+}; // ← This closes the original window.onload
 </script>
-</body>
-</html>
-
-
-
