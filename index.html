@@ -495,6 +495,7 @@ fetch('places_clean.csv')
   })
   .catch(err => console.error('Places CSV error:', err));
 
+<script>
 // -----------------------------
 // Search button functionality
 // -----------------------------
@@ -511,34 +512,48 @@ searchInput.addEventListener('keydown', (e) => {
   }
 });
 
-// Remove duplicates by name + county
-function uniquePlaces(places) {
-  const seen = new Set();
-  return places.filter(p => {
-    const key = `${p.PLACE15NM}|${p.CTYHISTNM}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
+// Fetch and parse CSV
+window.places = [];
+fetch('places_clean.csv')
+  .then(res => res.text())
+  .then(csvText => {
+    const lines = csvText.trim().split('\n').slice(1); // skip header
+    window.places = lines.map(line => {
+      const [PLACE15NM, CTYHISTNM, LAD15NM, CTRY15NM, lat, lon] = line.split(',');
+      return {
+        PLACE15NM: PLACE15NM.trim(),
+        CTYHISTNM: CTYHISTNM.trim(),
+        LAD15NM: LAD15NM.trim(),
+        CTRY15NM: CTRY15NM.trim(),
+        lat: parseFloat(lat),
+        lon: parseFloat(lon)
+      };
+    }).filter(p => p.PLACE15NM && !isNaN(p.lat) && !isNaN(p.lon));
 
+    // Initialize Fuse.js for fuzzy searching
+    window.fuse = new Fuse(window.places, {
+      keys: ['PLACE15NM'],
+      threshold: 0.3,
+      distance: 100
+    });
+  })
+  .catch(err => console.error('Places CSV error:', err));
+
+// Handle search
 searchBtn.addEventListener('click', () => {
   const query = searchInput.value.trim();
   if (!query || !window.fuse) return;
 
-  const results = window.fuse.search(query).map(r => r.item);
+  const results = window.fuse.search(query);
+
+  // Clear previous dropdown
+  searchDropdown.innerHTML = '';
+  searchDropdown.style.display = 'none';
 
   if (results.length === 0) {
     alert('Place not found');
     return;
   }
-
-  // Deduplicate results
-  const uniqueResults = uniquePlaces(results);
-
-  // Clear previous dropdown
-  searchDropdown.innerHTML = '';
-  searchDropdown.style.display = 'none';
 
   // Remove old marker
   if (searchMarker) {
@@ -546,33 +561,40 @@ searchBtn.addEventListener('click', () => {
     searchMarker = null;
   }
 
-  if (uniqueResults.length === 1) {
-    const match = uniqueResults[0];
-
+  if (results.length === 1) {
+    const match = results[0].item;
     searchMarker = L.marker([match.lat, match.lon])
       .addTo(map)
       .bindPopup(`
         <div style="font-family:Arial,sans-serif;font-size:14px;">
           <b>${match.PLACE15NM}</b><br>
-          ${match.CTYHISTNM || ''}<br>
-          ${match.CTRY15NM || ''}
+          ${match.CTYHISTNM ? match.CTYHISTNM + '<br>' : ''}
+          ${match.CTRY15NM ? match.CTRY15NM : ''}
         </div>
       `)
       .openPopup();
-
     map.setView([match.lat, match.lon], 11);
-
   } else {
     // Multiple matches – show dropdown
-    uniqueResults.forEach(match => {
+    // Remove duplicates: combine PLACE15NM + CTYHISTNM + lat/lon
+    const seen = new Set();
+    const uniqueResults = results.filter(r => {
+      const key = `${r.item.PLACE15NM}|${r.item.CTYHISTNM}|${r.item.lat}|${r.item.lon}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    uniqueResults.forEach(r => {
       const div = document.createElement('div');
       div.style.padding = '6px 10px';
       div.style.cursor = 'pointer';
       div.style.borderBottom = '1px solid #eee';
-      div.textContent = `${match.PLACE15NM}, ${match.CTYHISTNM}`;
+      div.textContent = `${r.item.PLACE15NM}, ${r.item.CTYHISTNM}`;
 
       div.addEventListener('click', () => {
-        // Remove old marker
+        const match = r.item;
+
         if (searchMarker) map.removeLayer(searchMarker);
 
         searchMarker = L.marker([match.lat, match.lon])
@@ -580,8 +602,8 @@ searchBtn.addEventListener('click', () => {
           .bindPopup(`
             <div style="font-family:Arial,sans-serif;font-size:14px;">
               <b>${match.PLACE15NM}</b><br>
-              ${match.CTYHISTNM || ''}<br>
-              ${match.CTRY15NM || ''}
+              ${match.CTYHISTNM ? match.CTYHISTNM + '<br>' : ''}
+              ${match.CTRY15NM ? match.CTRY15NM : ''}
             </div>
           `)
           .openPopup();
@@ -607,6 +629,7 @@ document.addEventListener('click', e => {
     searchDropdown.style.display = 'none';
   }
 });
+</script>
 
 // Hide dropdown if user clicks outside
 document.addEventListener('click', e => {
@@ -618,6 +641,7 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
 
 
 
