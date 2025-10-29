@@ -425,27 +425,50 @@ window.onload = function() {
   // -----------------------------
   // Load place data with Fuse.js
   // -----------------------------
-  window.places = []; // global array to store places
+  <script>
+window.onload = function() {
+  /* … all the code you already have up to the CSV fetch … */
 
+  // -----------------------------
+  // Load place data with Fuse.js
+  // -----------------------------
+  window.places = []; // global array to store places
   fetch('places_clean.csv')
     .then(res => res.text())
     .then(csvText => {
       const lines = csvText.trim().split('\n').slice(1);
-      window.places = lines.map(line => {
-        const [name, county, district, country, lat, lon] = line.split(',');
-        return {
-          name: name.trim(),
-          county: county.trim(),
-          district: district.trim(),
-          country: country.trim(),
+
+      /* ---- NEW: deduplicate by name + coordinates ---- */
+      const seen = new Set();
+      const uniquePlaces = [];
+
+      lines.forEach(line => {
+        const cols = line.split(',');
+        const name = cols[0]?.trim();
+        const lat  = cols[4];
+        const lon  = cols[5];
+
+        if (!name || isNaN(lat) || isNaN(lon)) return;   // skip malformed rows
+
+        const key = `${name}|${lat}|${lon}`;   // same name + same point = duplicate
+        if (seen.has(key)) return;            // already have this exact entry
+        seen.add(key);
+
+        uniquePlaces.push({
+          name: name,
+          county: cols[1]?.trim() || '',
+          district: cols[2]?.trim() || '',
+          country: cols[3]?.trim() || '',
           lat: parseFloat(lat),
           lon: parseFloat(lon)
-        };
-      }).filter(p => p.name && !isNaN(p.lat) && !isNaN(p.lon));
+        });
+      });
+      /* ------------------------------------------------ */
 
-      console.log(`Loaded ${window.places.length} places`);
+      window.places = uniquePlaces;
+      console.log(`Loaded ${window.places.length} unique places`);
 
-      // Initialize Fuse.js for fuzzy searching
+      // Initialise Fuse on the deduplicated array
       window.fuse = new Fuse(window.places, {
         keys: ['name'],
         threshold: 0.3,
@@ -453,6 +476,7 @@ window.onload = function() {
       });
     })
     .catch(err => console.error('Places CSV error:', err));
+};
 
   // -----------------------------
   // Search button functionality
@@ -542,3 +566,4 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
