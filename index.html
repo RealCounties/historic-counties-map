@@ -455,6 +455,48 @@ window.onload = function() {
     .catch(err => console.error('Places CSV error:', err));
 
 // -----------------------------
+// Load place data with Fuse.js
+// -----------------------------
+window.places = []; // global array to store places
+
+fetch('places_clean.csv')
+  .then(res => res.text())
+  .then(csvText => {
+    const lines = csvText.trim().split('\n').slice(1);
+    window.places = lines.map(line => {
+      const [name, county, country, district, lat, lon] = line.split(',');
+      return {
+        name: name.trim(),
+        county: county.trim(),
+        country: country.trim(),
+        district: district.trim(),
+        lat: parseFloat(lat),
+        lon: parseFloat(lon)
+      };
+    }).filter(p => p.name && !isNaN(p.lat) && !isNaN(p.lon));
+
+    // 🔹 Remove exact duplicates (same name + district + county + rounded coords)
+    const seen = new Set();
+    window.places = window.places.filter(p => {
+      const key = `${p.name}|${p.district}|${p.county}|${p.country}|${p.lat.toFixed(3)}|${p.lon.toFixed(3)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    console.log(`Loaded ${window.places.length} unique places`);
+
+    // Initialize Fuse.js for fuzzy searching
+    window.fuse = new Fuse(window.places, {
+      keys: ['name'],
+      threshold: 0.3,
+      distance: 100
+    });
+  })
+  .catch(err => console.error('Places CSV error:', err));
+
+
+// -----------------------------
 // Search button functionality
 // -----------------------------
 let searchMarker = null;
@@ -491,13 +533,12 @@ searchBtn.addEventListener('click', () => {
 
   if (results.length === 1) {
     const match = results[0].item;
-    const districtText = match.district ? `District: ${match.district}` : '';
-    const countyText = match.county ? `County: ${match.county}` : '';
     const popupHtml = `
       <div style="font-family:Arial,sans-serif;font-size:14px;">
         <b>${match.name}</b><br>
-        ${districtText ? districtText + '<br>' : ''}
-        ${countyText}
+        ${match.district ? `${match.district}<br>` : ''}
+        ${match.county ? `${match.county}<br>` : ''}
+        ${match.country || ''}
       </div>
     `;
 
@@ -510,36 +551,31 @@ searchBtn.addEventListener('click', () => {
   } else {
     // Multiple matches – show dropdown
     results.forEach(r => {
+      const m = r.item;
       const div = document.createElement('div');
       div.style.padding = '6px 10px';
       div.style.cursor = 'pointer';
       div.style.borderBottom = '1px solid #eee';
-      div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+      div.textContent = `${m.name}, ${m.district || m.county || ''}`;
 
       div.addEventListener('click', () => {
-        const m = r.item;
-        const lat = m.lat;
-        const lon = m.lon;
-
         if (searchMarker) map.removeLayer(searchMarker);
 
-        const districtText = m.district ? `District: ${m.district}` : '';
-        const countyText = m.county ? `County: ${m.county}` : '';
         const popupHtml = `
           <div style="font-family:Arial,sans-serif;font-size:14px;">
             <b>${m.name}</b><br>
-            ${districtText ? districtText + '<br>' : ''}
-            ${countyText}
+            ${m.district ? `${m.district}<br>` : ''}
+            ${m.county ? `${m.county}<br>` : ''}
+            ${m.country || ''}
           </div>
         `;
 
-        searchMarker = L.marker([lat, lon])
+        searchMarker = L.marker([m.lat, m.lon])
           .addTo(map)
           .bindPopup(popupHtml)
           .openPopup();
 
-        map.setView([lat, lon], 11);
-
+        map.setView([m.lat, m.lon], 11);
         searchDropdown.style.display = 'none';
         searchDropdown.innerHTML = '';
       });
@@ -561,3 +597,4 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
