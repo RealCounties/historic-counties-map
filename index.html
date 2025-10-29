@@ -559,26 +559,29 @@ searchBtn.addEventListener('click', () => {
       div.textContent = `${m.name}, ${m.district || m.county || ''}`;
 
       div.addEventListener('click', () => {
-        if (searchMarker) map.removeLayer(searchMarker);
+  const match = r.item;
 
-        const popupHtml = `
-          <div style="font-family:Arial,sans-serif;font-size:14px;">
-            <b>${m.name}</b><br>
-            ${m.district ? `${m.district}<br>` : ''}
-            ${m.county ? `${m.county}<br>` : ''}
-            ${m.country || ''}
-          </div>
-        `;
+  if (searchMarker) map.removeLayer(searchMarker);
 
-        searchMarker = L.marker([m.lat, m.lon])
-          .addTo(map)
-          .bindPopup(popupHtml)
-          .openPopup();
+  const popupHtml = `
+    <div style="font-family:Arial,sans-serif;font-size:14px;">
+      <b>${match.PLACE15NM}</b><br>
+      ${match.CTYHISTNM || ''}<br>
+      ${match.CTRY15NM || ''}
+    </div>
+  `;
 
-        map.setView([m.lat, m.lon], 11);
-        searchDropdown.style.display = 'none';
-        searchDropdown.innerHTML = '';
-      });
+  searchMarker = L.marker([match.lat, match.lon])
+    .addTo(map)
+    .bindPopup(popupHtml)
+    .openPopup();
+
+  map.setView([match.lat, match.lon], 11);
+
+  // Hide dropdown
+  searchDropdown.style.display = 'none';
+  searchDropdown.innerHTML = '';
+});
 
       searchDropdown.appendChild(div);
     });
@@ -597,4 +600,5 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
 
