@@ -428,16 +428,18 @@ window.onload = function() {
 window.places = []; // global array to store places
 
 function parseCSVLine(line) {
-  // Matches values inside quotes or unquoted values
-  const regex = /("([^"]*)"|[^,]*)(,|$)/g;
   const cols = [];
   let match;
+  const regex = /(?:\"([^\"]*)\"|([^,]+))/g; // capture quoted or unquoted
   while ((match = regex.exec(line)) !== null) {
-    let value = match[2] !== undefined ? match[2] : match[1]; // take quoted value if exists
-    cols.push(value.trim());
+    cols.push(match[1] || match[2] || '');
   }
   return cols;
 }
+lines.forEach(line => {
+  const cols = parseCSVLine(line);
+  console.log(cols); // Make sure DESCNM is at index 2
+});
 
 fetch('places_clean.csv')
   .then(res => res.text())
@@ -546,6 +548,7 @@ searchBtn.addEventListener('click', () => {
 
 }; // ← This closes the original window.onload
 </script>
+
 
 
 
