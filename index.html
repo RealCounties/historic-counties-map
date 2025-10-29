@@ -426,39 +426,44 @@ window.onload = function() {
 // Load place data (no Fuse.js – exact match only)
 // -----------------------------
 window.places = []; // global array to store places
+
+function parseCSVLine(line) {
+  // Matches values inside quotes or unquoted values
+  const regex = /("([^"]*)"|[^,]*)(,|$)/g;
+  const cols = [];
+  let match;
+  while ((match = regex.exec(line)) !== null) {
+    let value = match[2] !== undefined ? match[2] : match[1]; // take quoted value if exists
+    cols.push(value.trim());
+  }
+  return cols;
+}
+
 fetch('places_clean.csv')
   .then(res => res.text())
   .then(csvText => {
-    const lines = csvText.trim().split('\n').slice(1);
+    const lines = csvText.trim().split('\n');
+    lines.shift(); // remove header row
 
-    /* ---- Deduplicate by name + coordinates ---- */
-    const seen = new Set();
-    const uniquePlaces = [];
+    const locPlaces = [];
 
     lines.forEach(line => {
-      const cols = line.split(',');
-      const name = cols[0]?.trim();
-      const lat  = cols[4];
-      const lon  = cols[5];
+      const cols = parseCSVLine(line);
+      const name = cols[0];       // PLACE15NM
+      const desc = cols[2];       // DESCNM
+      const county = cols[3];     // CTYHISTNM
+      const country = cols[4];    // CTRY15NM
+      const lat = parseFloat(cols[6]); // LAT
+      const lon = parseFloat(cols[7]); // LONG_
 
-      if (!name || isNaN(lat) || isNaN(lon)) return;
+      // Only include LOC entries with valid lat/lon
+      if (desc !== 'LOC' || !name || isNaN(lat) || isNaN(lon)) return;
 
-      const key = `${name}|${lat}|${lon}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-
-      uniquePlaces.push({
-        name: name,
-        county: cols[1]?.trim() || '',
-        district: cols[2]?.trim() || '',
-        country: cols[3]?.trim() || '',
-        lat: parseFloat(lat),
-        lon: parseFloat(lon)
-      });
+      locPlaces.push({ name, county, country, lat, lon });
     });
 
-    window.places = uniquePlaces;
-    console.log(`Loaded ${window.places.length} unique places`);
+    window.places = locPlaces;
+    console.log(`Loaded ${window.places.length} LOC places`);
   })
   .catch(err => console.error('Places CSV error:', err));
 
@@ -541,6 +546,7 @@ searchBtn.addEventListener('click', () => {
 
 }; // ← This closes the original window.onload
 </script>
+
 
 
 
