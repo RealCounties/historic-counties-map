@@ -454,57 +454,14 @@ window.onload = function() {
     })
     .catch(err => console.error('Places CSV error:', err));
 
-// -----------------------------
-// Load place data with Fuse.js
-// -----------------------------
-window.places = []; // global array to store places
-
-fetch('places_clean.csv')
-  .then(res => res.text())
-  .then(csvText => {
-    const lines = csvText.trim().split('\n').slice(1);
-    window.places = lines.map(line => {
-      const [name, county, country, district, lat, lon] = line.split(',');
-      return {
-        name: name.trim(),
-        county: county.trim(),
-        country: country.trim(),
-        district: district.trim(),
-        lat: parseFloat(lat),
-        lon: parseFloat(lon)
-      };
-    }).filter(p => p.name && !isNaN(p.lat) && !isNaN(p.lon));
-
-    // 🔹 Remove exact duplicates (same name + district + county + rounded coords)
-    const seen = new Set();
-    window.places = window.places.filter(p => {
-      const key = `${p.name}|${p.district}|${p.county}|${p.country}|${p.lat.toFixed(3)}|${p.lon.toFixed(3)}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    console.log(`Loaded ${window.places.length} unique places`);
-
-    // Initialize Fuse.js for fuzzy searching
-    window.fuse = new Fuse(window.places, {
-      keys: ['name'],
-      threshold: 0.3,
-      distance: 100
-    });
-  })
-  .catch(err => console.error('Places CSV error:', err));
-
-<script>
-// -----------------------------
-// Search button functionality
-// -----------------------------
-let searchMarker = null;
+  // -----------------------------
+  // Search button functionality
+  // -----------------------------
+  let searchMarker = null;
 const searchBtn = document.getElementById('searchBtn');
 const searchInput = document.getElementById('placeSearch');
 const searchDropdown = document.getElementById('searchDropdown');
-
-// Trigger search on Enter key
+  // Trigger search on Enter key
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault(); // prevent form submission or page reload
@@ -512,40 +469,12 @@ searchInput.addEventListener('keydown', (e) => {
   }
 });
 
-// Fetch and parse CSV
-window.places = [];
-fetch('places_clean.csv')
-  .then(res => res.text())
-  .then(csvText => {
-    const lines = csvText.trim().split('\n').slice(1); // skip header
-    window.places = lines.map(line => {
-      const [PLACE15NM, CTYHISTNM, LAD15NM, CTRY15NM, lat, lon] = line.split(',');
-      return {
-        PLACE15NM: PLACE15NM.trim(),
-        CTYHISTNM: CTYHISTNM.trim(),
-        LAD15NM: LAD15NM.trim(),
-        CTRY15NM: CTRY15NM.trim(),
-        lat: parseFloat(lat),
-        lon: parseFloat(lon)
-      };
-    }).filter(p => p.PLACE15NM && !isNaN(p.lat) && !isNaN(p.lon));
-
-    // Initialize Fuse.js for fuzzy searching
-    window.fuse = new Fuse(window.places, {
-      keys: ['PLACE15NM'],
-      threshold: 0.3,
-      distance: 100
-    });
-  })
-  .catch(err => console.error('Places CSV error:', err));
-
-// Handle search
 searchBtn.addEventListener('click', () => {
   const query = searchInput.value.trim();
   if (!query || !window.fuse) return;
 
   const results = window.fuse.search(query);
-
+  
   // Clear previous dropdown
   searchDropdown.innerHTML = '';
   searchDropdown.style.display = 'none';
@@ -565,50 +494,30 @@ searchBtn.addEventListener('click', () => {
     const match = results[0].item;
     searchMarker = L.marker([match.lat, match.lon])
       .addTo(map)
-      .bindPopup(`
-        <div style="font-family:Arial,sans-serif;font-size:14px;">
-          <b>${match.PLACE15NM}</b><br>
-          ${match.CTYHISTNM ? match.CTYHISTNM + '<br>' : ''}
-          ${match.CTRY15NM ? match.CTRY15NM : ''}
-        </div>
-      `)
+      .bindPopup(`<b>${match.name}</b><br>${match.county || ''}`)
       .openPopup();
     map.setView([match.lat, match.lon], 11);
   } else {
     // Multiple matches – show dropdown
-    // Remove duplicates: combine PLACE15NM + CTYHISTNM + lat/lon
-    const seen = new Set();
-    const uniqueResults = results.filter(r => {
-      const key = `${r.item.PLACE15NM}|${r.item.CTYHISTNM}|${r.item.lat}|${r.item.lon}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    uniqueResults.forEach(r => {
+    results.forEach(r => {
       const div = document.createElement('div');
       div.style.padding = '6px 10px';
       div.style.cursor = 'pointer';
       div.style.borderBottom = '1px solid #eee';
-      div.textContent = `${r.item.PLACE15NM}, ${r.item.CTYHISTNM}`;
-
+      div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+      
       div.addEventListener('click', () => {
-        const match = r.item;
+        const lat = r.item.lat;
+        const lon = r.item.lon;
 
         if (searchMarker) map.removeLayer(searchMarker);
 
-        searchMarker = L.marker([match.lat, match.lon])
+        searchMarker = L.marker([lat, lon])
           .addTo(map)
-          .bindPopup(`
-            <div style="font-family:Arial,sans-serif;font-size:14px;">
-              <b>${match.PLACE15NM}</b><br>
-              ${match.CTYHISTNM ? match.CTYHISTNM + '<br>' : ''}
-              ${match.CTRY15NM ? match.CTRY15NM : ''}
-            </div>
-          `)
+          .bindPopup(`<b>${r.item.name}</b><br>${r.item.county || ''}`)
           .openPopup();
 
-        map.setView([match.lat, match.lon], 11);
+        map.setView([lat, lon], 11);
 
         // Hide dropdown
         searchDropdown.style.display = 'none';
@@ -629,20 +538,7 @@ document.addEventListener('click', e => {
     searchDropdown.style.display = 'none';
   }
 });
-</script>
-
-// Hide dropdown if user clicks outside
-document.addEventListener('click', e => {
-  if (!searchDropdown.contains(e.target) && e.target !== searchInput && e.target !== searchBtn) {
-    searchDropdown.style.display = 'none';
-  }
-});
 }; // 👈 this is now the ONE and ONLY closing brace for window.onload
 </script>
 </body>
 </html>
-
-
-
-
-
