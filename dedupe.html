@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Deduplicate Places</title>
+  <meta charset="utf-8">
+</head>
+<body>
+  <h1>Deduplicating places_clean.csv...</h1>
+  <pre id="log"></pre>
+  <button id="download" style="display:none; padding:10px; font-size:16px;">
+    Download places_clean_deduped.csv
+  </button>
+
+  <script>
+    const log = document.getElementById('log');
+    const downloadBtn = document.getElementById('download');
+    let downloadLink;
+
+    function logMsg(msg) {
+      log.textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    // Haversine distance
+    function haversine(lat1, lon1, lat2, lon2) {
+      const toRad = x => x * Math.PI / 180;
+      const R = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = 
+        Math.sin(dLat/2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon/2) ** 2;
+      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // OSM lookup with cache
+    const osmCache = new Map();
+    async function getOSMCenter(name) {
+      if (osmCache.has(name)) return osmCache.get(name);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name + ', UK')}&limit=1`
+        );
+        const data = await res.json();
+        if (data[0]) {
+          const center = { lat: +data[0].lat, lon: +data[0].lon };
+          osmCache.set(name, center);
+          return center;
+        }
+      } catch (e) {
+        logMsg(`OSM failed for "${name}"`);
+      }
+      osmCache.set(name, null);
+      return null;
+    }
+
+    // Main deduplication
+    async function dedupe() {
+      logMsg('Fetching places_clean.csv...');
+      const res = await fetch('places_clean.csv');
+      const csv = await res.text();
+      const lines = csv.trim().split('\n');
+      const header = lines[0];
+      const rows = lines.slice(1);
+
+      const byName = new Map();
+
+      rows.forEach(line => {
+        const cols = line.split(',');
+        const name = cols[0]?.trim();
+        if (!name) return;
+        const county = cols[1]?.trim() || '';
+        const district = cols[2]?.trim() || '';
+        const country = cols[3]?.trim() || '';
+        const lat = parseFloat(cols[4]);
+        const lon = parseFloat(cols[5]);
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        if (!byName.has(name)) byName.set(name, []);
+        byName.get(name).push({ name, county, district, country, lat, lon, original: line });
+      });
+
+      logMsg(`Found ${byName.size} unique place names. Querying OSM...`);
+
+      const bestRows = [header];
+
+      for (const [name, entries] of byName) {
+        const osm = await getOSMCenter(name);
+        if (!osm) {
+          bestRows.push(entries[0].original);
+          continue;
+        }
+
+        let best = entries[0];
+        let minDist = haversine(entries[0].lat, entries[0].lon, osm.lat, osm.lon);
+
+        for (let i = 1; i < entries.length; i++) {
+          const e = entries[i];
+          const dist = haversine(e.lat, e.lon, osm.lat, osm.lon);
+          if (dist < minDist) {
+            minDist = dist;
+            best = e;
+          }
+        }
+        bestRows.push(best.original);
+        logMsg(`Kept: ${name} → ${best.lat.toFixed(4)}, ${best.lon.toFixed(4)}`);
+      }
+
+      const finalCSV = bestRows.join('\n');
+
+      // Create download
+      const blob = new Blob([finalCSV], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = 'places_clean_deduped.csv';
+      downloadBtn.style.display = 'block';
+      downloadBtn.onclick = () => downloadLink.click();
+
+      logMsg(`\nDONE! ${bestRows.length - 1} unique places saved.`);
+      logMsg(`Click button below to download.`);
+    }
+
+    dedupe();
+  </script>
+</body>
+</html>
