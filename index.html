@@ -990,16 +990,6 @@ document.addEventListener('click', e => {
     searchDropdown.style.display = 'none';
   }
 });
-
-// -----------------------------
-// Geocoder
-// -----------------------------
-L.Control.geocoder({
-  defaultMarkGeocode: true,
-  placeholder: 'Search town, village, postcode…',
-  geocoder: new L.Control.Geocoder.Nominatim()
-}).addTo(map);
 </script>
 </body>
 </html>
-
