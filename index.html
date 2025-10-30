@@ -465,6 +465,7 @@ window.onload = function() {
       const lines = csvText.trim().split('\n');
       lines.shift();
       const locPlaces = [];
+      
       lines.forEach(line => {
         const cols = parseCSVLine(line);
         const name = cols[0];
@@ -472,11 +473,12 @@ window.onload = function() {
         const county = cols[3];
         const lat = parseFloat(cols[6]);
         const lon = parseFloat(cols[7]);
+        
         // -------------------------------------------------
         //  NEW: include both LOC *and* PAR entries
         // -------------------------------------------------
         if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
-        allPlaces.push({ name, county, lat, lon });
+          allPlaces.push({ name, county, lat, lon });
         }
       });
 
@@ -515,5 +517,6 @@ window.onload = function() {
 </script>
 </body>
 </html>
+
 
 
