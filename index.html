@@ -189,14 +189,12 @@ html, body {
   </div>
   <div id="map"></div>
 </div>
-
 <!-- JS libraries -->
 <script src="https://cdn.jsdelivr.net/npm/polylabel@1.0.3/polylabel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
-
 <script>
 window.onload = function() {
   const sidebar = document.getElementById('sidebar');
@@ -204,7 +202,6 @@ window.onload = function() {
   const infoDiv = document.getElementById('info');
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
-
   // -----------------------------
   // Initialize map
   // -----------------------------
@@ -213,12 +210,10 @@ window.onload = function() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> contributors | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
   }).addTo(map);
-
   // Restrict to British Isles
   const ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
   map.setMaxBounds(ukBounds);
   map.fitBounds(ukBounds);
-
   // -----------------------------
   // Toggle button (mobile)
   // -----------------------------
@@ -233,7 +228,6 @@ window.onload = function() {
   };
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
-
   // -----------------------------
   // County data
   // -----------------------------
@@ -282,7 +276,7 @@ window.onload = function() {
     "Hertfordshire": { area: "633 sq mi", population: "1,157,166", link: "" },
     "Huntingdonshire": { area: "366 sq mi", population: "211,776", link: "" },
     "Inverness-shire": { area: "4,211 sq mi", population: "118,077", link: "" },
-    "Kent": { area: "1,611 sq mi", iation: "2,747,715", link: "" },
+    "Kent": { area: "1,611 sq mi", population: "2,747,715", link: "" },
     "Kincardineshire": { area: "380 sq mi", population: "77,670", link: "" },
     "Kinross-shire": { area: "73 sq mi", population: "11,223", link: "" },
     "Kirkcudbrightshire": { area: "899 sq mi", population: "47,546", link: "" },
@@ -331,7 +325,6 @@ window.onload = function() {
     "Worcestershire": { area: "709 sq mi", population: "1,125,037", link: "" },
     "Yorkshire": { area: "6,081 sq mi", population: "5,218,838", link: "" }
   };
-
   // -----------------------------
   // Load GeoJSON
   // -----------------------------
@@ -349,7 +342,6 @@ window.onload = function() {
       data.features.forEach((feature, idx) => {
         feature.properties.color = pastelColors[idx % pastelColors.length];
       });
-
       const geoJsonLayer = L.geoJSON(data, {
         style: f => ({
           color: "#333",
@@ -359,7 +351,6 @@ window.onload = function() {
         }),
         onEachFeature: (feature, layer) => {
           const details = countyData[feature.properties.NAME] || {};
-
           // SAFE: Bind tooltip only after layer is added
           layer.on('add', () => {
             layer.bindTooltip(feature.properties.NAME, {
@@ -368,7 +359,6 @@ window.onload = function() {
               className: 'county-tooltip'
             });
           });
-
           layer.on('click', () => {
             infoDiv.innerHTML = `
               <div class="county-card">
@@ -381,12 +371,10 @@ window.onload = function() {
               sidebar.classList.add('visible');
             }
           });
-
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
         }
       }).addTo(map);
-
       // Critical: Refresh map size after GeoJSON is added
       map.invalidateSize();
       infoDiv.innerHTML = '<em>No county selected.</em>';
@@ -395,7 +383,6 @@ window.onload = function() {
       console.error(err);
       infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Check file path.</em>';
     });
-
   // -----------------------------
   // Geocoder
   // -----------------------------
@@ -404,14 +391,12 @@ window.onload = function() {
     placeholder: 'Search town, village, postcode…',
     geocoder: new L.Control.Geocoder.Nominatim()
   }).addTo(map);
-
   // -----------------------------
   // CSV Places Search
   // -----------------------------
   window.places = [];
   let fuse = null;
   let searchMarker = null;
-
   function parseCSVLine(line) {
     const cols = [];
     let match;
@@ -421,12 +406,10 @@ window.onload = function() {
     }
     return cols;
   }
-
   function initFuse() {
     if (!window.places.length) return;
     fuse = new Fuse(window.places, { keys: ['name', 'county'], threshold: 0.3 });
   }
-
   function showDropdown(results) {
     searchDropdown.innerHTML = '';
     if (!results.length) {
@@ -447,7 +430,6 @@ window.onload = function() {
     });
     searchDropdown.style.display = 'block';
   }
-
   function selectPlace(place) {
     if (searchMarker) map.removeLayer(searchMarker);
     searchMarker = L.marker([place.lat, place.lon])
@@ -458,14 +440,13 @@ window.onload = function() {
     searchDropdown.style.display = 'none';
     searchInput.value = place.name;
   }
-
   fetch('places_clean.csv')
     .then(res => res.text())
     .then(csvText => {
       const lines = csvText.trim().split('\n');
       lines.shift();
-      const locPlaces = [];
-      
+      const allPlaces = [];
+     
       lines.forEach(line => {
         const cols = parseCSVLine(line);
         const name = cols[0];
@@ -473,21 +454,19 @@ window.onload = function() {
         const county = cols[3];
         const lat = parseFloat(cols[6]);
         const lon = parseFloat(cols[7]);
-        
+       
         // -------------------------------------------------
-        //  NEW: include both LOC *and* PAR entries
+        // NEW: include both LOC *and* PAR entries
         // -------------------------------------------------
         if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
           allPlaces.push({ name, county, lat, lon });
         }
       });
-
       window.places = allPlaces;
       console.log(`Loaded ${window.places.length} places (LOC + PAR)`);
-      initFuse();                 // Fuse is now ready
+      initFuse(); // Fuse is now ready
     })
     .catch(err => console.error('CSV load error:', err));
-
   // Search input
   searchInput.addEventListener('input', () => {
     const query = searchInput.value.trim();
@@ -497,7 +476,6 @@ window.onload = function() {
     }
     showDropdown(fuse.search(query));
   });
-
   searchInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -507,7 +485,6 @@ window.onload = function() {
       else alert('Place not found');
     }
   });
-
   document.addEventListener('click', e => {
     if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
       searchDropdown.style.display = 'none';
@@ -517,6 +494,3 @@ window.onload = function() {
 </script>
 </body>
 </html>
-
-
-
