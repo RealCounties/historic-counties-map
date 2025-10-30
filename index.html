@@ -472,12 +472,17 @@ window.onload = function() {
         const county = cols[3];
         const lat = parseFloat(cols[6]);
         const lon = parseFloat(cols[7]);
-        if (desc !== 'LOC' || !name || isNaN(lat) || isNaN(lon)) return;
-        locPlaces.push({ name, county, lat, lon });
+        // -------------------------------------------------
+        //  NEW: include both LOC *and* PAR entries
+        // -------------------------------------------------
+        if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
+        allPlaces.push({ name, county, lat, lon });
+        }
       });
-      window.places = locPlaces;
-      console.log(`Loaded ${window.places.length} places`);
-      initFuse();
+
+    window.places = allPlaces;
+    console.log(`Loaded ${window.places.length} places (LOC + PAR)`);
+    initFuse();                 // Fuse is now ready
     })
     .catch(err => console.error('CSV load error:', err));
 
@@ -510,3 +515,4 @@ window.onload = function() {
 </script>
 </body>
 </html>
+
