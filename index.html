@@ -480,9 +480,9 @@ window.onload = function() {
         }
       });
 
-    window.places = allPlaces;
-    console.log(`Loaded ${window.places.length} places (LOC + PAR)`);
-    initFuse();                 // Fuse is now ready
+      window.places = allPlaces;
+      console.log(`Loaded ${window.places.length} places (LOC + PAR)`);
+      initFuse();                 // Fuse is now ready
     })
     .catch(err => console.error('CSV load error:', err));
 
@@ -515,4 +515,5 @@ window.onload = function() {
 </script>
 </body>
 </html>
+
 
