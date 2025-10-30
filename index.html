@@ -326,6 +326,67 @@ window.onload = function() {
     "Yorkshire": { area: "6,081 sq mi", population: "5,218,838", link: "" }
   };
   // -----------------------------
+  // NEW: Native language names (Welsh/Gaelic/Irish)
+  // -----------------------------
+  const nativeNames = {
+    // Wales (Historic counties)
+    "Anglesey": "Sir Fôn",
+    "Brecknockshire": "Sir Frycheiniog",
+    "Caernarfonshire": "Sir Gaernarfon",
+    "Cardiganshire": "Sir Aberteifi/Ceredigion",
+    "Carmarthenshire": "Sir Gaerfyrddin",
+    "Denbighshire": "Sir Ddinbych",
+    "Flintshire": "Sir y Fflint",
+    "Glamorgan": "Morgannwg",
+    "Merionethshire": "Meirionnydd",
+    "Monmouthshire": "Sir Fynwy",
+    "Montgomeryshire": "Sir Drefaldwyn",
+    "Pembrokeshire": "Sir Benfro",
+    "Radnorshire": "Sir Faesyfed",
+    // Scotland (Historic counties, Scottish Gaelic)
+    "Aberdeenshire": "Siorrachd Obar Dheathain",
+    "Angus": "Aonghas",
+    "Argyllshire": "Siorrachd Earra-Ghàidheal",
+    "Ayrshire": "Siorrachd Inbhir Àir",
+    "Banffshire": "Siorrachd Bhanbh",
+    "Berwickshire": "Siorrachd Bhearaig",
+    "Buteshire": "Siorrachd Bhùth",
+    "Caithness": "Gallaibh",
+    "Clackmannanshire": "Siorrachd Chlach Mhanainn",
+    "Cromartyshire": "Siorrachd Chròmbaidh",
+    "Dumfriesshire": "Siorrachd Dhùn Phris",
+    "Dunbartonshire": "Siorrachd Dhùn Bhreatainn",
+    "East Lothian": "Siorrachd an Ear Leothain",
+    "Fife": "Fìobha",
+    "Inverness-shire": "Siorrachd Inbhir Nis",
+    "Kincardineshire": "Siorrachd Chinn Chàrdainn",
+    "Kinross-shire": "Siorrachd Cheann Rois",
+    "Kirkcudbrightshire": "Siorrachd Chille Chuithbeirt",
+    "Lanarkshire": "Siorrachd Lanraig",
+    "Midlothian": "Meadhan Labhdaidh",
+    "Morayshire": "Moireibh",
+    "Nairnshire": "Siorrachd Inbhir Narann",
+    "Orkney": "Arcaibh",
+    "Peeblesshire": "Siorrachd nam Pùballan",
+    "Perthshire": "Siorrachd Pheairt",
+    "Renfrewshire": "Siorrachd Rinn Friù",
+    "Ross-shire": "Siorrachd Rois",
+    "Roxburghshire": "Siorrachd Rosbroig",
+    "Selkirkshire": "Siorrachd Shailcirc",
+    "Shetland": "Sealtainn / Zetland",
+    "Stirlingshire": "Siorrachd Shruighlea",
+    "Sutherland": "Cataibh",
+    "West Lothian": "Lothian an Iar",
+    "Wigtownshire": "Siorrachd Bhaile na h-Ùige",
+    // Northern Ireland (Historic counties, Irish Gaelic)
+    "Antrim": "Aontroim",
+    "Armagh": "Árd Mhacha",
+    "Down": "An Dún",
+    "Fermanagh": "Fhear Manach",
+    "Londonderry": "Doire",
+    "Tyrone": "Chontae Thír Eoghain"
+  };
+  // -----------------------------
   // Load GeoJSON
   // -----------------------------
   fetch('./counties_simplified8.json')
@@ -351,18 +412,28 @@ window.onload = function() {
         }),
         onEachFeature: (feature, layer) => {
           const details = countyData[feature.properties.NAME] || {};
-          // SAFE: Bind tooltip only after layer is added
+          const englishName = feature.properties.NAME;
+          const native = nativeNames[englishName] || null;
+
+          // SAFE: Bind tooltip only after layer is added (English + Native if available)
           layer.on('add', () => {
-            layer.bindTooltip(feature.properties.NAME, {
+            const tooltipText = native ? `${englishName} (${native})` : englishName;
+            layer.bindTooltip(tooltipText, {
               permanent: false,
               direction: 'center',
               className: 'county-tooltip'
             });
           });
+
           layer.on('click', () => {
+            let nativeHtml = '';
+            if (native) {
+              nativeHtml = `<p><strong>Native Name:</strong> ${native}</p>`;
+            }
             infoDiv.innerHTML = `
               <div class="county-card">
-                <h3>${feature.properties.NAME}</h3>
+                <h3>${englishName}</h3>
+                ${nativeHtml}
                 <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
                 <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
               </div>`;
@@ -371,6 +442,7 @@ window.onload = function() {
               sidebar.classList.add('visible');
             }
           });
+
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
         }
