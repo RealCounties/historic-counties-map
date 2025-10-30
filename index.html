@@ -813,7 +813,7 @@ fetch('./counties_simplified8.json')
             ? `<p><strong>Density:</strong> ${density.toLocaleString()} people/sq mi</p>`
             : '';
           let eventsHtml = events.length > 0
-            ? `<h4>Key Historic Events</h4><ul>${events.map(e => `<li>${e}</li>`).join('')}</ul>`
+            ? `<h4>Key Historical Events</h4><ul>${events.map(e => `<li>${e}</li>`).join('')}</ul>`
             : '<p><em>No major events recorded.</em></p>';
           let landmarksHtml = landmarks.length > 0
             ? `<h4>Famous Landmarks</h4><ul>${landmarks.map(l => `<li>${l}</li>`).join('')}</ul>`
@@ -958,6 +958,7 @@ fetch('./counties_simplified8.json')
 </script>
 </body>
 </html>
+
 
 
 
