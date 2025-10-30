@@ -209,8 +209,8 @@ window.onload = function() {
 
       infoDiv.innerHTML = `
         <div class="county-card">
-          <h3>${englishName}</h3>
           ${weatherHtml}
+          <h3>${englishName}</h3>
           ${langEntry ? `<p><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
           <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
           <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
@@ -513,4 +513,5 @@ window.onload = function() {
 </script>
 </body>
 </html>
+
 
