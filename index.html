@@ -204,16 +204,20 @@ window.onload = function() {
 
   // === 1. WEATHER ===
   const WEATHER_API_KEY = 'YOUR_API_KEY_HERE'; // ← REPLACE!
-  async function fetchWeather(countyName) {
+  async function fetchWeather(lat, lon) {
     try {
-      const res = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
-        params: { q: countyName + ',UK', appid: WEATHER_API_KEY, units: 'metric' }
-      });
-      const temp = Math.round(res.data.main.temp);
-      const desc = res.data.weather[0].description;
-      return { temp, desc };
+      const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
+      const temp = Math.round(res.data.current.temperature_2m);
+      const code = res.data.current.weather_code;
+      const desc = {  // Simple code to desc map
+        0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 
+        51: 'Light drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 71: 'Light snow', 
+        73: 'Snow', 75: 'Heavy snow', 80: 'Showers', 95: 'Thunderstorm'
+      }[code] || 'Unknown';
+      const wind = res.data.current.wind_speed_10m;
+      return { temp, desc, wind };
     } catch (e) { return null; }
-  }
+}
 
   // === 2. UPDATE COUNTY CARD (with weather, zoom, highlight, photo) ===
   let currentLayer = null;
@@ -933,4 +937,5 @@ const countyData = {
 </script>
 </body>
 </html>
+
 
