@@ -386,75 +386,92 @@ window.onload = function() {
     "Londonderry": "Doire",
     "Tyrone": "Chontae Thír Eoghain"
   };
-  // -----------------------------
-  // Load GeoJSON
-  // -----------------------------
-  fetch('./counties_simplified8.json')
-    .then(res => {
-      if (!res.ok) throw new Error(`Failed to load counties_simplified8.json: ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      const pastelColors = [
-        "#ffdede","#dedefd","#deffde","#fff0de","#fdefff",
-        "#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee",
-        "#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"
-      ];
-      data.features.forEach((feature, idx) => {
-        feature.properties.color = pastelColors[idx % pastelColors.length];
-      });
-      const geoJsonLayer = L.geoJSON(data, {
-        style: f => ({
-          color: "#333",
-          weight: 1,
-          fillColor: f.properties.color,
-          fillOpacity: 0.35
-        }),
-        onEachFeature: (feature, layer) => {
-          const details = countyData[feature.properties.NAME] || {};
-          const englishName = feature.properties.NAME;
-          const native = nativeNames[englishName] || null;
-
-          // SAFE: Bind tooltip only after layer is added (English + Native if available)
-          layer.on('add', () => {
-            const tooltipText = native ? `${englishName} (${native})` : englishName;
-            layer.bindTooltip(tooltipText, {
-              permanent: false,
-              direction: 'center',
-              className: 'county-tooltip'
-            });
-          });
-
-          layer.on('click', () => {
-            let nativeHtml = '';
-            if (native) {
-              nativeHtml = `<p><strong>Native Name:</strong> ${native}</p>`;
-            }
-            infoDiv.innerHTML = `
-              <div class="county-card">
-                <h3>${englishName}</h3>
-                ${nativeHtml}
-                <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
-                <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
-              </div>`;
-            try { map.fitBounds(layer.getBounds()); } catch(e) {}
-            if (window.innerWidth <= 1024) {
-              sidebar.classList.add('visible');
-            }
-          });
-
-          layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
-          layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
-        }
-      }).addTo(map);
-      // Critical: Refresh map size after GeoJSON is added
-      map.invalidateSize();
-      infoDiv.innerHTML = '<em>No county selected.</em>';
-    })
-    .catch(err => {
-      console.error(err);
-      infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Check file path.</em>';
+// -----------------------------
+// Load GeoJSON (with density)
+// -----------------------------
+fetch('./counties_simplified8.json')
+  .then(res => {
+    if (!res.ok) throw new Error(`Failed to load counties_simplified8.json: ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    const pastelColors = [
+      "#ffdede","#dedefd","#deffde","#fff0de","#fdefff",
+      "#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee",
+      "#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"
+    ];
+    data.features.forEach((feature, idx) => {
+      feature.properties.color = pastelColors[idx % pastelColors.length];
     });
+
+    const geoJsonLayer = L.geoJSON(data, {
+      style: f => ({
+        color: "#333",
+        weight: 1,
+        fillColor: f.properties.color,
+        fillOpacity: 0.35
+      }),
+      onEachFeature: (feature, layer) => {
+        const englishName = feature.properties.NAME;
+        const details = countyData[englishName] || {};
+        const native = nativeNames[englishName] || null;
+
+        // Parse area and population
+        const areaMatch = details.area?.match(/([\d,]+)\s*sq\s*mi/);
+        const areaSqMi = areaMatch ? parseFloat(areaMatch[1].replace(/,/g, '')) : null;
+
+        const popStr = details.population?.replace(/,/g, '');
+        const population = popStr ? parseInt(popStr, 10) : null;
+
+        // Calculate density
+        let density = null;
+        if (areaSqMi && population && areaSqMi > 0) {
+          density = Math.round(population / areaSqMi);
+        }
+
+        // Tooltip: English (Native)
+        layer.on('add', () => {
+          const tooltipText = native ? `${englishName} (${native})` : englishName;
+          layer.bindTooltip(tooltipText, {
+            permanent: false,
+            direction: 'center',
+            className: 'county-tooltip'
+          });
+        });
+
+        // Click: Show card with Native + Area + Population + Density
+        layer.on('click', () => {
+          let nativeHtml = native ? `<p><strong>Native Name:</strong> ${native}</p>` : '';
+          let densityHtml = density !== null
+            ? `<p><strong>Density:</strong> ${density.toLocaleString()} people/sq mi</p>`
+            : '';
+
+          infoDiv.innerHTML = `
+            <div class="county-card">
+              <h3>${englishName}</h3>
+              ${nativeHtml}
+              <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
+              <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
+              ${densityHtml}
+            </div>`;
+          try { map.fitBounds(layer.getBounds()); } catch(e) {}
+          if (window.innerWidth <= 1024) {
+            sidebar.classList.add('visible');
+          }
+        });
+
+        layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
+        layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
+      }
+    }).addTo(map);
+
+    map.invalidateSize();
+    infoDiv.innerHTML = '<em>No county selected.</em>';
+  })
+  .catch(err => {
+    console.error(err);
+    infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Check file path.</em>';
+  });
   // -----------------------------
   // Geocoder
   // -----------------------------
@@ -566,3 +583,4 @@ window.onload = function() {
 </script>
 </body>
 </html>
+
