@@ -8,237 +8,139 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 <style>
-html, body {
-  height: 100%;
-  margin: 0;
-  font-family: Arial, sans-serif;
+/* === LIGHT MODE (default) === */
+:root {
+  --bg: #faf4e6;
+  --card-bg: #f3e9da;
+  --text: #333;
+  --border: #ccc;
+  --shadow: rgba(0,0,0,0.2);
+  --accent: #9B2C2C;
+  --tooltip-bg: rgba(255,255,255,0.9);
 }
-#container {
-  display: flex;
-  height: 100%;
+
+/* === DARK MODE === */
+.dark-mode {
+  --bg: #1a1a1a;
+  --card-bg: #2d2d2d;
+  --text: #e0e0e0;
+  --border: #444;
+  --shadow: rgba(0,0,0,0.4);
+  --accent: #d32f2f;
+  --tooltip-bg: rgba(30,30,30,0.9);
 }
-#logo-container {
-  text-align: center;
-  margin-bottom: 10px;
-}
+.dark-mode #sidebar { background: var(--bg); color: var(--text); }
+.dark-mode .county-card { background: var(--card-bg); box-shadow: 0 2px 6px var(--shadow); }
+.dark-mode .leaflet-tooltip { background: var(--tooltip-bg); border-color: #666; color: #fff; }
+
+/* === BASE STYLES === */
+html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
+#container { display:flex; height:100%; }
+#logo-container { text-align:center; margin-bottom:10px; }
 #sidebar-logo {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-  opacity: 0;
-  transform: scale(0.9);
-  animation: logoLoad 1.4s ease-out forwards;
+  max-width:100%; height:auto; display:block; margin:0 auto;
+  opacity:0; transform:scale(0.9);
+  animation:logoLoad 1.4s ease-out forwards;
 }
 @keyframes logoLoad {
   0%   { opacity:0; transform:scale(0.9) translateY(10px); }
   60%  { opacity:1; transform:scale(1.02); }
   100% { opacity:1; transform:scale(1); }
 }
+#logo-link { display:block; transition:opacity .25s ease; }
+#logo-link:hover { opacity:.85; }
 
-/* ----- LOGO LINK ----- */
-#logo-link {
-  display: block;
-  transition: opacity .25s ease;
-}
-#logo-link:hover { opacity: .85; }
-#logo-link img { display:block; max-width:100%; height:auto; }
-
-/* ----- SIDEBAR (desktop) ----- */
+/* Sidebar */
 #sidebar {
-  width: 340px;
-  background:#faf4e6;
-  padding:15px;
-  overflow-y:auto;
-  border-right:1px solid #ccc;
-  transition:all .3s ease;
-  position:relative;
+  width:340px; background:var(--bg); padding:15px; overflow-y:auto;
+  border-right:1px solid var(--border); transition:all .3s ease; position:relative;
+  color:var(--text);
 }
 
-/* ----- SEARCH BAR ----- */
-#search-bar {
-  margin-top:15px;
-  display:flex;
-  gap:6px;
-  align-items:center;
-  justify-content:center;
-}
+/* Search */
+#search-bar { margin-top:15px; display:flex; gap:6px; align-items:center; justify-content:center; }
 #search-bar input {
-  flex:1;
-  min-width:140px;
-  padding:10px 12px;
-  border:1px solid #ccc;
-  border-radius:4px;
-  font-family:'Inter',sans-serif;
-  font-size:.9rem;
-  color:#333;
-  box-shadow:0 2px 4px rgba(0,0,0,.1);
-  transition:border-color .25s,box-shadow .25s;
+  flex:1; min-width:140px; padding:10px 12px; border:1px solid var(--border);
+  border-radius:4px; font-size:.9rem; color:var(--text); background:#fff;
+  box-shadow:0 2px 4px var(--shadow); transition:all .25s;
 }
-#search-bar input:focus {
-  outline:none;
-  border-color:#9B2C2C;
-  box-shadow:0 0 0 3px rgba(155,44,44,.2);
-}
+#search-bar input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(155,44,44,.2); }
 #search-bar button {
-  padding:10px 18px;
-  background:#9B2C2C;
-  color:#FAF4E6;
-  border:none;
-  border-radius:4px;
-  font-family:'Inter',sans-serif;
-  font-size:.9rem;
-  font-weight:500;
-  box-shadow:0 3px 6px rgba(0,0,0,.15);
-  cursor:pointer;
-  transition:background .25s cubic-bezier(.4,0,.2,1),
-             transform .25s cubic-bezier(.4,0,.2,1),
-             box-shadow .25s cubic-bezier(.4,0,.2,1);
+  padding:10px 18px; background:var(--accent); color:#FAF4E6; border:none; border-radius:4px;
+  font-weight:500; box-shadow:0 3px 6px var(--shadow); cursor:pointer;
+  transition:all .25s cubic-bezier(.4,0,.2,1);
 }
-#search-bar button:hover {
-  background:#7a2222;
-  transform:translateY(-2px) scale(1.05);
-  box-shadow:0 6px 14px rgba(0,0,0,.25);
-}
+#search-bar button:hover { background:#7a2222; transform:translateY(-2px) scale(1.05); box-shadow:0 6px 14px var(--shadow); }
 
-/* ----- MAP ----- */
+/* Map */
 #map { flex:1; }
 
-/* ----- COUNTY CARD (desktop) ----- */
+/* County Card */
 .county-card {
-  background:#f3e9da;
-  padding:12px;
-  border-radius:8px;
-  box-shadow:0 2px 4px rgba(0,0,0,.2);
-  transition:all .3s ease;
-  cursor:pointer;
+  background:var(--card-bg); padding:14px; border-radius:10px;
+  box-shadow:0 2px 6px var(--shadow); transition:all .3s ease; cursor:pointer;
+  position:relative;
 }
-.county-card:hover {
-  transform:translateY(-6px);
-  box-shadow:0 8px 18px rgba(0,0,0,.25);
-}
-.county-card h3 { margin-top:0; color:#333; }
-.county-card p  { margin:4px 0; }
-.county-card a  { color:#0066cc; text-decoration:none; }
+.county-card:hover { transform:translateY(-6px); box-shadow:0 8px 18px var(--shadow); }
+.county-card h3 { margin:0 0 10px; font-size:1.15rem; color:var(--text); }
+.county-card p { margin:6px 0; }
+.county-card a { color:#0066cc; text-decoration:none; }
 .county-card a:hover { text-decoration:underline; }
 
-/* ----- TOOLTIP ----- */
+/* Weather Badge */
+.weather-badge {
+  position:absolute; top:8px; right:8px; font-size:0.8rem; background:rgba(0,0,0,0.1);
+  padding:4px 8px; border-radius:12px; font-weight:500;
+}
+
+/* Zoom Button */
+.zoom-btn {
+  background:var(--accent); color:white; border:none; padding:6px 12px;
+  border-radius:6px; font-size:0.85rem; cursor:pointer; margin-top:8px;
+  transition:all .2s;
+}
+.zoom-btn:hover { background:#7a2222; }
+
+/* Tooltip */
 .leaflet-tooltip.county-tooltip {
-  background:rgba(255,255,255,.9);
-  border:1px solid #9b2c2c;
-  color:#333;
-  font-weight:bold;
-  padding:2px 6px;
-  border-radius:4px;
+  background:var(--tooltip-bg); border:1px solid var(--accent); color:var(--text);
+  font-weight:bold; padding:2px 6px; border-radius:4px;
 }
 
-/* ----- CLOSE BUTTON (mobile) ----- */
+/* Close Button */
 #closeSidebar {
-  display:none;
-  position:absolute;
-  top:6px; right:10px;
-  font-size:20px;
-  background:none;
-  border:none;
-  color:#555;
-  cursor:pointer;
-  z-index:1001;
+  display:none; position:absolute; top:10px; right:12px; width:32px; height:32px;
+  font-size:20px; color:#666; background:rgba(255,255,255,0.9); border:none;
+  border-radius:50%; cursor:pointer; align-items:center; justify-content:center;
+}
+#closeSidebar:hover { background:#fff; }
+
+/* Dark Mode Toggle */
+#darkModeToggle {
+  position:absolute; top:10px; right:10px; background:var(--accent); color:white;
+  border:none; width:36px; height:36px; border-radius:50%; cursor:pointer;
+  font-size:18px; z-index:1001;
 }
 
-/* ----- Responsive layout (mobile centered modal, 50% height, scrollable) ----- */
-/* ----- Responsive: Bottom-Left Panel (≤1024px) ----- */
-@media (max-width: 1024px) {
-  #container { flex-direction: column; }
-
+/* === RESPONSIVE: Bottom-Left Panel === */
+@media (max-width:1024px) {
+  #container { flex-direction:column; }
   #sidebar {
-    position: fixed;
-    bottom: 16px;
-    left: 16px;
-    width: 45vw;                 /* ← ~45% of screen width */
-    max-width: 380px;
-    max-height: 50vh;            /* ← Max 50% height */
-    background: #faf4e6;
-    border-radius: 14px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.22);
-    padding: 14px;
-    overflow-y: auto;
-    transform: translateY(120%);
-    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000;
-    display: block !important;
-    font-size: 0.94rem;
+    position:fixed; bottom:16px; left:16px; width:45vw; max-width:380px;
+    max-height:50vh; background:var(--bg); border-radius:14px;
+    box-shadow:0 6px 20px var(--shadow); padding:14px; overflow-y:auto;
+    transform:translateY(120%); transition:transform .32s cubic-bezier(.4,0,.2,1);
+    z-index:1000; display:block !important; font-size:.94rem;
   }
-
-  #sidebar.visible {
-    transform: translateY(0);
-  }
-
-  /* Close button */
-  #closeSidebar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    width: 32px;
-    height: 32px;
-    font-size: 20px;
-    color: #666;
-    background: rgba(255,255,255,0.9);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-  }
-
-  #closeSidebar:hover {
-    background: #fff;
-    color: #333;
-  }
-
-  /* County card inside panel */
-  .county-card {
-    background: white;
-    padding: 14px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-    margin-top: 6px;
-  }
-
-  .county-card h3 {
-    margin: 0 0 10px;
-    font-size: 1.15rem;
-  }
-
-  .county-card p {
-    margin: 6px 0;
-  }
-
-  /* Map stays full */
-  #map {
-    height: 100vh !important;
-  }
-
-  /* Logo scaling */
-  #sidebar-logo {
-    max-width: 65%;
-  }
+  #sidebar.visible { transform:translateY(0); }
+  #map { height:100vh !important; }
+  #sidebar-logo { max-width:65%; }
 }
-@media (max-width: 480px) {
-  #sidebar {
-    width: 90vw;
-    left: 5vw;
-    max-width: none;
-  }
-  #sidebar-logo {
-    max-width: 55%;
-  }
+@media (max-width:480px) {
+  #sidebar { width:90vw; left:5vw; max-width:none; }
+  #sidebar-logo { max-width:55%; }
 }
-#sidebar h2 {
-  text-align:center;
-  margin:5px 0 10px;
-  color:#9b2c2c;
-}
+#sidebar h2 { text-align:center; margin:5px 0 10px; color:var(--accent); }
 </style>
 </head>
 <body>
@@ -313,6 +215,106 @@ window.onload = function() {
   };
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
+  // === 1. WEATHER ===
+const WEATHER_API_KEY = 'YOUR_API_KEY_HERE'; // ← REPLACE WITH YOUR KEY
+
+async function fetchWeather(countyName) {
+  try {
+    const res = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
+      params: { q: countyName + ',UK', appid: WEATHER_API_KEY, units: 'metric' }
+    });
+    const temp = Math.round(res.data.main.temp);
+    const desc = res.data.weather[0].description;
+    const icon = res.data.weather[0].icon;
+    return { temp, desc, icon };
+  } catch (e) { return null; }
+}
+
+// === 2. ZOOM BUTTON + 3. HIGHLIGHT + 4. PHOTO + 5. DARK MODE ===
+let currentLayer = null;
+let photoTimeout;
+
+function updateCountyCard(englishName, layer) {
+  const details = countyData[englishName] || {};
+  const native = nativeNames[englishName] || null;
+  const events = details.events || [];
+  const landmarks = details.landmarks || [];
+
+  // Weather
+  fetchWeather(englishName).then(weather => {
+    const weatherHtml = weather
+      ? `<div class="weather-badge"> ${weather.temp}°C • ${weather.desc}</div>`
+      : '';
+    
+    // Final HTML
+    infoDiv.innerHTML = `
+      <div class="county-card">
+        ${weatherHtml}
+        <button id="closeSidebar">×</button>
+        <h3>${englishName}</h3>
+        ${native ? `<p><strong>Native:</strong> ${native}</p>` : ''}
+        <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
+        <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
+        ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
+        ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
+        <button class="zoom-btn" onclick="map.fitBounds(currentLayer.getBounds())">Zoom to County</button>
+      </div>`;
+    
+    document.getElementById('closeSidebar')?.addEventListener('click', () => sidebar.classList.remove('visible'));
+  });
+
+  // Highlight
+  if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
+  layer.setStyle({ weight: 3, fillOpacity: 0.6 });
+  currentLayer = layer;
+}
+
+// === 3. PHOTO PREVIEW ===
+function showPhoto(landmark, e) {
+  clearTimeout(photoTimeout);
+  const img = document.createElement('img');
+  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}`;
+  img.style.cssText = 'position:absolute; top:'+(e.clientY+10)+'px; left:'+(e.clientX+10)+'px; width:200px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10000;';
+  img.onload = () => document.body.appendChild(img);
+  window.photoImg = img;
+}
+function hidePhoto() {
+  photoTimeout = setTimeout(() => {
+    if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+  }, 300);
+}
+
+// === 4. DARK MODE TOGGLE ===
+const darkToggle = L.control({position: 'topright'});
+darkToggle.onAdd = () => {
+  const btn = L.DomUtil.create('button', 'leaflet-bar');
+  btn.id = 'darkModeToggle';
+  btn.innerHTML = 'Dark Mode';
+  btn.title = 'Toggle dark mode';
+  btn.onclick = () => document.body.classList.toggle('dark-mode');
+  return btn;
+};
+darkToggle.addTo(map);
+
+// === UPDATE LAYER CLICK ===
+layer.on('click', () => {
+  updateCountyCard(englishName, layer);
+  if (window.innerWidth <= 1024) {
+    sidebar.classList.add('visible');
+  }
+  try { map.fitBounds(layer.getBounds()); } catch(e) {}
+});
+
+// === UPDATE SEARCH SELECTPLACE ===
+function selectPlace(place) {
+  if (searchMarker) map.removeLayer(searchMarker);
+  searchMarker = L.marker([place.lat, place.lon]).addTo(map)
+    .bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
+  map.setView([place.lat, place.lon], 11);
+  searchDropdown.style.display = 'none';
+  searchInput.value = place.name;
+  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+}
 // -----------------------------
 // County data (with events + landmarks)
 // -----------------------------
@@ -1079,6 +1081,7 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
 
 
 
