@@ -928,7 +928,28 @@ fetch('./counties_simplified8.json')
       });
       window.places = allPlaces;
       console.log(`Loaded ${window.places.length} places (LOC + PAR)`);
-      initFuse(); // Fuse is now ready
+      initFuse()
+      function showCountyFromPoint(lat, lon) {
+        const point = turf.point([lon, lat]);
+        let foundLayer = null;
+
+        map.eachLayer(layer => {
+          if (layer instanceof L.GeoJSON) {
+            layer.eachLayer(countyLayer => {
+              if (countyLayer.feature && countyLayer.getBounds && countyLayer.getBounds().contains([lat, lon])) {
+                if (turf.booleanPointInPolygon(point, countyLayer.feature)) {
+                  foundLayer = countyLayer;
+                }
+              }
+            });
+        }
+      });
+
+      if (foundLayer && foundLayer.fire) {
+        foundLayer.fire('click'); // Triggers full county card
+      } else {
+        infoDiv.innerHTML = '<em>County not found for this location.</em>';
+      }
     })
     .catch(err => console.error('CSV load error:', err));
   // Search input
@@ -958,6 +979,7 @@ fetch('./counties_simplified8.json')
 </script>
 </body>
 </html>
+
 
 
 
