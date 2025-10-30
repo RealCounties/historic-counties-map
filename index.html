@@ -99,14 +99,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   padding:4px 8px; border-radius:12px; font-weight:500;
 }
 
-/* Zoom Button */
-.zoom-btn {
-  background:var(--accent); color:white; border:none; padding:6px 12px;
-  border-radius:6px; font-size:0.85rem; cursor:pointer; margin-top:8px;
-  transition:all .2s;
-}
-.zoom-btn:hover { background:#7a2222; }
-
 /* Tooltip */
 .leaflet-tooltip.county-tooltip {
   background:var(--tooltip-bg); border:1px solid var(--accent); color:var(--text);
@@ -247,7 +239,6 @@ window.onload = function() {
           <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
           ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
           ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
-          <button class="zoom-btn" onclick="map.fitBounds(currentLayer.getBounds())">Zoom to County</button>
         </div>`;
 
       document.getElementById('closeSidebar')?.addEventListener('click', () => sidebar.classList.remove('visible'));
@@ -942,3 +933,4 @@ const countyData = {
 </script>
 </body>
 </html>
+
