@@ -25,19 +25,6 @@
   --accent: #9B2C2C;
   --tooltip-bg: rgba(255,255,255,0.9);
 }
-/* === DARK MODE === */
-.dark-mode {
-  --bg: #1a1a1a;
-  --card-bg: #2d2d2d;
-  --text: #e0e0e0;
-  --border: #444;
-  --shadow: rgba(0,0,0,0.4);
-  --accent: #d32f2f;
-  --tooltip-bg: rgba(30,30,30,0.9);
-}
-.dark-mode #sidebar { background: var(--bg); color: var(--text); }
-.dark-mode .county-card { background: var(--card-bg); box-shadow: 0 2px 6px var(--shadow); }
-.dark-mode .leaflet-tooltip { background: var(--tooltip-bg); border-color: #666; color: #fff; }
 
 /* === BASE STYLES === */
 html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
@@ -112,12 +99,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
 }
 #closeSidebar:hover { background:#fff; }
-
-/* Dark Mode Toggle */
-#darkModeToggle {
-  background:var(--accent); color:white; border:none; width:36px; height:36px;
-  border-radius:50%; cursor:pointer; font-size:18px; z-index:1001;
-}
 
 /* === RESPONSIVE: Bottom-Left Panel === */
 @media (max-width:1024px) {
@@ -202,35 +183,36 @@ window.onload = function() {
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
-  // === 1. WEATHER ===
-  const WEATHER_API_KEY = 'YOUR_API_KEY_HERE'; // ← REPLACE!
+  // === 1. WEATHER (Open-Meteo: No Key!) ===
   async function fetchWeather(lat, lon) {
     try {
       const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
       const temp = Math.round(res.data.current.temperature_2m);
       const code = res.data.current.weather_code;
-      const desc = {  // Simple code to desc map
-        0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 
-        51: 'Light drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 71: 'Light snow', 
-        73: 'Snow', 75: 'Heavy snow', 80: 'Showers', 95: 'Thunderstorm'
-      }[code] || 'Unknown';
-      const wind = res.data.current.wind_speed_10m;
+      const wind = Math.round(res.data.current.wind_speed_10m);
+      const descMap = {
+        0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+        61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
+        80: 'Showers', 81: 'Rain showers', 82: 'Heavy showers', 95: 'Thunderstorm'
+      };
+      const desc = descMap[code] || 'Unknown';
       return { temp, desc, wind };
     } catch (e) { return null; }
-}
+  }
 
-  // === 2. UPDATE COUNTY CARD (with weather, zoom, highlight, photo) ===
+  // === 2. UPDATE COUNTY CARD (No Zoom Button) ===
   let currentLayer = null;
   let photoTimeout;
-  function updateCountyCard(englishName, layer) {
+  function updateCountyCard(englishName, layer, lat, lon) {
     const details = countyData[englishName] || {};
     const native = nativeNames[englishName] || null;
     const events = details.events || [];
     const landmarks = details.landmarks || [];
 
-    fetchWeather(englishName).then(weather => {
+    fetchWeather(lat, lon).then(weather => {
       const weatherHtml = weather
-        ? `<div class="weather-badge">${weather.temp}°C • ${weather.desc}</div>`
+        ? `<div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} km/h</div>`
         : '';
 
       infoDiv.innerHTML = `
@@ -268,17 +250,6 @@ window.onload = function() {
     }, 300);
   }
 
-  // === 4. DARK MODE TOGGLE ===
-  const darkToggle = L.control({position: 'topright'});
-  darkToggle.onAdd = () => {
-    const btn = L.DomUtil.create('button', 'leaflet-bar');
-    btn.id = 'darkModeToggle';
-    btn.innerHTML = 'Dark Mode';
-    btn.title = 'Toggle dark mode';
-    btn.onclick = () => document.body.classList.toggle('dark-mode');
-    return btn;
-  };
-  darkToggle.addTo(map);
 // -----------------------------
 // County data (with events + landmarks)
 // -----------------------------
@@ -823,6 +794,11 @@ const countyData = {
           const details = countyData[englishName] || {};
           const native = nativeNames[englishName] || null;
 
+          // Centroid for weather
+          const centroid = turf.centroid(feature);
+          const lat = centroid.geometry.coordinates[1];
+          const lon = centroid.geometry.coordinates[0];
+
           // Tooltip
           layer.on('add', () => {
             const text = native ? `${englishName} (${native})` : englishName;
@@ -831,7 +807,7 @@ const countyData = {
 
           // Click
           layer.on('click', () => {
-            updateCountyCard(englishName, layer);
+            updateCountyCard(englishName, layer, lat, lon);
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             try { map.fitBounds(layer.getBounds()); } catch(e) {}
           });
@@ -898,8 +874,15 @@ const countyData = {
         });
       }
     });
-    if (found) found.fire('click');
-    else infoDiv.innerHTML = '<em>County not found.</em>';
+    if (found) {
+      const englishName = found.feature.properties.NAME;
+      const centroid = turf.centroid(found.feature);
+      const clat = centroid.geometry.coordinates[1];
+      const clon = centroid.geometry.coordinates[0];
+      updateCountyCard(englishName, found, clat, clon);
+    } else {
+      infoDiv.innerHTML = '<em>County not found.</em>';
+    }
   }
 
   fetch('places_clean.csv')
@@ -932,10 +915,7 @@ const countyData = {
       searchDropdown.style.display = 'none';
     }
   });
-
 };
 </script>
 </body>
 </html>
-
-
