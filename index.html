@@ -908,86 +908,155 @@ fetch('./counties_simplified8.json')
     // NEW: Show county card automatically
     setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
   }
-  fetch('places_clean.csv')
-    .then(res => res.text())
-    .then(csvText => {
-      const lines = csvText.trim().split('\n');
-      lines.shift();
-      const allPlaces = [];
-     
-      lines.forEach(line => {
-        const cols = parseCSVLine(line);
-        const name = cols[0];
-        const desc = cols[2];
-        const county = cols[3];
-        const lat = parseFloat(cols[6]);
-        const lon = parseFloat(cols[7]);
-       
-        // -------------------------------------------------
-        // NEW: include both LOC *and* PAR entries
-        // -------------------------------------------------
-        if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
-          allPlaces.push({ name, county, lat, lon });
+  // -----------------------------
+// CSV Places Search
+// -----------------------------
+window.places = [];
+let fuse = null;
+let searchMarker = null;
+
+function parseCSVLine(line) {
+  const cols = [];
+  let match;
+  const regex = /(?:\"([^\"]*)\"|([^,]+))/g;
+  while ((match = regex.exec(line)) !== null) {
+    cols.push(match[1] || match[2] || '');
+  }
+  return cols;
+}
+
+function initFuse() {
+  if (!window.places.length) return;
+  fuse = new Fuse(window.places, { keys: ['name', 'county'], threshold: 0.3 });
+}
+
+function showDropdown(results) {
+  searchDropdown.innerHTML = '';
+  if (!results.length) {
+    searchDropdown.style.display = 'none';
+    return;
+  }
+  results.slice(0, 10).forEach(r => {
+    const div = document.createElement('div');
+    div.style.padding = '8px 12px';
+    div.style.cursor = 'pointer';
+    div.style.borderBottom = '1px solid #eee';
+    div.style.fontSize = '0.9rem';
+    div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+    div.onmouseover = () => div.style.backgroundColor = '#f5f5f5';
+    div.onmouseout = () => div.style.backgroundColor = '';
+    div.onclick = () => selectPlace(r.item);
+    searchDropdown.appendChild(div);
+  });
+  searchDropdown.style.display = 'block';
+}
+
+function selectPlace(place) {
+  if (searchMarker) map.removeLayer(searchMarker);
+  searchMarker = L.marker([place.lat, place.lon])
+    .addTo(map)
+    .bindPopup(`<b>${place.name}</b><br>${place.county || 'Historic county unknown'}`)
+    .openPopup();
+
+  map.setView([place.lat, place.lon], 11);
+  searchDropdown.style.display = 'none';
+  searchInput.value = place.name;
+
+  // Show county card after zoom
+  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+}
+
+// -----------------------------
+// GLOBAL: showCountyFromPoint (MUST be outside CSV block)
+// -----------------------------
+function showCountyFromPoint(lat, lon) {
+  const point = turf.point([lon, lat]);
+  let foundLayer = null;
+
+  map.eachLayer(layer => {
+    if (layer instanceof L.GeoJSON) {
+      layer.eachLayer(countyLayer => {
+        if (countyLayer.feature && countyLayer.getBounds && countyLayer.getBounds().contains([lat, lon])) {
+          if (turf.booleanPointInPolygon(point, countyLayer.feature)) {
+            foundLayer = countyLayer;
+          }
         }
       });
-      window.places = allPlaces;
-      console.log(`Loaded ${window.places.length} places (LOC + PAR)`);
-      initFuse()
-      function showCountyFromPoint(lat, lon) {
-        const point = turf.point([lon, lat]);
-        let foundLayer = null;
+    }
+  });
 
-        map.eachLayer(layer => {
-          if (layer instanceof L.GeoJSON) {
-            layer.eachLayer(countyLayer => {
-              if (countyLayer.feature && countyLayer.getBounds && countyLayer.getBounds().contains([lat, lon])) {
-                if (turf.booleanPointInPolygon(point, countyLayer.feature)) {
-                  foundLayer = countyLayer;
-                }
-              }
-            });
-        }
-      });
+  if (foundLayer && foundLayer.fire) {
+    foundLayer.fire('click'); // Triggers full county card
+  } else {
+    infoDiv.innerHTML = '<em>County not found for this location.</em>';
+  }
+}
 
-      if (foundLayer && foundLayer.fire) {
-        foundLayer.fire('click'); // Triggers full county card
-      } else {
-        infoDiv.innerHTML = '<em>County not found for this location.</em>';
+// -----------------------------
+// Load CSV and initialize search
+// -----------------------------
+fetch('places_clean.csv')
+  .then(res => res.text())
+  .then(csvText => {
+    const lines = csvText.trim().split('\n');
+    lines.shift(); // Remove header
+    const allPlaces = [];
+
+    lines.forEach(line => {
+      const cols = parseCSVLine(line);
+      const name = cols[0];
+      const desc = cols[2];
+      const county = cols[3];
+      const lat = parseFloat(cols[6]);
+      const lon = parseFloat(cols[7]);
+
+      if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
+        allPlaces.push({ name, county, lat, lon });
       }
-    })
-    .catch(err => console.error('CSV load error:', err));
-  // Search input
-  searchInput.addEventListener('input', () => {
-    const query = searchInput.value.trim();
-    if (!query || !fuse) {
-      searchDropdown.style.display = 'none';
-      return;
-    }
-    showDropdown(fuse.search(query));
-  });
-  searchInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (!fuse) return;
-      const results = fuse.search(searchInput.value.trim());
-      if (results.length) selectPlace(results[0].item);
-      else alert('Place not found');
-    }
-  });
-  document.addEventListener('click', e => {
-    if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
-      searchDropdown.style.display = 'none';
-    }
-  });
-};
+    });
+
+    window.places = allPlaces;
+    console.log(`Loaded ${window.places.length} places (LOC + PAR)`);
+    initFuse(); // ← Now properly called
+  })
+  .catch(err => console.error('CSV load error:', err));
+
+// -----------------------------
+// Search Input Events
+// -----------------------------
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.trim();
+  if (!query || !fuse) {
+    searchDropdown.style.display = 'none';
+    return;
+  }
+  showDropdown(fuse.search(query));
+});
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (!fuse) return;
+    const results = fuse.search(searchInput.value.trim());
+    if (results.length) selectPlace(results[0].item);
+    else alert('Place not found');
+  }
+});
+
+document.addEventListener('click', e => {
+  if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
+    searchDropdown.style.display = 'none';
+  }
+});
+
+// -----------------------------
+// Geocoder
+// -----------------------------
+L.Control.geocoder({
+  defaultMarkGeocode: true,
+  placeholder: 'Search town, village, postcode…',
+  geocoder: new L.Control.Geocoder.Nominatim()
+}).addTo(map);
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
