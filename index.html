@@ -898,11 +898,15 @@ fetch('./counties_simplified8.json')
     if (searchMarker) map.removeLayer(searchMarker);
     searchMarker = L.marker([place.lat, place.lon])
       .addTo(map)
-      .bindPopup(`<b>${place.name}</b><br>${place.county || ''}`)
+      .bindPopup(`<b>${place.name}</b><br>${place.county || 'Historic county unknown'}`)
       .openPopup();
+  
     map.setView([place.lat, place.lon], 11);
     searchDropdown.style.display = 'none';
     searchInput.value = place.name;
+
+    // NEW: Show county card automatically
+    setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
   }
   fetch('places_clean.csv')
     .then(res => res.text())
@@ -979,6 +983,7 @@ fetch('./counties_simplified8.json')
 </script>
 </body>
 </html>
+
 
 
 
