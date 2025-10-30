@@ -25,7 +25,6 @@
   --accent: #9B2C2C;
   --tooltip-bg: rgba(255,255,255,0.9);
 }
-
 /* === BASE STYLES === */
 html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #container { display:flex; height:100%; }
@@ -92,13 +91,16 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   font-weight:bold; padding:2px 6px; border-radius:4px;
 }
 
-/* Close Button */
+/* Close Button — MOBILE ONLY */
 #closeSidebar {
-  display:none; position:absolute; top:10px; right:12px; width:32px; height:32px;
-  font-size:20px; color:#666; background:rgba(255,255,255,0.9); border:none;
-  border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  display: none; /* Hidden on desktop */
+  position: absolute; top: 10px; right: 12px;
+  width: 32px; height: 32px; font-size: 20px; color: #666;
+  background: rgba(255,255,255,0.9); border: none; border-radius: 50%;
+  cursor: pointer; align-items: center; justify-content: center;
+  z-index: 1001;
 }
-#closeSidebar:hover { background:#fff; }
+#closeSidebar:hover { background: #fff; }
 
 /* === RESPONSIVE: Bottom-Left Panel === */
 @media (max-width:1024px) {
@@ -113,6 +115,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   #sidebar.visible { transform:translateY(0); }
   #map { height:100vh !important; }
   #sidebar-logo { max-width:65%; }
+  #closeSidebar { display: flex; } /* Show only on mobile */
 }
 @media (max-width:480px) {
   #sidebar { width:90vw; left:5vw; max-width:none; }
@@ -201,12 +204,12 @@ window.onload = function() {
     } catch (e) { return null; }
   }
 
-  // === 2. UPDATE COUNTY CARD (No Zoom Button) ===
+  // === 2. UPDATE COUNTY CARD (Clean, No Zoom, Language Labels) ===
   let currentLayer = null;
   let photoTimeout;
   function updateCountyCard(englishName, layer, lat, lon) {
     const details = countyData[englishName] || {};
-    const native = nativeNames[englishName] || null;
+    const langEntry = countyLanguages[englishName];
     const events = details.events || [];
     const landmarks = details.landmarks || [];
 
@@ -218,16 +221,13 @@ window.onload = function() {
       infoDiv.innerHTML = `
         <div class="county-card">
           ${weatherHtml}
-          <button id="closeSidebar">x</button>
           <h3>${englishName}</h3>
-          ${native ? `<p><strong>Native:</strong> ${native}</p>` : ''}
+          ${langEntry ? `<p><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
           <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
           <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
           ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
           ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
         </div>`;
-
-      document.getElementById('closeSidebar')?.addEventListener('click', () => sidebar.classList.remove('visible'));
     });
 
     if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
@@ -777,6 +777,65 @@ const countyData = {
     "Tyrone": "Chontae Thír Eoghain"
   };
 // -----------------------------
+  // Language Names (Welsh, Scottish Gaelic, Irish Gaelic)
+  // -----------------------------
+  const countyLanguages = {
+    "Anglesey": { name: "Sir Fôn", lang: "Welsh" },
+    "Brecknockshire": { name: "Sir Frycheiniog", lang: "Welsh" },
+    "Caernarfonshire": { name: "Sir Gaernarfon", lang: "Welsh" },
+    "Cardiganshire": { name: "Sir Aberteifi", lang: "Welsh" },
+    "Carmarthenshire": { name: "Sir Gaerfyrddin", lang: "Welsh" },
+    "Denbighshire": { name: "Sir Ddinbych", lang: "Welsh" },
+    "Flintshire": { name: "Sir y Fflint", lang: "Welsh" },
+    "Glamorgan": { name: "Morgannwg", lang: "Welsh" },
+    "Merionethshire": { name: "Meirionnydd", lang: "Welsh" },
+    "Monmouthshire": { name: "Sir Fynwy", lang: "Welsh" },
+    "Montgomeryshire": { name: "Sir Drefaldwyn", lang: "Welsh" },
+    "Pembrokeshire": { name: "Sir Benfro", lang: "Welsh" },
+    "Radnorshire": { name: "Sir Faesyfed", lang: "Welsh" },
+    "Aberdeenshire": { name: "Siorrachd Obar Dheathain", lang: "Scottish Gaelic" },
+    "Angus": { name: "Aonghas", lang: "Scottish Gaelic" },
+    "Argyllshire": { name: "Siorrachd Earra-Ghàidheal", lang: "Scottish Gaelic" },
+    "Ayrshire": { name: "Siorrachd Inbhir Àir", lang: "Scottish Gaelic" },
+    "Banffshire": { name: "Siorrachd Bhanbh", lang: "Scottish Gaelic" },
+    "Berwickshire": { name: "Siorrachd Bhearaig", lang: "Scottish Gaelic" },
+    "Buteshire": { name: "Siorrachd Bhùth", lang: "Scottish Gaelic" },
+    "Caithness": { name: "Gallaibh", lang: "Scottish Gaelic" },
+    "Clackmannanshire": { name: "Siorrachd Chlach Mhanainn", lang: "Scottish Gaelic" },
+    "Cromartyshire": { name: "Siorrachd Chròmbaidh", lang: "Scottish Gaelic" },
+    "Dumfriesshire": { name: "Siorrachd Dhùn Phris", lang: "Scottish Gaelic" },
+    "Dunbartonshire": { name: "Siorrachd Dhùn Bhreatainn", lang: "Scottish Gaelic" },
+    "East Lothian": { name: "Siorrachd an Ear Leothain", lang: "Scottish Gaelic" },
+    "Fife": { name: "Fìobha", lang: "Scottish Gaelic" },
+    "Inverness-shire": { name: "Siorrachd Inbhir Nis", lang: "Scottish Gaelic" },
+    "Kincardineshire": { name: "Siorrachd Chinn Chàrdainn", lang: "Scottish Gaelic" },
+    "Kinross-shire": { name: "Siorrachd Cheann Rois", lang: "Scottish Gaelic" },
+    "Kirkcudbrightshire": { name: "Siorrachd Chille Chuithbeirt", lang: "Scottish Gaelic" },
+    "Lanarkshire": { name: "Siorrachd Lanraig", lang: "Scottish Gaelic" },
+    "Midlothian": { name: "Meadhan Labhdaidh", lang: "Scottish Gaelic" },
+    "Morayshire": { name: "Moireibh", lang: "Scottish Gaelic" },
+    "Nairnshire": { name: "Siorrachd Inbhir Narann", lang: "Scottish Gaelic" },
+    "Orkney": { name: "Arcaibh", lang: "Scottish Gaelic" },
+    "Peeblesshire": { name: "Siorrachd nam Pùballan", lang: "Scottish Gaelic" },
+    "Perthshire": { name: "Siorrachd Pheairt", lang: "Scottish Gaelic" },
+    "Renfrewshire": { name: "Siorrachd Rinn Friù", lang: "Scottish Gaelic" },
+    "Ross-shire": { name: "Siorrachd Rois", lang: "Scottish Gaelic" },
+    "Roxburghshire": { name: "Siorrachd Rosbroig", lang: "Scottish Gaelic" },
+    "Selkirkshire": { name: "Siorrachd Shailcirc", lang: "Scottish Gaelic" },
+    "Shetland": { name: "Sealtainn", lang: "Scottish Gaelic" },
+    "Stirlingshire": { name: "Siorrachd Shruighlea", lang: "Scottish Gaelic" },
+    "Sutherland": { name: "Cataibh", lang: "Scottish Gaelic" },
+    "West Lothian": { name: "Lothian an Iar", lang: "Scottish Gaelic" },
+    "Wigtownshire": { name: "Siorrachd Bhaile na h-Ùige", lang: "Scottish Gaelic" },
+    "Antrim": { name: "Aontroim", lang: "Irish Gaelic" },
+    "Armagh": { name: "Árd Mhacha", lang: "Irish Gaelic" },
+    "Down": { name: "An Dún", lang: "Irish Gaelic" },
+    "Fermanagh": { name: "Fear Manach", lang: "Irish Gaelic" },
+    "Londonderry": { name: "Doire", lang: "Irish Gaelic" },
+    "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
+  };
+
+  // -----------------------------
   // GeoJSON Load
   // -----------------------------
   fetch('./counties_simplified8.json')
@@ -791,8 +850,7 @@ const countyData = {
         }),
         onEachFeature: (feature, layer) => {
           const englishName = feature.properties.NAME;
-          const details = countyData[englishName] || {};
-          const native = nativeNames[englishName] || null;
+          const langEntry = countyLanguages[englishName];
 
           // Centroid for weather
           const centroid = turf.centroid(feature);
@@ -801,7 +859,7 @@ const countyData = {
 
           // Tooltip
           layer.on('add', () => {
-            const text = native ? `${englishName} (${native})` : englishName;
+            const text = langEntry ? `${englishName} (${langEntry.lang}: ${langEntry.name})` : englishName;
             layer.bindTooltip(text, { direction: 'center', className: 'county-tooltip' });
           });
 
@@ -880,6 +938,7 @@ const countyData = {
       const clat = centroid.geometry.coordinates[1];
       const clon = centroid.geometry.coordinates[0];
       updateCountyCard(englishName, found, clat, clon);
+      if (window.innerWidth <= 1024) sidebar.classList.add('visible');
     } else {
       infoDiv.innerHTML = '<em>County not found.</em>';
     }
