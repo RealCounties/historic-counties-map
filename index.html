@@ -213,7 +213,7 @@ window.onload = function() {
           ${langEntry ? `<p><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
           <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
           <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
-          ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</ Forsyth</li>`).join('')}</ul>` : ''}
+          ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
           ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
         </div>`;
     });
@@ -237,7 +237,6 @@ window.onload = function() {
     }, 300);
   }
 
-  // === FULL COUNTY DATA (80+ counties) ===
   const countyData = {
     "Aberdeenshire": { area: "1,950 sq mi", population: "380,495", events: ["Battle of Harlaw (1411): Clan battle that halted Highland expansion into Lowlands.", "Gordon Riots (1689): Jacobite uprising against William III.", "Founding of Aberdeen University (1495) by Bishop Elphinstone."], landmarks: ["Slains Castle", "Balmoral Castle (Royal residence)", "Dunnottar Castle"] },
     "Anglesey": { area: "277 sq mi", population: "69,751", events: ["Roman invasion repelled by druids (60 AD) at Mona.", "Owain Gwynedd's victory over Normans (1138).", "Llyn Peninsula Druid uprising crushed (78 AD)."], landmarks: ["Beaumaris Castle", "South Stack Lighthouse", "Menai Suspension Bridge"] },
@@ -320,14 +319,13 @@ window.onload = function() {
     "Tyrone": { area: "1,261 sq mi", population: "177,000", events: ["Flight of the Earls (1607).", "Omagh bombing (1998)."], landmarks: ["Ulster American Folk Park", "Sperrin Mountains", "Beaghmore Stone Circles"] },
     "Warwickshire": { area: "763 sq mi", population: "571,000", events: ["Shakespeare born in Stratford (1564).", "Battle of Edgehill (1642)."], landmarks: ["Stratford-upon-Avon", "Warwick Castle", "Kenilworth Castle"] },
     "West Lothian": { area: "162 sq mi", population: "183,000", events: ["Linlithgow Palace: Mary Queen of Scots born (1542)."], landmarks: ["Linlithgow Palace", "Blackness Castle", "Almond Valley"] },
-    "Westmorland": { area: "792 sq mi", population: ": "75,000", events: ["Appleby Horse Fair.", "Kendal Mint Cake."], landmarks: ["Kendal Castle", "Sizergh Castle", "Levens Hall"] },
+    "Westmorland": { area: "792 sq mi", population: "75,000", events: ["Appleby Horse Fair.", "Kendal Mint Cake."], landmarks: ["Kendal Castle", "Sizergh Castle", "Levens Hall"] },
     "Wigtownshire": { area: "487 sq mi", population: "28,000", events: ["Whithorn Priory: St Ninian (397 AD).", "Mull of Galloway."], landmarks: ["Whithorn Priory", "Logan Botanic Garden", "Castle Kennedy"] },
-    "Wiltshire": { area: "1,346 sq mi", population: "720,000", events: ["Stonehenge: "Stonehenge (3000 BC).", "Avebury stone circle."], landmarks: ["Stonehenge", "Avebury", "Salisbury Cathedral"] },
+    "Wiltshire": { area: "1,346 sq mi", population: "720,000", events: ["Stonehenge (3000 BC).", "Avebury stone circle."], landmarks: ["Stonehenge", "Avebury", "Salisbury Cathedral"] },
     "Worcestershire": { area: "672 sq mi", population: "592,000", events: ["Battle of Worcester (1651).", "Elgar born in Broadheath (1857)."], landmarks: ["Worcester Cathedral", "Malvern Hills", "Broadway Tower"] },
     "Yorkshire": { area: "6,079 sq mi", population: "5,400,000", events: ["Largest county in UK.", "York Minster (627 AD)."], landmarks: ["York Minster", "Castle Howard", "North York Moors"] }
   };
 
-  // === FULL LANGUAGE MAP ===
   const countyLanguages = {
     "Anglesey": { name: "Sir Fôn", lang: "Welsh" },
     "Brecknockshire": { name: "Sir Frycheiniog", lang: "Welsh" },
@@ -420,7 +418,7 @@ window.onload = function() {
     })
     .catch(err => {
       console.error(err);
-      infoDiv.innerHTML = '<em style="color:red;">Failed to load map data.</em>';
+      infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Is counties_simplified8.json in the same folder?</em>';
     });
 
   L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
