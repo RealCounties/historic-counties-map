@@ -26,182 +26,198 @@ html, body {
   height: auto;
   display: block;
   margin: 0 auto;
-}
-/* Optional: scale logo on smaller screens */
-@media (max-width: 1024px) {
-  #sidebar-logo {
-    max-width: 70%;
-  }
-}
-@media (max-width: 480px) {
-  #sidebar-logo {
-    max-width: 50%;
-  }
-}
-#sidebar {
-  width: 340px;
-  background: #faf4e6;
-  padding: 15px;
-  overflow-y: auto;
-  border-right: 1px solid #ccc;
-  transition: all 0.3s ease;
-  position: relative;
-}
-#search-bar {
-  margin-top: 15px;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-}
-#search-bar input {
-  flex: 1;
-  min-width: 140px;
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  color: #333;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: border-color 0.25s, box-shadow 0.25s;
-}
-#search-bar input:focus {
-  outline: none;
-  border-color: #9B2C2C;
-  box-shadow: 0 0 0 3px rgba(155, 44, 44, 0.2);
-}
-#search-bar button {
-  padding: 10px 18px;
-  background: #9B2C2C;
-  color: #FAF4E6;
-  border: none;
-  border-radius: 4px;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-  cursor: pointer;
-  transition: background 0.25s cubic-bezier(0.4,0,0.2,1),
-              transform 0.25s cubic-bezier(0.4,0,0.2,1),
-              box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);
-}
-#search-bar button:hover {
-  background: #7a2222;
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-}
-#map {
-  flex: 1;
-}
-.county-card {
-  background: #f3e9da;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  transition: all 0.3s ease; /* ← ADD THIS */
-  cursor: pointer;           /* ← Optional: shows it's interactive */
-}
-.county-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.25);
-}
-.county-card h3 { margin-top: 0; color: #333; }
-.county-card p { margin: 4px 0; }
-.county-card a { color: #0066cc; text-decoration: none; }
-.county-card a:hover { text-decoration: underline; }
-/* Tooltip style */
-.leaflet-tooltip.county-tooltip {
-  background-color: rgba(255,255,255,0.9);
-  border: 1px solid #9b2c2c;
-  color: #333;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-/* Close button (hidden on desktop) */
-#closeSidebar {
-  display: none;
-  position: absolute;
-  top: 6px;
-  right: 10px;
-  font-size: 20px;
-  background: none;
-  border: none;
-  color: #555;
-  cursor: pointer;
-  z-index: 1001;
-}
-/* ----- Responsive layout ----- */
-@media (max-width: 1024px) {
-  #container { flex-direction: column; }
-  #sidebar {
-    width: auto;
-    height: auto;
-    max-width: 90%;
-    max-height: 70%;
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    background: rgba(255,255,255,0.97);
-    display: none;
-    z-index: 1000;
-  }
-  #sidebar.visible {
-    display: block;
-  }
-  #closeSidebar {
-    display: block;
-  }
-}
-#sidebar h2 {
-  text-align: center;
-  margin-top: 5px;
-  margin-bottom: 10px;
-  color: #9b2c2c;
-}
-#logo-link {
-  display: block;
-  transition: opacity 0.25s ease;
-}
-
-#logo-link:hover {
-  opacity: 0.85;
-}
-
-#logo-link img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
- #sidebar-logo {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
   opacity: 0;
   transform: scale(0.9);
   animation: logoLoad 1.4s ease-out forwards;
 }
-
 @keyframes logoLoad {
-  0% {
-    opacity: 0;
-    transform: scale(0.9) translateY(10px);
+  0%   { opacity:0; transform:scale(0.9) translateY(10px); }
+  60%  { opacity:1; transform:scale(1.02); }
+  100% { opacity:1; transform:scale(1); }
+}
+
+/* ----- LOGO LINK ----- */
+#logo-link {
+  display: block;
+  transition: opacity .25s ease;
+}
+#logo-link:hover { opacity: .85; }
+#logo-link img { display:block; max-width:100%; height:auto; }
+
+/* ----- SIDEBAR (desktop) ----- */
+#sidebar {
+  width: 340px;
+  background:#faf4e6;
+  padding:15px;
+  overflow-y:auto;
+  border-right:1px solid #ccc;
+  transition:all .3s ease;
+  position:relative;
+}
+
+/* ----- SEARCH BAR ----- */
+#search-bar {
+  margin-top:15px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+}
+#search-bar input {
+  flex:1;
+  min-width:140px;
+  padding:10px 12px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  font-family:'Inter',sans-serif;
+  font-size:.9rem;
+  color:#333;
+  box-shadow:0 2px 4px rgba(0,0,0,.1);
+  transition:border-color .25s,box-shadow .25s;
+}
+#search-bar input:focus {
+  outline:none;
+  border-color:#9B2C2C;
+  box-shadow:0 0 0 3px rgba(155,44,44,.2);
+}
+#search-bar button {
+  padding:10px 18px;
+  background:#9B2C2C;
+  color:#FAF4E6;
+  border:none;
+  border-radius:4px;
+  font-family:'Inter',sans-serif;
+  font-size:.9rem;
+  font-weight:500;
+  box-shadow:0 3px 6px rgba(0,0,0,.15);
+  cursor:pointer;
+  transition:background .25s cubic-bezier(.4,0,.2,1),
+             transform .25s cubic-bezier(.4,0,.2,1),
+             box-shadow .25s cubic-bezier(.4,0,.2,1);
+}
+#search-bar button:hover {
+  background:#7a2222;
+  transform:translateY(-2px) scale(1.05);
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
+}
+
+/* ----- MAP ----- */
+#map { flex:1; }
+
+/* ----- COUNTY CARD (desktop) ----- */
+.county-card {
+  background:#f3e9da;
+  padding:12px;
+  border-radius:8px;
+  box-shadow:0 2px 4px rgba(0,0,0,.2);
+  transition:all .3s ease;
+  cursor:pointer;
+}
+.county-card:hover {
+  transform:translateY(-6px);
+  box-shadow:0 8px 18px rgba(0,0,0,.25);
+}
+.county-card h3 { margin-top:0; color:#333; }
+.county-card p  { margin:4px 0; }
+.county-card a  { color:#0066cc; text-decoration:none; }
+.county-card a:hover { text-decoration:underline; }
+
+/* ----- TOOLTIP ----- */
+.leaflet-tooltip.county-tooltip {
+  background:rgba(255,255,255,.9);
+  border:1px solid #9b2c2c;
+  color:#333;
+  font-weight:bold;
+  padding:2px 6px;
+  border-radius:4px;
+}
+
+/* ----- CLOSE BUTTON (mobile) ----- */
+#closeSidebar {
+  display:none;
+  position:absolute;
+  top:6px; right:10px;
+  font-size:20px;
+  background:none;
+  border:none;
+  color:#555;
+  cursor:pointer;
+  z-index:1001;
+}
+
+/* -------------------------------------------------
+   RESPONSIVE – TABLET & MOBILE (≤1024px)
+   ------------------------------------------------- */
+@media (max-width:1024px) {
+  #container { flex-direction:column; }
+
+  /* Sidebar becomes a bottom sheet */
+  #sidebar {
+    width:auto;
+    height:auto;
+    max-height:78vh;               /* leaves ~22vh of map visible */
+    position:fixed;
+    bottom:0; left:0; right:0;
+    top:auto;
+    transform:translateY(100%);
+    border-radius:16px 16px 0 0;
+    background:#faf4e6;
+    padding:12px 16px 20px;
+    overflow-y:auto;
+    box-shadow:0 -4px 20px rgba(0,0,0,.2);
+    transition:transform .35s cubic-bezier(.4,0,.2,1);
+    z-index:1000;
+    display:block !important;     /* we control visibility with .visible */
   }
-  60% {
-    opacity: 1;
-    transform: scale(1.02);
+  #sidebar.visible { transform:translateY(0); }
+
+  /* Drag-handle */
+  #sidebar::before {
+    content:'';
+    display:block;
+    width:40px;
+    height:5px;
+    background:#ccc;
+    border-radius:3px;
+    margin:8px auto 12px;
   }
-  100% {
-    opacity: 1;
-    transform: scale(1);
+
+  /* Close button – larger tap target */
+  #closeSidebar {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    top:12px; right:16px;
+    width:36px; height:36px;
+    font-size:24px;
+    color:#666;
+    border-radius:50%;
   }
-} 
+  #closeSidebar:hover { background:rgba(0,0,0,.1); }
+
+  /* Keep map visible above the sheet */
+  #map { height:100vh !important; }
+
+  /* Card inside the sheet – a little extra breathing room */
+  .county-card {
+    background:#fff;
+    padding:16px;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+    margin-top:8px;
+  }
+
+  /* Logo scaling on very small screens */
+  #sidebar-logo { max-width:70%; }
+}
+@media (max-width:480px) {
+  #sidebar-logo { max-width:50%; }
+}
+#sidebar h2 {
+  text-align:center;
+  margin:5px 0 10px;
+  color:#9b2c2c;
+}
 </style>
 </head>
 <body>
@@ -1042,6 +1058,7 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
 
 
 
