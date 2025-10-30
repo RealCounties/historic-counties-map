@@ -146,64 +146,72 @@ html, body {
 }
 
 /* ----- Responsive layout (mobile centered modal, 50% height, scrollable) ----- */
+/* ----- Responsive: Bottom-Left Panel (≤1024px) ----- */
 @media (max-width: 1024px) {
   #container { flex-direction: column; }
 
   #sidebar {
-    width: auto;
-    height: auto;
-    max-width: 90%;
-    max-height: 50vh;           /* ← HALF the screen */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    width: 45vw;                 /* ← ~45% of screen width */
+    max-width: 380px;
+    max-height: 50vh;            /* ← Max 50% height */
     background: #faf4e6;
-    padding: 16px;
-    overflow-y: auto;           /* ← SCROLLABLE */
-    display: none;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+    padding: 14px;
+    overflow-y: auto;
+    transform: translateY(120%);
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
-    font-size: 0.95rem;
+    display: block !important;
+    font-size: 0.94rem;
   }
 
   #sidebar.visible {
-    display: block;
+    transform: translateY(0);
   }
 
+  /* Close button */
   #closeSidebar {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     top: 10px;
-    right: 14px;
-    font-size: 22px;
-    background: rgba(255,255,255,0.9);
-    border: none;
+    right: 12px;
     width: 32px;
     height: 32px;
+    font-size: 20px;
+    color: #666;
+    background: rgba(255,255,255,0.9);
+    border: none;
     border-radius: 50%;
     cursor: pointer;
-    color: #666;
   }
 
   #closeSidebar:hover {
     background: #fff;
+    color: #333;
   }
 
-  /* County card inside modal */
+  /* County card inside panel */
   .county-card {
     background: white;
     padding: 14px;
     border-radius: 10px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-    margin-top: 8px;
+    margin-top: 6px;
   }
 
   .county-card h3 {
     margin: 0 0 10px;
     font-size: 1.15rem;
+  }
+
+  .county-card p {
+    margin: 6px 0;
   }
 
   /* Map stays full */
@@ -213,11 +221,18 @@ html, body {
 
   /* Logo scaling */
   #sidebar-logo {
-    max-width: 70%;
+    max-width: 65%;
   }
 }
 @media (max-width: 480px) {
-  #sidebar-logo { max-width: 55%; }
+  #sidebar {
+    width: 90vw;
+    left: 5vw;
+    max-width: none;
+  }
+  #sidebar-logo {
+    max-width: 55%;
+  }
 }
 #sidebar h2 {
   text-align:center;
@@ -1064,6 +1079,7 @@ document.addEventListener('click', e => {
 </script>
 </body>
 </html>
+
 
 
 
