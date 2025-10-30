@@ -4,9 +4,16 @@
 <meta charset="utf-8">
 <title>Historic Counties Interactive Map</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Leaflet CSS -->
+<!-- Leaflet + Libraries -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/polylabel@1.0.3/polylabel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+
 <style>
 /* === LIGHT MODE (default) === */
 :root {
@@ -18,7 +25,6 @@
   --accent: #9B2C2C;
   --tooltip-bg: rgba(255,255,255,0.9);
 }
-
 /* === DARK MODE === */
 .dark-mode {
   --bg: #1a1a1a;
@@ -84,7 +90,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .county-card:hover { transform:translateY(-6px); box-shadow:0 8px 18px var(--shadow); }
 .county-card h3 { margin:0 0 10px; font-size:1.15rem; color:var(--text); }
 .county-card p { margin:6px 0; }
-.county-card a { color:#f3e9da; text-decoration:none; }
+.county-card a { color:#0066cc; text-decoration:none; }
 .county-card a:hover { text-decoration:underline; }
 
 /* Weather Badge */
@@ -111,15 +117,14 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #closeSidebar {
   display:none; position:absolute; top:10px; right:12px; width:32px; height:32px;
   font-size:20px; color:#666; background:rgba(255,255,255,0.9); border:none;
-  border-radius:50%; cursor:pointer; align-items:center; justify-content:center;
+  border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
 }
 #closeSidebar:hover { background:#fff; }
 
 /* Dark Mode Toggle */
 #darkModeToggle {
-  position:absolute; top:10px; right:10px; background:var(--accent); color:white;
-  border:none; width:36px; height:36px; border-radius:50%; cursor:pointer;
-  font-size:18px; z-index:1001;
+  background:var(--accent); color:white; border:none; width:36px; height:36px;
+  border-radius:50%; cursor:pointer; font-size:18px; z-index:1001;
 }
 
 /* === RESPONSIVE: Bottom-Left Panel === */
@@ -146,11 +151,11 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 <body>
 <div id="container">
   <div id="sidebar">
-    <button id="closeSidebar">×</button>
+    <button id="closeSidebar">x</button>
     <div id="logo-container">
       <a href="https://realcounties.com" target="_blank" rel="noopener" id="logo-link">
-        <img src="https://realcounties.wordpress.com/wp-content/uploads/2025/06/logo-full-trans-16-6-25.png" 
-             alt="Campaign for Historic Counties Logo" 
+        <img src="https://realcounties.wordpress.com/wp-content/uploads/2025/06/logo-full-trans-16-6-25.png"
+             alt="Campaign for Historic Counties Logo"
              id="sidebar-logo">
       </a>
     </div>
@@ -162,26 +167,14 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
       <button id="searchBtn">Search</button>
     </div>
     <div id="searchDropdown" style="
-      position: absolute;
-      background: white;
-      border: 1px solid #ccc;
-      max-height: 200px;
-      overflow-y: auto;
-      width: calc(100% - 60px);
-      display: none;
-      z-index: 1001;
-      margin-top: 5px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      position: absolute; background: white; border: 1px solid #ccc;
+      max-height: 200px; overflow-y: auto; width: calc(100% - 60px);
+      display: none; z-index: 1001; margin-top: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     "></div>
   </div>
   <div id="map"></div>
 </div>
-<!-- JS libraries -->
-<script src="https://cdn.jsdelivr.net/npm/polylabel@1.0.3/polylabel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+
 <script>
 window.onload = function() {
   const sidebar = document.getElementById('sidebar');
@@ -189,6 +182,7 @@ window.onload = function() {
   const infoDiv = document.getElementById('info');
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
+
   // -----------------------------
   // Initialize map
   // -----------------------------
@@ -197,10 +191,10 @@ window.onload = function() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> contributors | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
   }).addTo(map);
-  // Restrict to British Isles
   const ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
   map.setMaxBounds(ukBounds);
   map.fitBounds(ukBounds);
+
   // -----------------------------
   // Toggle button (mobile)
   // -----------------------------
@@ -215,106 +209,81 @@ window.onload = function() {
   };
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
+
   // === 1. WEATHER ===
-const WEATHER_API_KEY = 'YOUR_API_KEY_HERE'; // ← REPLACE WITH YOUR KEY
-
-async function fetchWeather(countyName) {
-  try {
-    const res = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
-      params: { q: countyName + ',UK', appid: WEATHER_API_KEY, units: 'metric' }
-    });
-    const temp = Math.round(res.data.main.temp);
-    const desc = res.data.weather[0].description;
-    const icon = res.data.weather[0].icon;
-    return { temp, desc, icon };
-  } catch (e) { return null; }
-}
-
-// === 2. ZOOM BUTTON + 3. HIGHLIGHT + 4. PHOTO + 5. DARK MODE ===
-let currentLayer = null;
-let photoTimeout;
-
-function updateCountyCard(englishName, layer) {
-  const details = countyData[englishName] || {};
-  const native = nativeNames[englishName] || null;
-  const events = details.events || [];
-  const landmarks = details.landmarks || [];
-
-  // Weather
-  fetchWeather(englishName).then(weather => {
-    const weatherHtml = weather
-      ? `<div class="weather-badge"> ${weather.temp}°C • ${weather.desc}</div>`
-      : '';
-    
-    // Final HTML
-    infoDiv.innerHTML = `
-      <div class="county-card">
-        ${weatherHtml}
-        <button id="closeSidebar">×</button>
-        <h3>${englishName}</h3>
-        ${native ? `<p><strong>Native:</strong> ${native}</p>` : ''}
-        <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
-        <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
-        ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
-        ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
-        <button class="zoom-btn" onclick="map.fitBounds(currentLayer.getBounds())">Zoom to County</button>
-      </div>`;
-    
-    document.getElementById('closeSidebar')?.addEventListener('click', () => sidebar.classList.remove('visible'));
-  });
-
-  // Highlight
-  if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
-  layer.setStyle({ weight: 3, fillOpacity: 0.6 });
-  currentLayer = layer;
-}
-
-// === 3. PHOTO PREVIEW ===
-function showPhoto(landmark, e) {
-  clearTimeout(photoTimeout);
-  const img = document.createElement('img');
-  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}`;
-  img.style.cssText = 'position:absolute; top:'+(e.clientY+10)+'px; left:'+(e.clientX+10)+'px; width:200px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10000;';
-  img.onload = () => document.body.appendChild(img);
-  window.photoImg = img;
-}
-function hidePhoto() {
-  photoTimeout = setTimeout(() => {
-    if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
-  }, 300);
-}
-
-// === 4. DARK MODE TOGGLE ===
-const darkToggle = L.control({position: 'topright'});
-darkToggle.onAdd = () => {
-  const btn = L.DomUtil.create('button', 'leaflet-bar');
-  btn.id = 'darkModeToggle';
-  btn.innerHTML = 'Dark Mode';
-  btn.title = 'Toggle dark mode';
-  btn.onclick = () => document.body.classList.toggle('dark-mode');
-  return btn;
-};
-darkToggle.addTo(map);
-
-// === UPDATE LAYER CLICK ===
-layer.on('click', () => {
-  updateCountyCard(englishName, layer);
-  if (window.innerWidth <= 1024) {
-    sidebar.classList.add('visible');
+  const WEATHER_API_KEY = 'YOUR_API_KEY_HERE'; // ← REPLACE!
+  async function fetchWeather(countyName) {
+    try {
+      const res = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
+        params: { q: countyName + ',UK', appid: WEATHER_API_KEY, units: 'metric' }
+      });
+      const temp = Math.round(res.data.main.temp);
+      const desc = res.data.weather[0].description;
+      return { temp, desc };
+    } catch (e) { return null; }
   }
-  try { map.fitBounds(layer.getBounds()); } catch(e) {}
-});
 
-// === UPDATE SEARCH SELECTPLACE ===
-function selectPlace(place) {
-  if (searchMarker) map.removeLayer(searchMarker);
-  searchMarker = L.marker([place.lat, place.lon]).addTo(map)
-    .bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
-  map.setView([place.lat, place.lon], 11);
-  searchDropdown.style.display = 'none';
-  searchInput.value = place.name;
-  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
-}
+  // === 2. UPDATE COUNTY CARD (with weather, zoom, highlight, photo) ===
+  let currentLayer = null;
+  let photoTimeout;
+  function updateCountyCard(englishName, layer) {
+    const details = countyData[englishName] || {};
+    const native = nativeNames[englishName] || null;
+    const events = details.events || [];
+    const landmarks = details.landmarks || [];
+
+    fetchWeather(englishName).then(weather => {
+      const weatherHtml = weather
+        ? `<div class="weather-badge">${weather.temp}°C • ${weather.desc}</div>`
+        : '';
+
+      infoDiv.innerHTML = `
+        <div class="county-card">
+          ${weatherHtml}
+          <button id="closeSidebar">x</button>
+          <h3>${englishName}</h3>
+          ${native ? `<p><strong>Native:</strong> ${native}</p>` : ''}
+          <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
+          <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
+          ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
+          ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
+          <button class="zoom-btn" onclick="map.fitBounds(currentLayer.getBounds())">Zoom to County</button>
+        </div>`;
+
+      document.getElementById('closeSidebar')?.addEventListener('click', () => sidebar.classList.remove('visible'));
+    });
+
+    if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
+    layer.setStyle({ weight: 3, fillOpacity: 0.6 });
+    currentLayer = layer;
+  }
+
+  // === 3. PHOTO PREVIEW ===
+  function showPhoto(landmark, e) {
+    clearTimeout(photoTimeout);
+    const img = document.createElement('img');
+    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}`;
+    img.style.cssText = 'position:absolute; top:'+(e.clientY+10)+'px; left:'+(e.clientX+10)+'px; width:200px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10000;';
+    img.onload = () => document.body.appendChild(img);
+    window.photoImg = img;
+  }
+  function hidePhoto() {
+    photoTimeout = setTimeout(() => {
+      if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+    }, 300);
+  }
+
+  // === 4. DARK MODE TOGGLE ===
+  const darkToggle = L.control({position: 'topright'});
+  darkToggle.onAdd = () => {
+    const btn = L.DomUtil.create('button', 'leaflet-bar');
+    btn.id = 'darkModeToggle';
+    btn.innerHTML = 'Dark Mode';
+    btn.title = 'Toggle dark mode';
+    btn.onclick = () => document.body.classList.toggle('dark-mode');
+    return btn;
+  };
+  darkToggle.addTo(map);
 // -----------------------------
 // County data (with events + landmarks)
 // -----------------------------
@@ -842,137 +811,68 @@ const countyData = {
     "Tyrone": "Chontae Thír Eoghain"
   };
 // -----------------------------
-// GeoJSON Load (with density, events and landmarks)
-// -----------------------------
-fetch('./counties_simplified8.json')
-  .then(res => {
-    if (!res.ok) throw new Error(`Failed to load counties_simplified8.json: ${res.status}`);
-    return res.json();
-  })
-  .then(data => {
-    const pastelColors = [
-      "#ffdede","#dedefd","#deffde","#fff0de","#fdefff",
-      "#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee",
-      "#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"
-    ];
-    data.features.forEach((feature, idx) => {
-      feature.properties.color = pastelColors[idx % pastelColors.length];
+  // GeoJSON Load
+  // -----------------------------
+  fetch('./counties_simplified8.json')
+    .then(res => { if (!res.ok) throw new Error(`Failed: ${res.status}`); return res.json(); })
+    .then(data => {
+      const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
+      data.features.forEach((f, i) => f.properties.color = pastelColors[i % pastelColors.length]);
+
+      L.geoJSON(data, {
+        style: f => ({
+          color: "#333", weight: 1, fillColor: f.properties.color, fillOpacity: 0.35
+        }),
+        onEachFeature: (feature, layer) => {
+          const englishName = feature.properties.NAME;
+          const details = countyData[englishName] || {};
+          const native = nativeNames[englishName] || null;
+
+          // Tooltip
+          layer.on('add', () => {
+            const text = native ? `${englishName} (${native})` : englishName;
+            layer.bindTooltip(text, { direction: 'center', className: 'county-tooltip' });
+          });
+
+          // Click
+          layer.on('click', () => {
+            updateCountyCard(englishName, layer);
+            if (window.innerWidth <= 1024) sidebar.classList.add('visible');
+            try { map.fitBounds(layer.getBounds()); } catch(e) {}
+          });
+
+          // Hover
+          layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
+          layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
+        }
+      }).addTo(map);
+
+      map.invalidateSize();
+      infoDiv.innerHTML = '<em>No county selected.</em>';
+    })
+    .catch(err => {
+      console.error(err);
+      infoDiv.innerHTML = '<em style="color:red;">Failed to load map data.</em>';
     });
 
-    const geoJsonLayer = L.geoJSON(data, {
-      style: f => ({
-        color: "#333",
-        weight: 1,
-        fillColor: f.properties.color,
-        fillOpacity: 0.35
-      }),
-      onEachFeature: (feature, layer) => {
-        const englishName = feature.properties.NAME;
-        const details = countyData[englishName] || {};
-        const native = nativeNames[englishName] || null;
-        const events = details.events || [];
-        const landmarks = details.landmarks || [];
-
-        // Parse area and population for density
-        const areaMatch = details.area?.match(/([\d,]+)\s*sq\s*mi/);
-        const areaSqMi = areaMatch ? parseFloat(areaMatch[1].replace(/,/g, '')) : null;
-        const popStr = details.population?.replace(/,/g, '');
-        const population = popStr ? parseInt(popStr, 10) : null;
-        let density = null;
-        if (areaSqMi && population && areaSqMi > 0) {
-          density = Math.round(population / areaSqMi);
-        }
-
-        // Tooltip
-        layer.on('add', () => {
-          const tooltipText = native ? `${englishName} (${native})` : englishName;
-          layer.bindTooltip(tooltipText, {
-            permanent: false,
-            direction: 'center',
-            className: 'county-tooltip'
-          });
-        });
-
-        // Click: Full card with landmarks
-        layer.on('click', () => {
-          let nativeHtml = native ? `<p><strong>Native Name:</strong> ${native}</p>` : '';
-          let densityHtml = density !== null
-            ? `<p><strong>Density:</strong> ${density.toLocaleString()} people/sq mi</p>`
-            : '';
-          let eventsHtml = events.length > 0
-            ? `<h4>Key Historical Events</h4><ul>${events.map(e => `<li>${e}</li>`).join('')}</ul>`
-            : '<p><em>No major events recorded.</em></p>';
-          let landmarksHtml = landmarks.length > 0
-            ? `<h4>Famous Landmarks</h4><ul>${landmarks.map(l => `<li>${l}</li>`).join('')}</ul>`
-            : '<p><em>No major landmarks recorded.</em></p>';
-
-          infoDiv.innerHTML = `
-            <div class="county-card">
-              <h3>${englishName}</h3>
-              ${nativeHtml}
-              <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
-              <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
-              ${densityHtml}
-              ${eventsHtml}
-              ${landmarksHtml}
-            </div>`;
-          try { map.fitBounds(layer.getBounds()); } catch(e) {}
-          if (window.innerWidth <= 1024) {
-            sidebar.classList.add('visible');
-          }
-        });
-
-        layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
-        layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
-      }
-    }).addTo(map);
-
-    map.invalidateSize();
-    infoDiv.innerHTML = '<em>No county selected.</em>';
-  })
-  .catch(err => {
-    console.error(err);
-    infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Check file path.</em>';
-  });
   // -----------------------------
-  // Geocoder
+  // Geocoder + Search
   // -----------------------------
-  L.Control.geocoder({
-    defaultMarkGeocode: true,
-    placeholder: 'Search town, village, postcode…',
-    geocoder: new L.Control.Geocoder.Nominatim()
-  }).addTo(map);
-  // -----------------------------
-  // CSV Places Search
-  // -----------------------------
-  window.places = [];
-  let fuse = null;
-  let searchMarker = null;
+  L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
+
+  window.places = []; let fuse = null; let searchMarker = null;
   function parseCSVLine(line) {
-    const cols = [];
-    let match;
-    const regex = /(?:\"([^\"]*)\"|([^,]+))/g;
-    while ((match = regex.exec(line)) !== null) {
-      cols.push(match[1] || match[2] || '');
-    }
+    const cols = []; const regex = /(?:\"([^\"]*)\"|([^,]+))/g; let m;
+    while ((m = regex.exec(line)) !== null) cols.push(m[1] || m[2] || '');
     return cols;
   }
-  function initFuse() {
-    if (!window.places.length) return;
-    fuse = new Fuse(window.places, { keys: ['name', 'county'], threshold: 0.3 });
-  }
+  function initFuse() { if (window.places.length) fuse = new Fuse(window.places, { keys: ['name', 'county'], threshold: 0.3 }); }
   function showDropdown(results) {
     searchDropdown.innerHTML = '';
-    if (!results.length) {
-      searchDropdown.style.display = 'none';
-      return;
-    }
+    if (!results.length) { searchDropdown.style.display = 'none'; return; }
     results.slice(0, 10).forEach(r => {
       const div = document.createElement('div');
-      div.style.padding = '8px 12px';
-      div.style.cursor = 'pointer';
-      div.style.borderBottom = '1px solid #eee';
-      div.style.fontSize = '0.9rem';
+      div.style.cssText = 'padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee; font-size:0.9rem;';
       div.textContent = `${r.item.name}, ${r.item.county || ''}`;
       div.onmouseover = () => div.style.backgroundColor = '#f5f5f5';
       div.onmouseout = () => div.style.backgroundColor = '';
@@ -983,114 +883,62 @@ fetch('./counties_simplified8.json')
   }
   function selectPlace(place) {
     if (searchMarker) map.removeLayer(searchMarker);
-    searchMarker = L.marker([place.lat, place.lon])
-      .addTo(map)
-      .bindPopup(`<b>${place.name}</b><br>${place.county || 'Historic county unknown'}`)
-      .openPopup();
-  
+    searchMarker = L.marker([place.lat, place.lon]).addTo(map)
+      .bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
     map.setView([place.lat, place.lon], 11);
     searchDropdown.style.display = 'none';
     searchInput.value = place.name;
-
-    // NEW: Show county card automatically
     setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
   }
-// -----------------------------
-// GLOBAL: showCountyFromPoint (MUST be outside CSV block)
-// -----------------------------
-function showCountyFromPoint(lat, lon) {
-  const point = turf.point([lon, lat]);
-  let foundLayer = null;
 
-  map.eachLayer(layer => {
-    if (layer instanceof L.GeoJSON) {
-      layer.eachLayer(countyLayer => {
-        if (countyLayer.feature && countyLayer.getBounds && countyLayer.getBounds().contains([lat, lon])) {
-          if (turf.booleanPointInPolygon(point, countyLayer.feature)) {
-            foundLayer = countyLayer;
+  function showCountyFromPoint(lat, lon) {
+    const point = turf.point([lon, lat]);
+    let found = null;
+    map.eachLayer(l => {
+      if (l instanceof L.GeoJSON) {
+        l.eachLayer(cl => {
+          if (cl.getBounds && cl.getBounds().contains([lat, lon]) && turf.booleanPointInPolygon(point, cl.feature)) {
+            found = cl;
           }
+        });
+      }
+    });
+    if (found) found.fire('click');
+    else infoDiv.innerHTML = '<em>County not found.</em>';
+  }
+
+  fetch('places_clean.csv')
+    .then(r => r.text())
+    .then(text => {
+      const lines = text.trim().split('\n'); lines.shift();
+      lines.forEach(line => {
+        const c = parseCSVLine(line);
+        const name = c[0], desc = c[2], county = c[3], lat = parseFloat(c[6]), lon = parseFloat(c[7]);
+        if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
+          window.places.push({ name, county, lat, lon });
         }
       });
+      initFuse();
+    });
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim();
+    if (!q || !fuse) { searchDropdown.style.display = 'none'; return; }
+    showDropdown(fuse.search(q));
+  });
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && fuse) {
+      const res = fuse.search(searchInput.value.trim());
+      if (res.length) selectPlace(res[0].item);
+    }
+  });
+  document.addEventListener('click', e => {
+    if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
+      searchDropdown.style.display = 'none';
     }
   });
 
-  if (foundLayer && foundLayer.fire) {
-    foundLayer.fire('click'); // Triggers full county card
-  } else {
-    infoDiv.innerHTML = '<em>County not found for this location.</em>';
-  }
-}
-
-// -----------------------------
-// Load CSV and initialize search
-// -----------------------------
-fetch('places_clean.csv')
-  .then(res => res.text())
-  .then(csvText => {
-    const lines = csvText.trim().split('\n');
-    lines.shift(); // Remove header
-    const allPlaces = [];
-
-    lines.forEach(line => {
-      const cols = parseCSVLine(line);
-      const name = cols[0];
-      const desc = cols[2];
-      const county = cols[3];
-      const lat = parseFloat(cols[6]);
-      const lon = parseFloat(cols[7]);
-
-      if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
-        allPlaces.push({ name, county, lat, lon });
-      }
-    });
-
-    window.places = allPlaces;
-    console.log(`Loaded ${window.places.length} places (LOC + PAR)`);
-    initFuse(); // ← Now properly called
-  })
-  .catch(err => console.error('CSV load error:', err));
-
-// -----------------------------
-// Search Input Events
-// -----------------------------
-searchInput.addEventListener('input', () => {
-  const query = searchInput.value.trim();
-  if (!query || !fuse) {
-    searchDropdown.style.display = 'none';
-    return;
-  }
-  showDropdown(fuse.search(query));
-});
-
-searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    if (!fuse) return;
-    const results = fuse.search(searchInput.value.trim());
-    if (results.length) selectPlace(results[0].item);
-    else alert('Place not found');
-  }
-});
-
-document.addEventListener('click', e => {
-  if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
-    searchDropdown.style.display = 'none';
-  }
-});
 };
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
