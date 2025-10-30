@@ -908,64 +908,6 @@ fetch('./counties_simplified8.json')
     // NEW: Show county card automatically
     setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
   }
-  // -----------------------------
-// CSV Places Search
-// -----------------------------
-window.places = [];
-let fuse = null;
-let searchMarker = null;
-
-function parseCSVLine(line) {
-  const cols = [];
-  let match;
-  const regex = /(?:\"([^\"]*)\"|([^,]+))/g;
-  while ((match = regex.exec(line)) !== null) {
-    cols.push(match[1] || match[2] || '');
-  }
-  return cols;
-}
-
-function initFuse() {
-  if (!window.places.length) return;
-  fuse = new Fuse(window.places, { keys: ['name', 'county'], threshold: 0.3 });
-}
-
-function showDropdown(results) {
-  searchDropdown.innerHTML = '';
-  if (!results.length) {
-    searchDropdown.style.display = 'none';
-    return;
-  }
-  results.slice(0, 10).forEach(r => {
-    const div = document.createElement('div');
-    div.style.padding = '8px 12px';
-    div.style.cursor = 'pointer';
-    div.style.borderBottom = '1px solid #eee';
-    div.style.fontSize = '0.9rem';
-    div.textContent = `${r.item.name}, ${r.item.county || ''}`;
-    div.onmouseover = () => div.style.backgroundColor = '#f5f5f5';
-    div.onmouseout = () => div.style.backgroundColor = '';
-    div.onclick = () => selectPlace(r.item);
-    searchDropdown.appendChild(div);
-  });
-  searchDropdown.style.display = 'block';
-}
-
-function selectPlace(place) {
-  if (searchMarker) map.removeLayer(searchMarker);
-  searchMarker = L.marker([place.lat, place.lon])
-    .addTo(map)
-    .bindPopup(`<b>${place.name}</b><br>${place.county || 'Historic county unknown'}`)
-    .openPopup();
-
-  map.setView([place.lat, place.lon], 11);
-  searchDropdown.style.display = 'none';
-  searchInput.value = place.name;
-
-  // Show county card after zoom
-  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
-}
-
 // -----------------------------
 // GLOBAL: showCountyFromPoint (MUST be outside CSV block)
 // -----------------------------
@@ -1060,3 +1002,4 @@ L.Control.geocoder({
 </script>
 </body>
 </html>
+
