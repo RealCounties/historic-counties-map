@@ -83,6 +83,8 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     <div id="search-bar">
       <input type="text" id="placeSearch" placeholder="Search for a place...">
       <button id="searchBtn">Search</button>
+      <input type="text" id="placeSearch" placeholder="Search for a place...">
+      <button id="searchBtn">Search</button>
       <button id="tempToggle" title="Toggle °C/°F & mph/kmh">°C / mph</button
     </div>
     <div id="searchDropdown" style="position:absolute;background:white;border:1px solid #ccc;max-height:200px;overflow-y:auto;width:calc(100%-60px);display:none;z-index:1001;margin-top:5px;box-shadow:0 4px 8px rgba(0,0,0,0.1);"></div>
@@ -327,59 +329,29 @@ window.onload = function() {
         else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
         else badgeStyle = 'background:#66BB6A; color:white;';
 
-        // === WEATHER STATE & TOGGLE ===
-let useCelsius = true;
-let useMph = true;
-
-document.getElementById('tempToggle').onclick = () => {
-  useCelsius = !useCelsius;
-  useMph = !useMph;
-  document.getElementById('tempToggle').textContent = 
-    (useCelsius ? '°C' : '°F') + ' / ' + (useMph ? 'mph' : 'kmh');
-  
-  // Re-fetch weather for current county if visible
-  if (currentLayer) {
-    const centroid = turf.centroid(currentLayer.feature);
-    const lat = centroid.geometry.coordinates[1];
-    const lon = centroid.geometry.coordinates[0];
-    const englishName = currentLayer.feature.properties.NAME;
-    window.updateCountyCard(englishName, currentLayer, lat, lon);
-  }
-};
-
-// === UPDATED fetchWeather WITH CONVERSIONS ===
-async function fetchWeather(lat, lon) {
-  try {
-    const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
-    const tempC = res.data.current.temperature_2m;
-    const windKmh = res.data.current.wind_speed_10m;
-    const code = res.data.current.weather_code;
-
-    const descMap = {
-      0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',
-      45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
-      61:'Light rain',63:'Rain',65:'Heavy rain',
-      71:'Light snow',73:'Snow',75:'Heavy snow',
-      80:'Showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm'
-    };
-    const desc = descMap[code] || 'Unknown';
-
-    // Convert based on toggle
-    const temp = useCelsius ? Math.round(tempC) : Math.round(tempC * 9/5 + 32);
-    const wind = useMph ? Math.round(windKmh * 0.621371) : Math.round(windKmh);
-
-    return { 
-      temp, 
-      desc, 
-      wind,
-      unit: useCelsius ? '°C' : '°F',
-      windUnit: useMph ? 'mph' : 'kmh'
-    };
-  } catch (err) {
-    console.error("Weather error:", err);
-    return null;
-  }
-}
+        fetchWeather(lat, lon).then(weather => {
+          const weatherBlock = weather ? `<div style="text-align:center;"><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div><div class="weather-underline"></div></div>` : '';
+          infoDiv.innerHTML = `
+            <div class="county-card">
+              ${weatherBlock}
+              <h3 style="text-align:center; margin:0 0 10px;">${englishName}</h3>
+              ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+              <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
+                <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
+                <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+              </div>
+              <div style="text-align:center; margin:12px 0;">
+                <span style="display:inline-block; ${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                  Density: ${density} people/sq mi
+                </span>
+              </div>
+              ${details.events?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent);">Events</h4><ul style="margin:0; padding-left:18px; font-size:0.9rem;">${details.events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
+              ${details.landmarks?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent);">Landmarks</h4><ul style="margin:0; padding-left:18px; font-size:0.9rem;">${details.landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
+            </div>`;
+        });
+        if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
+        layer.setStyle({ weight: 3, fillOpacity: 0.6 });
+        currentLayer = layer;
       };
 
       // ADD GEOJSON
