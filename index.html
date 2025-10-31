@@ -157,7 +157,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 </div>
 
 <script>
-window.onload = function() {
+window.onload = () {
   const sidebar = document.getElementById('sidebar');
   const closeBtn = document.getElementById('closeSidebar');
   const infoDiv = document.getElementById('info');
@@ -174,7 +174,7 @@ window.onload = function() {
   map.fitBounds(ukBounds);
 
   const toggleButton = L.control({ position: 'topright' });
-  toggleButton.onAdd = function() {
+  toggleButton.onAdd = () {
     const btn = L.DomUtil.create('button', 'leaflet-bar');
     btn.innerHTML = 'Info';
     btn.title = 'Show county info';
@@ -185,7 +185,7 @@ window.onload = function() {
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
-  async function fetchWeather(lat, lon) {
+  async  fetchWeather(lat, lon) {
     try {
       const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
       const temp = Math.round(res.data.current.temperature_2m);
@@ -228,7 +228,20 @@ window.onload = function() {
     <div><strong>Population:</strong> ${popNum.toLocaleString()}</div>
     <div><strong>Density:</strong> ${density !== 'N/A' ? density + ' per sq mi' : 'N/A'}</div>
     <div class="mt-2 text-sm text-gray-700">${details.info}</div>
-  `;
+
+// CALCULATE DENSITY
+	const density = area > 0 ? Math.round(pop / area) : null;
+
+// DENSITY BADGE COLOR
+let badgeStyle = '';
+if (density === null) {
+	badgeStyle = 'background:#ccc; color:black;';
+} else if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
+else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
+else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
+else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
+else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
+else badgeStyle = 'background:#66BB6A; color:white;';
 }
   fetchWeather(lat, lon).then(weather => {
     const weatherBlock = weather
