@@ -215,8 +215,8 @@ window.onload = function() {
 
       infoDiv.innerHTML = `
         <div class="county-card">
+        	<h3 style="text-align:center; margin-top:0;">${englishName}</h3>
           ${weatherBlock}
-          <h3 style="text-align:center; margin-top:0;">${englishName}</h3>
           ${langEntry ? `<p><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
           <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
           <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
