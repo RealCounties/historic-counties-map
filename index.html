@@ -391,6 +391,7 @@ window.onload = function() {
               ${flagHTML}
               <div class="card-body">
                 <h3>${englishName}</h3>
+                ${weatherBlock}
                 ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
                 <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
                   <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
@@ -401,7 +402,6 @@ window.onload = function() {
                     Density: ${density} people/sq mi
                   </span>
                 </div>
-                ${weatherBlock}
                 ${details.events?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:center;">Events</h4><ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block;">${details.events.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
                 ${details.landmarks?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:center;">Landmarks</h4><ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block;">${details.landmarks.map(l => `<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
               </div>
