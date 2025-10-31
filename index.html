@@ -433,9 +433,10 @@ window.onload = function() {
         }
       }).addTo(map);
 
-      map.invalidateSize();
-      infoDiv.innerHTML = '<em>No county selected.</em>';
-    })
+      setTimeout(() => {
+        map.invalidateSize();
+        console.log("Map resized – should now be visible");
+      }, 100);
     .catch(err => {
       console.error(err);
       infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Is counties_simplified8.json in the same folder?</em>';
