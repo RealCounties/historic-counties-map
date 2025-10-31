@@ -45,9 +45,9 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   color:var(--text);
 }
 
-#search-bar { margin-top:15px; display:flex; gap:6px; align-items:center; justify-content:center; }
+#search-bar { margin-top:15px; display:; gap:6px; align-items:center; justify-content:center; }
 #search-bar input {
-  flex:1; min-width:140px; padding:10px 12px; border:1px solid var(--border);
+  :1; min-width:140px; padding:10px 12px; border:1px solid var(--border);
   border-radius:4px; font-size:.9rem; color:var(--text); background:#fff;
   box-shadow:0 2px 4px var(--shadow); transition:all .25s;
 }
@@ -59,7 +59,10 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 }
 #search-bar button:hover { background:#7a2222; transform:translateY(-2px) scale(1.05); box-shadow:0 6px 14px var(--shadow); }
 
-#map { flex:1; }
+#map {
+  flex: 1;
+  height: 100vh; /* ensure it fills the screen */
+}
 
 .county-card {
   background:var(--card-bg); padding:14px; border-radius:10px;
