@@ -11,7 +11,6 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
-
 <style>
 :root {
   --bg: #faf4e6; --card-bg: #f3e9da; --text: #333; --border: #ccc;
@@ -30,8 +29,16 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #search-bar button { padding:10px 18px; background:var(--accent); color:#FAF4E6; border:none; border-radius:4px; font-weight:500; box-shadow:0 3px 6px var(--shadow); cursor:pointer; transition:all .25s cubic-bezier(.4,0,.2,1); }
 #search-bar button:hover { background:#7a2222; transform:translateY(-2px) scale(1.05); box-shadow:0 6px 14px var(--shadow); }
 #map { flex:1; background:#e0f2fe; }
-.county-card { background:var(--card-bg); padding:14px; border-radius:10px; box-shadow:0 2px 6px var(--shadow); transition:all .3s ease; cursor:pointer; position:relative; }
+
+/* ---- NEW CARD LAYOUT WITH FLAG ---- */
+.county-card { 
+  background:var(--card-bg); padding:14px; border-radius:10px; 
+  box-shadow:0 2px 6px var(--shadow); transition:all .3s ease; 
+  cursor:pointer; position:relative; display:flex; gap:12px; align-items:flex-start; 
+}
 .county-card:hover { transform:translateY(-6px); box-shadow:0 8px 18px var(--shadow); }
+.county-card .flag { width:48px; height:auto; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.2); flex-shrink:0; }
+.county-card .card-body { flex:1; }
 .county-card h3 { margin:0 0 12px; font-size:1.25rem; color:var(--text); word-wrap:break-word; text-align:center; line-height:1.3; }
 .weather-badge { display:inline-block; font-size:0.82rem; background:rgba(0,0,0,0.1); color:var(--text); padding:6px 12px; border-radius:16px; font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.12); }
 .weather-underline { width:60px; height:2px; background:var(--accent); margin:8px auto 12px; border-radius:1px; }
@@ -80,7 +87,6 @@ window.onload = function() {
   const infoDiv = document.getElementById('info');
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
-
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
@@ -89,7 +95,6 @@ window.onload = function() {
   const ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
   map.setMaxBounds(ukBounds);
   map.fitBounds(ukBounds);
-
   const toggleButton = L.control({ position: 'topright' });
   toggleButton.onAdd = function() {
     const btn = L.DomUtil.create('button', 'leaflet-bar');
@@ -101,27 +106,86 @@ window.onload = function() {
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
-async function fetchWeather(lat, lon) {
-  try {
-    const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
-    const temp = Math.round(res.data.current.temperature_2m);
-    const code = res.data.current.weather_code;
-    const windKmh = res.data.current.wind_speed_10m;
-    const windMph = Math.round(windKmh * 0.621371); // Convert km/h to mph
-    const descMap = {
-      0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
-      45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
-      61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
-      71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
-      80: 'Showers', 81: 'Rain showers', 82: 'Heavy showers', 95: 'Thunderstorm'
-    };
-    const desc = descMap[code] || 'Unknown';
-    return { temp, desc, wind: windMph }; // wind now in mph
-  } catch (err) {
-    console.error("Weather fetch failed:", err);
-    return null;
+  /* ---------- FLAG DATA (YOUR REAL SITE) ---------- */
+const countyFlags = {
+  "Aberdeenshire": "https://realcounties.com/wp-content/uploads/2023/11/aberdeenshire-flag.png",
+  "Anglesey": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/anglesey.png",
+  "Banffshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/banffshire-flag-1.jpg",
+  "Berkshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/berkshire.png",
+  "Berwickshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/berwickshire.png",
+  "Buckinghamshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/buckinghamshire.png",
+  "Caernarfonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/caernarfonshire.png",
+  "Caithness": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/caithness-flag.png",
+  "Cambridgeshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cambridgeshire.png",
+  "Cheshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cheshire.png",
+  "Cornwall": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cornwall.png",
+  "Cumberland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cumberland.png",
+  "Derbyshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/derbyshire.jpg",
+  "Devon": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/devon.jpg",
+  "Dorset": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/dorset.jpg",
+  "Durham": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/county-durham.png",
+  "East Lothian": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/east-lothian-flag.png",
+  "Essex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/essex.jpg",
+  "Flintshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/flintshire.png",
+  "Glamorgan": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/glamorgan.png",
+  "Gloucestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/gloucestershire.png",
+  "Hampshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/hampshire.png",
+  "Herefordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/herefordshire.png",
+  "Hertfordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/hertfordshire.png",
+  "Huntingdonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/huntingdonshire.png",
+  "Kent": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/kent.png",
+  "Kirkcudbrightshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/kirkcudbrightshire-flag.png",
+  "Lancashire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/lancashire.png",
+  "Leicestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/leicestershire.png",
+  "Lincolnshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/lincolnshire.png",
+  "Middlesex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/middlesex.png",
+  "Monmouthshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/monmouthshire.png",
+  "Morayshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/morayshire-flag-2.jpg",
+  "Norfolk": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/norfolk.png",
+  "Northamptonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/northamptonshire.png",
+  "Northumberland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/northumberland.jpg",
+  "Nottinghamshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/nottinghamshire.jpg",
+  "Orkney": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/orkney-flag.png",
+  "Oxfordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/oxfordshire.png",
+  "Pembrokeshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/pembrokeshire.png",
+  "Rutland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/rutland.png",
+  "Shetland": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/shetland-flag.png",
+  "Shropshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/shropshire.png",
+  "Somerset": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/somerset.png",
+  "Staffordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/staffordshire.png",
+  "Suffolk": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/suffolk.png",
+  "Surrey": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/surrey.png",
+  "Sussex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/sussex.png",
+  "Sutherland": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/sutherland-flag.png",
+  "Warwickshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/warwickshire.png",
+  "Westmorland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/westmorland.jpg",
+  "Wiltshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/wiltshire.png",
+  "Worcestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/worcestershire.png",
+  "Yorkshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/yorkshire.jpg"
+  // Counties without a flag in your list will simply show the card without an image.
+};
+
+  async function fetchWeather(lat, lon) {
+    try {
+      const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
+      const temp = Math.round(res.data.current.temperature_2m);
+      const code = res.data.current.weather_code;
+      const windKmh = res.data.current.wind_speed_10m;
+      const windMph = Math.round(windKmh * 0.621371);
+      const descMap = {
+        0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+        61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
+        71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
+        80: 'Showers', 81: 'Rain showers', 82: 'Heavy showers', 95: 'Thunderstorm'
+      };
+      const desc = descMap[code] || 'Unknown';
+      return { temp, desc, wind: windMph };
+    } catch (err) {
+      console.error("Weather fetch failed:", err);
+      return null;
+    }
   }
-}
 
   let currentLayer = null;
   let photoTimeout;
@@ -143,7 +207,7 @@ async function fetchWeather(lat, lon) {
   fetch('./counties_simplified8.json')
     .then(res => res.ok ? res.json() : Promise.reject(`Failed: ${res.status}`))
     .then(data => {
-      // COUNTY DATA (NUMBERS ONLY)
+      const countyData = {
       const countyData = {
         "Aberdeenshire": { area: 1950, population: 380495, events: ["Battle of Harlaw (1411)", "Aberdeen University founded (1495)"], landmarks: ["Slains Castle", "Balmoral Castle", "Dunnottar Castle"] },
         "Anglesey": { area: 277, population: 69751, events: ["Roman invasion repelled (60 AD)", "Menai Bridge opened (1826)"], landmarks: ["Beaumaris Castle", "South Stack Lighthouse", "Menai Suspension Bridge"] },
@@ -293,14 +357,13 @@ async function fetchWeather(lat, lon) {
         "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
       };
 
-      // UPDATE CARD FUNCTION (NOW SEES countyData)
+// UPDATE CARD FUNCTION (injects flag from your site)
       window.updateCountyCard = function(englishName, layer, lat, lon) {
         const details = countyData[englishName] || {};
         const langEntry = countyLanguages[englishName];
         const area = details.area || 0;
         const pop = details.population || 0;
         const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
-
         let badgeStyle = '';
         if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
         else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
@@ -311,30 +374,36 @@ async function fetchWeather(lat, lon) {
 
         fetchWeather(lat, lon).then(weather => {
           const weatherBlock = weather ? `<div style="text-align:center;"><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div><div class="weather-underline"></div></div>` : '';
+          const flagUrl = countyFlags[englishName];
+          const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag">` : '';
+
           infoDiv.innerHTML = `
             <div class="county-card">
-              ${weatherBlock}
-              <h3 style="text-align:center; margin:0 0 10px;">${englishName}</h3>
-              ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
-              <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
-                <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
-                <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+              ${flagHTML}
+              <div class="card-body">
+                ${weatherBlock}
+                <h3 style="text-align:center; margin:0 0 10px;">${englishName}</h3>
+                ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+                <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
+                  <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
+                  <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+                </div>
+                <div style="text-align:center; margin:12px 0;">
+                  <span style="display:inline-block; ${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                    Density: ${density} people/sq mi
+                  </span>
+                </div>
+                ${details.events?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent);">Events</h4><ul style="margin:0; padding-left:18px; font-size:0.9rem;">${details.events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
+                ${details.landmarks?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent);">Landmarks</h4><ul style="margin:0; padding-left:18px; font-size:0.9rem;">${details.landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
               </div>
-              <div style="text-align:center; margin:12px 0;">
-                <span style="display:inline-block; ${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
-                  Density: ${density} people/sq mi
-                </span>
-              </div>
-              ${details.events?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent);">Events</h4><ul style="margin:0; padding-left:18px; font-size:0.9rem;">${details.events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
-              ${details.landmarks?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent);">Landmarks</h4><ul style="margin:0; padding-left:18px; font-size:0.9rem;">${details.landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
             </div>`;
         });
+
         if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
         layer.setStyle({ weight: 3, fillOpacity: 0.6 });
         currentLayer = layer;
       };
 
-      // ADD GEOJSON
       const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
       data.features.forEach((f, i) => f.properties.color = pastelColors[i % pastelColors.length]);
 
@@ -362,7 +431,6 @@ async function fetchWeather(lat, lon) {
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             map.fitBounds(layer.getBounds());
           });
-
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
         }
