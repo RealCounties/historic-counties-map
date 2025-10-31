@@ -92,7 +92,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 window.onload = function() {
   const sidebar = document.getElementById('sidebar');
   const closeBtn = document.getElementById('closeSidebar');
-  const infoDiv = document.getElementById('info');
+  const  = document.getElementById('info');
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
@@ -386,9 +386,9 @@ const countyFlags = {
 
 infoDiv.innerHTML = `
   <div class="county-card">
-    ${weatherBlock}
     ${flagHTML}
     <h3>${englishName}</h3>
+    ${weatherBlock}
     <div class="card-body">
       ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
       <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
