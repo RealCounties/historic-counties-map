@@ -50,22 +50,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 }
 @media (max-width:480px) { #sidebar { width:90vw; left:5vw; max-width:none; } #sidebar-logo { max-width:55%; } }
 #sidebar h2 { text-align:center; margin:5px 0 10px; color:var(--accent); }
-  #tempToggle {
-  padding:8px 12px;
-  background:#555;
-  color:#fff;
-  border:none;
-  border-radius:4px;
-  font-size:0.8rem;
-  font-weight:500;
-  cursor:pointer;
-  transition:all .25s;
-  min-width:60px;
-}
-#tempToggle:hover {
-  background:#333;
-  transform:scale(1.05);
-}
 </style>
 </head>
 <body>
@@ -83,9 +67,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     <div id="search-bar">
       <input type="text" id="placeSearch" placeholder="Search for a place...">
       <button id="searchBtn">Search</button>
-      <input type="text" id="placeSearch" placeholder="Search for a place...">
-      <button id="searchBtn">Search</button>
-      <button id="tempToggle" title="Toggle °C/°F & mph/kmh">°C / mph</button
     </div>
     <div id="searchDropdown" style="position:absolute;background:white;border:1px solid #ccc;max-height:200px;overflow-y:auto;width:calc(100%-60px);display:none;z-index:1001;margin-top:5px;box-shadow:0 4px 8px rgba(0,0,0,0.1);"></div>
   </div>
@@ -121,26 +102,16 @@ window.onload = function() {
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
   async function fetchWeather(lat, lon) {
-  try {
-    const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
-    const temp = Math.round(res.data.current.temperature_2m);
-    const code = res.data.current.weather_code;
-    const windKmh = res.data.current.wind_speed_10m;
-    const windMph = Math.round(windKmh * 0.621371); // Convert km/h to mph
-    const descMap = {
-      0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
-      45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
-      61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
-      71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
-      80: 'Showers', 81: 'Rain showers', 82: 'Heavy showers', 95: 'Thunderstorm'
-    };
-    const desc = descMap[code] || 'Unknown';
-    return { temp, desc, wind: windMph }; // wind now in mph
-  } catch (err) {
-    console.error("Weather fetch failed:", err);
-    return null;
+    try {
+      const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
+      const temp = Math.round(res.data.current.temperature_2m);
+      const code = res.data.current.weather_code;
+      const wind = Math.round(res.data.current.wind_speed_10m);
+      const descMap = {0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm'};
+      const desc = descMap[code] || 'Unknown';
+      return { temp, desc, wind };
+    } catch { return null; }
   }
-}
 
   let currentLayer = null;
   let photoTimeout;
@@ -166,14 +137,13 @@ window.onload = function() {
       const countyData = {
         "Aberdeenshire": { area: 1950, population: 380495, events: ["Battle of Harlaw (1411)", "Aberdeen University founded (1495)"], landmarks: ["Slains Castle", "Balmoral Castle", "Dunnottar Castle"] },
         "Anglesey": { area: 277, population: 69751, events: ["Roman invasion repelled (60 AD)", "Menai Bridge opened (1826)"], landmarks: ["Beaumaris Castle", "South Stack Lighthouse", "Menai Suspension Bridge"] },
-        "Angus": { area: 899, population: 264044, events: ["The Battle of Nechtansmere (AD 685)", "The Battle of Arbroath (1445)", "RAF Montrose - Birth of Military Aviation (From 1913)"], landmarks: ["Glamis Castle", "Arbroath Abbey", "Lunan Bay"] },
         "Antrim": { area: 1175, population: 615701, events: ["Titanic built in Belfast (1912)", "Giant's Causeway formed (~60M BC)"], landmarks: ["Giant's Causeway", "Carrickfergus Castle", "Dark Hedges"] },
         "Argyllshire": { area: 3110, population: 64819, events: ["Iona Abbey founded (563 AD)", "Massacre of Glencoe (1692)"], landmarks: ["Iona Abbey", "Inveraray Castle", "Oban Distillery"] },
         "Armagh": { area: 512, population: 178598, events: ["St. Patrick founds cathedral (445 AD)", "Armagh Observatory opens (1790)"], landmarks: ["Armagh Cathedral", "Navan Fort", "Armagh Planetarium"] },
         "Ayrshire": { area: 1129, population: 367676, events: ["Robert Burns born (1759)", "Ayr Racecourse founded (1907)"], landmarks: ["Culzean Castle", "Burns Cottage", "Ailsa Craig"] },
         "Banffshire": { area: 641, population: 46537, events: ["Whisky boom begins (1820s)", "Banff Bridge built (1779)"], landmarks: ["Duff House", "Balvenie Castle", "Glenfiddich Distillery"] },
         "Bedfordshire": { area: 468, population: 602847, events: ["Bunyan writes Pilgrim's Progress (1678)", "Woburn Safari Park opens (1970)"], landmarks: ["Woburn Abbey", "Whipsnade Zoo", "Shuttleworth Collection"] },
-        "Berkshire": { area: 722, population: 842804, events: ["Battle of Reading (871 AD)", "Reading Abbey Founded by Henry I (1121)", "Ascot Racecourse founded (1711)"], landmarks: ["Windsor Castle", "Ascot Racecourse", "Uffington White Horse"] },
+        "Berkshire": { area: 722, population: 842804, events: ["Magna Carta at Runnymede (1215)", "Ascot Racecourse founded (1711)"], landmarks: ["Windsor Castle", "Ascot Racecourse", "Highclere Castle"] },
         "Berwickshire": { area: 457, population: 26458, events: ["Flodden Field aftermath (1513)", "Union of Crowns impacts (1603)"], landmarks: ["Paxton House", "Duns Castle", "St Abb’s Head"] },
         "Brecknockshire": { area: 742, population: 67598, events: ["Norman conquest of Brycheiniog (1093)", "Brecon & Merthyr Railway (1863)"], landmarks: ["Brecon Beacons", "Brecon Cathedral", "Llangorse Lake"] },
         "Buckinghamshire": { area: 746, population: 916903, events: ["Bletchley Park breaks Enigma (1940)", "Eton College founded (1440)"], landmarks: ["Bletchley Park", "Stowe House", "Eton College"] },
@@ -330,7 +300,7 @@ window.onload = function() {
         else badgeStyle = 'background:#66BB6A; color:white;';
 
         fetchWeather(lat, lon).then(weather => {
-          const weatherBlock = weather ? `<div style="text-align:center;"><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div><div class="weather-underline"></div></div>` : '';
+          const weatherBlock = weather ? `<div style="text-align:center;"><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} km/h</div><div class="weather-underline"></div></div>` : '';
           infoDiv.innerHTML = `
             <div class="county-card">
               ${weatherBlock}
