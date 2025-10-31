@@ -230,18 +230,6 @@ window.onload = function() {
     <div class="mt-2 text-sm text-gray-700">${details.info}</div>
   `;
 }
-  // CALCULATE DENSITY
-  const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
-
-  // DENSITY BADGE COLOR
-  let badgeStyle = '';
-  if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
-  else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
-  else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
-  else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
-  else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
-  else badgeStyle = 'background:#66BB6A; color:white;';
-
   fetchWeather(lat, lon).then(weather => {
     const weatherBlock = weather
       ? `<div style="text-align:center;">
