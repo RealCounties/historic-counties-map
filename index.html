@@ -382,7 +382,7 @@ window.onload = function() {
         else badgeStyle = 'background:#66BB6A; color:white;';
      
         fetchWeather(lat, lon).then(weather => {
-          const weatherBlock = weather ? `<div style="text-align:center; margin:14px 0 8px;"><div class="weather-underline" style="margin:0 auto 10px;"></div><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div></div>` : '';
+          const weatherBlock = weather ? `<div style="text-align:center; margin:14px 0 8px;"><div class="weather-underline" style="margin:0 auto 14px;"></div><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div></div>` : '';
           const flagUrl = countyFlags[englishName];
           const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
 
