@@ -102,16 +102,26 @@ window.onload = function() {
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
   async function fetchWeather(lat, lon) {
-    try {
-      const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
-      const temp = Math.round(res.data.current.temperature_2m);
-      const code = res.data.current.weather_code;
-      const wind = Math.round(res.data.current.wind_speed_10m);
-      const descMap = {0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm'};
-      const desc = descMap[code] || 'Unknown';
-      return { temp, desc, wind };
-    } catch { return null; }
+  try {
+    const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
+    const temp = Math.round(res.data.current.temperature_2m);
+    const code = res.data.current.weather_code;
+    const windKmh = res.data.current.wind_speed_10m;
+    const windMph = Math.round(windKmh * 0.621371); // Convert km/h to mph
+    const descMap = {
+      0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
+      45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+      61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
+      71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
+      80: 'Showers', 81: 'Rain showers', 82: 'Heavy showers', 95: 'Thunderstorm'
+    };
+    const desc = descMap[code] || 'Unknown';
+    return { temp, desc, wind: windMph }; // wind now in mph
+  } catch (err) {
+    console.error("Weather fetch failed:", err);
+    return null;
   }
+}
 
   let currentLayer = null;
   let photoTimeout;
@@ -301,7 +311,7 @@ window.onload = function() {
         else badgeStyle = 'background:#66BB6A; color:white;';
 
         fetchWeather(lat, lon).then(weather => {
-          const weatherBlock = weather ? `<div style="text-align:center;"><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} km/h</div><div class="weather-underline"></div></div>` : '';
+          const weatherBlock = weather ? `<div style="text-align:center;"><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div><div class="weather-underline"></div></div>` : '';
           infoDiv.innerHTML = `
             <div class="county-card">
               ${weatherBlock}
