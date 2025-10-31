@@ -208,16 +208,16 @@ window.onload = function() {
         : '';
 
       infoDiv.innerHTML = `
-        <div class="county-card">
+      	<div class="county-card">
           <h3>${englishName}</h3>
           ${langEntry ? `<p><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
           <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
           <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
-        	<div style="text-align: center;">
- 						${weatherHtml}
-					</div>
           ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
           ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
+          <div style="text-align: center;">
+ 						${weatherHtml}
+					</div>
         </div>`;
     });
 
