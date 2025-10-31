@@ -88,110 +88,83 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     <div id="search-bar">
       <input type="text" id="placeSearch" placeholder="Search for a place...">
       <button id="searchBtn">Search</button>
-      <button id="tempToggle" title="Toggle °C/°F & mph/kmh">°C / mph</button>
+      <button id="tempToggle" title="Toggle °C/°F & mph/kmh">°C / mph</button
     </div>
     <div id="searchDropdown" style="position:absolute;background:white;border:1px solid #ccc;max-height:200px;overflow-y:auto;width:calc(100%-60px);display:none;z-index:1001;margin-top:5px;box-shadow:0 4px 8px rgba(0,0,0,0.1);"></div>
   </div>
   <div id="map"></div>
 </div>
 
-// Put these **anywhere** before the script runs (e.g. in a separate <script> tag)
 <script>
-  window.countyData      = { /* your huge object */ };
-  window.countyLanguages = { /* your language map   */ };
-</script>
-  
-<script>
-/* --------------------------------------------------------------
-   1. Run **after** Leaflet, Axios, Turf, Fuse are loaded
-   -------------------------------------------------------------- */
-document.addEventListener('DOMContentLoaded', () => {
-  /* ---------- ELEMENTS ---------- */
-  const sidebar        = document.getElementById('sidebar');
-  const closeBtn       = document.getElementById('closeSidebar');
-  const infoDiv        = document.getElementById('info');
-  const searchInput    = document.getElementById('placeSearch');
+window.onload = function() {
+  const sidebar = document.getElementById('sidebar');
+  const closeBtn = document.getElementById('closeSidebar');
+  const infoDiv = document.getElementById('info');
+  const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
 
-  /* ---------- MAP ---------- */
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> | <a href="https://county-borders.co.uk">Historic County Borders Project</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
   }).addTo(map);
-
   const ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
   map.setMaxBounds(ukBounds);
   map.fitBounds(ukBounds);
 
-  /* ---------- INFO TOGGLE BUTTON (top-right) ---------- */
-  const toggleBtn = L.control({ position: 'topright' });
-  toggleBtn.onAdd = () => {
+  const toggleButton = L.control({ position: 'topright' });
+  toggleButton.onAdd = function() {
     const btn = L.DomUtil.create('button', 'leaflet-bar');
-    btn.innerHTML = 'Info';
-    btn.title = 'Show county info';
-    btn.style.cssText = 'background:#fff;border:1px solid #999;width:34px;height:34px;font-size:18px;cursor:pointer;border-radius:4px;box-shadow:0 2px 4px rgba(0,0,0,0.3);';
+    btn.innerHTML = 'Info'; btn.title = 'Show county info';
+    btn.style.cssText = 'background:white; border:1px solid #999; width:34px; height:34px; font-size:18px; cursor:pointer; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.3);';
     btn.onclick = () => sidebar.classList.toggle('visible');
     return btn;
   };
-  toggleBtn.addTo(map);
+  toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
-  /* ---------- UNIT TOGGLE STATE ---------- */
-  let useCelsius = true;
-  let useMph     = true;
-  const tempToggle = document.getElementById('tempToggle');
-  tempToggle.onclick = () => {
-    useCelsius = !useCelsius;
-    useMph     = !useMph;
-    tempToggle.textContent = (useCelsius ? '°C' : '°F') + ' / ' + (useMph ? 'mph' : 'kmh');
-
-    // Refresh weather for the currently selected county
-    if (currentLayer) {
-      const c = turf.centroid(currentLayer.feature);
-      updateCountyCard(
-        currentLayer.feature.properties.NAME,
-        currentLayer,
-        c.geometry.coordinates[1],
-        c.geometry.coordinates[0]
-      );
-    }
-  };
-
-  /* ---------- SINGLE GLOBAL fetchWeather ---------- */
   async function fetchWeather(lat, lon) {
-    try {
-      const r = await axios.get(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`
-      );
-      const tC = r.data.current.temperature_2m;
-      const wKmh = r.data.current.wind_speed_10m;
-      const code = r.data.current.weather_code;
-
-      const descMap = {
-        0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',
-        45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
-        61:'Light rain',63:'Rain',65:'Heavy rain',
-        71:'Light snow',73:'Snow',75:'Heavy snow',
-        80:'Showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm'
-      };
-      const desc = descMap[code] || 'Unknown';
-
-      const temp = useCelsius ? Math.round(tC) : Math.round(tC * 9/5 + 32);
-      const wind = useMph ? Math.round(wKmh * 0.621371) : Math.round(wKmh);
-
-      return {
-        temp, desc, wind,
-        unit: useCelsius ? '°C' : '°F',
-        windUnit: useMph ? 'mph' : 'kmh'
-      };
-    } catch (e) {
-      console.error('Weather error:', e);
-      return null;
-    }
+  try {
+    const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
+    const temp = Math.round(res.data.current.temperature_2m);
+    const code = res.data.current.weather_code;
+    const windKmh = res.data.current.wind_speed_10m;
+    const windMph = Math.round(windKmh * 0.621371); // Convert km/h to mph
+    const descMap = {
+      0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
+      45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+      61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
+      71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
+      80: 'Showers', 81: 'Rain showers', 82: 'Heavy showers', 95: 'Thunderstorm'
+    };
+    const desc = descMap[code] || 'Unknown';
+    return { temp, desc, wind: windMph }; // wind now in mph
+  } catch (err) {
+    console.error("Weather fetch failed:", err);
+    return null;
   }
+}
 
   let currentLayer = null;
+  let photoTimeout;
+  function showPhoto(landmark, e) {
+    clearTimeout(photoTimeout);
+    const img = document.createElement('img');
+    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}`;
+    img.style.cssText = 'position:absolute; top:'+(e.clientY+10)+'px; left:'+(e.clientX+10)+'px; width:200px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10000;';
+    img.onload = () => document.body.appendChild(img);
+    window.photoImg = img;
+  }
+  function hidePhoto() {
+    photoTimeout = setTimeout(() => {
+      if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+    }, 300);
+  }
+
+  // === ALL DATA + FUNCTIONS INSIDE FETCH ===
+  fetch('./counties_simplified8.json')
+    .then(res => res.ok ? res.json() : Promise.reject(`Failed: ${res.status}`))
+    .then(data => {
       // COUNTY DATA (NUMBERS ONLY)
       const countyData = {
         "Aberdeenshire": { area: 1950, population: 380495, events: ["Battle of Harlaw (1411)", "Aberdeen University founded (1495)"], landmarks: ["Slains Castle", "Balmoral Castle", "Dunnottar Castle"] },
@@ -343,115 +316,107 @@ document.addEventListener('DOMContentLoaded', () => {
         "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
       };
 
-/* ---------- UPDATE COUNTY CARD (async) ---------- */
-  const updateCountyCard = async (englishName, layer, lat, lon) => {
-    // ---- placeholders – you will fill these later ----
-    const countyData      = window.countyData      || {};
-    const countyLanguages = window.countyLanguages || {};
+      // UPDATE CARD FUNCTION (NOW SEES countyData)
+      window.updateCountyCard = function(englishName, layer, lat, lon) {
+        const details = countyData[englishName] || {};
+        const langEntry = countyLanguages[englishName];
+        const area = details.area || 0;
+        const pop = details.population || 0;
+        const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
 
-    const d = countyData[englishName] || {};
-    const lang = countyLanguages[englishName];
-    const area = d.area || 0;
-    const pop  = d.population || 0;
-    const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
+        let badgeStyle = '';
+        if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
+        else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
+        else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
+        else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
+        else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
+        else badgeStyle = 'background:#66BB6A; color:white;';
 
-    // colour badge
-    let badge = '';
-    if (density > 1000) badge = 'background:#9B2C2C;color:#fff;';
-    else if (density > 500) badge = 'background:#D32F2F;color:#fff;';
-    else if (density > 200) badge = 'background:#FF7043;color:#fff;';
-    else if (density > 100) badge = 'background:#FFB300;color:#fff;';
-    else if (density > 50)  badge = 'background:#8BC34A;color:#fff;';
-    else badge = 'background:#66BB6A;color:#fff;';
+        // === WEATHER STATE & TOGGLE ===
+const weatherBlock = weather ? `
+  <div style="text-align:center;">
+    <div class="weather-badge">
+      ${weather.temp}${weather.unit} • ${weather.desc} • Wind ${weather.wind} ${weather.windUnit}
+    </div>
+    <div class="weather-underline"></div>
+  </div>` : '';
+  
+  // Re-fetch weather for current county if visible
+  if (currentLayer) {
+    const centroid = turf.centroid(currentLayer.feature);
+    const lat = centroid.geometry.coordinates[1];
+    const lon = centroid.geometry.coordinates[0];
+    const englishName = currentLayer.feature.properties.NAME;
+    window.updateCountyCard(englishName, currentLayer, lat, lon);
+  }
+};
 
-    // ---- weather ----
-    const weather = await fetchWeather(lat, lon);
-    const wBlock = weather ? `
-      <div style="text-align:center;">
-        <div class="weather-badge">
-          ${weather.temp}${weather.unit} • ${weather.desc} • Wind ${weather.wind} ${weather.windUnit}
-        </div>
-        <div class="weather-underline"></div>
-      </div>` : '';
+// === UPDATED fetchWeather WITH CONVERSIONS ===
+async function fetchWeather(lat, lon) {
+  try {
+    const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
+    const tempC = res.data.current.temperature_2m;
+    const windKmh = res.data.current.wind_speed_10m;
+    const code = res.data.current.weather_code;
 
-    // ---- final HTML ----
-    infoDiv.innerHTML = `
-      <div class="county-card">
-        ${wBlock}
-        <h3 style="text-align:center;margin:0 0 10px;">${englishName}</h3>
-        ${lang ? `<p style="margin:6px 0;font-size:0.9rem;"><strong>${lang.lang}:</strong> ${lang.name}</p>` : ''}
-        <div style="display:flex;justify-content:space-between;margin:12px 0;font-size:0.95rem;">
-          <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
-          <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
-        </div>
-        <div style="text-align:center;margin:12px 0;">
-          <span style="display:inline-block;${badge}padding:6px 16px;border-radius:20px;font-weight:600;font-size:0.9rem;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
-            Density: ${density} people/sq mi
-          </span>
-        </div>
-        ${d.events?.length ? `<h4 style="margin:12px 0 6px;color:var(--accent);">Events</h4><ul style="margin:0;padding-left:18px;font-size:0.9rem;">${d.events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
-        ${d.landmarks?.length ? `<h4 style="margin:12px 0 6px;color:var(--accent);">Landmarks</h4><ul style="margin:0;padding-left:18px;font-size:0.9rem;">${d.landmarks.map(l=>`<li onmouseover="showPhoto('${l}',event)" onmouseout="hidePhoto()" style="cursor:pointer;color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
-      </div>`;
+    const descMap = {
+      0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',
+      45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+      61:'Light rain',63:'Rain',65:'Heavy rain',
+      71:'Light snow',73:'Snow',75:'Heavy snow',
+      80:'Showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm'
+    };
+    const desc = descMap[code] || 'Unknown';
 
-    // highlight selected county
-    if (currentLayer) currentLayer.setStyle({ weight:1, fillOpacity:0.35 });
-    layer.setStyle({ weight:3, fillOpacity:0.6 });
-    currentLayer = layer;
-  };
-  window.updateCountyCard = updateCountyCard;   // expose globally for click handlers
+    // Convert based on toggle
+    const temp = useCelsius ? Math.round(tempC) : Math.round(tempC * 9/5 + 32);
+    const wind = useMph ? Math.round(windKmh * 0.621371) : Math.round(windKmh);
 
-  /* ---------- PHOTO HOVER ---------- */
-  let photoTimeout;
-  window.showPhoto = (landmark, e) => {
-    clearTimeout(photoTimeout);
-    const img = document.createElement('img');
-    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark+' UK')}`;
-    img.style.cssText = `position:absolute;top:${e.clientY+10}px;left:${e.clientX+10}px;width:200px;height:auto;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000;`;
-    img.onload = () => document.body.appendChild(img);
-    window.photoImg = img;
-  };
-  window.hidePhoto = () => {
-    photoTimeout = setTimeout(() => {
-      if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
-    }, 300);
-  };
+    return { 
+      temp, 
+      desc, 
+      wind,
+      unit: useCelsius ? '°C' : '°F',
+      windUnit: useMph ? 'mph' : 'kmh'
+    };
+  } catch (err) {
+    console.error("Weather error:", err);
+    return null;
+  }
+}
+      };
 
-  /* ---------- LOAD GEOJSON ---------- */
-  fetch('./counties_simplified8.json')
-    .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-    .then(data => {
-      /* ---- OPTIONAL: put your countyData / countyLanguages here ---- */
-      window.countyData      = window.countyData      || {};
-      window.countyLanguages = window.countyLanguages || {};
-
-      const pastel = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
-      data.features.forEach((f,i) => f.properties.color = pastel[i % pastel.length]);
+      // ADD GEOJSON
+      const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
+      data.features.forEach((f, i) => f.properties.color = pastelColors[i % pastelColors.length]);
 
       L.geoJSON(data, {
-        style: f => ({ color:'#333', weight:1, fillColor:f.properties.color, fillOpacity:0.35 }),
+        style: f => ({ color: "#333", weight: 1, fillColor: f.properties.color, fillOpacity: 0.35 }),
         onEachFeature: (feature, layer) => {
-          const name = feature.properties.NAME;
-          const d    = window.countyData[name] || {};
-          const lang = window.countyLanguages[name];
-          const density = d.area ? Math.round(d.population/d.area) : '?';
-          const cen = turf.centroid(feature);
-          const lat = cen.geometry.coordinates[1];
-          const lon = cen.geometry.coordinates[0];
+          const englishName = feature.properties.NAME;
+          const details = countyData[englishName] || {};
+          const langEntry = countyLanguages[englishName];
+          const density = details.area > 0 ? Math.round(details.population / details.area) : '?';
+          const centroid = turf.centroid(feature);
+          const lat = centroid.geometry.coordinates[1];
+          const lon = centroid.geometry.coordinates[0];
 
           layer.bindTooltip(`
-            <div style="text-align:center;font-weight:bold;font-size:0.95rem;">
-              ${name}<br>
-              ${lang ? `<small>${lang.lang}: ${lang.name}</small><br>` : ''}
+            <div style="text-align:center; font-weight:bold; font-size:0.95rem;">
+              ${englishName}<br>
+              ${langEntry ? `<small>${langEntry.lang}: ${langEntry.name}</small><br>` : ''}
               <small style="color:#555;">${density} people/sq mi</small>
-            </div>`, { direction:'center', className:'county-tooltip' });
+            </div>
+          `, { direction: 'center', className: 'county-tooltip' });
 
           layer.on('click', () => {
-            updateCountyCard(name, layer, lat, lon);
+            window.updateCountyCard(englishName, layer, lat, lon);
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             map.fitBounds(layer.getBounds());
           });
-          layer.on('mouseover', () => layer.setStyle({ weight:2 }));
-          layer.on('mouseout',  () => layer.setStyle({ weight:1 }));
+
+          layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
+          layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
         }
       }).addTo(map);
 
@@ -459,77 +424,78 @@ document.addEventListener('DOMContentLoaded', () => {
       infoDiv.innerHTML = '<em>Click a county to explore.</em>';
     })
     .catch(err => {
-      console.error('GeoJSON load error:', err);
-      infoDiv.innerHTML = '<em style="color:red;">Failed to load counties – check console.</em>';
+      console.error(err);
+      infoDiv.innerHTML = '<em style="color:red;">Failed to load map data.</em>';
     });
 
-  /* ---------- SEARCH (places_clean.csv) ---------- */
-  L.Control.geocoder({ defaultMarkGeocode:true, placeholder:'Search town, village, postcode…' }).addTo(map);
+  // SEARCH & PLACES (unchanged)
+  L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
   window.places = []; let fuse = null; let searchMarker = null;
-
-  const parseCSVLine = line => {
-    const cols = []; const re = /(?:\"([^\"]*)\"|([^,]+))/g; let m;
-    while ((m = re.exec(line)) !== null) cols.push(m[1] || m[2] || '');
+  function parseCSVLine(line) {
+    const cols = []; const regex = /(?:\"([^\"]*)\"|([^,]+))/g; let m;
+    while ((m = regex.exec(line)) !== null) cols.push(m[1] || m[2] || '');
     return cols;
-  };
-  const initFuse = () => { if (window.places.length) fuse = new Fuse(window.places, { keys:['name','county'], threshold:0.3 }); };
-  const showDropdown = results => {
+  }
+  function initFuse() { if (window.places.length) fuse = new Fuse(window.places, { keys: ['name', 'county'], threshold: 0.3 }); }
+  function showDropdown(results) {
     searchDropdown.innerHTML = '';
-    if (!results.length) { searchDropdown.style.display='none'; return; }
-    results.slice(0,10).forEach(r => {
+    if (!results.length) { searchDropdown.style.display = 'none'; return; }
+    results.slice(0, 10).forEach(r => {
       const div = document.createElement('div');
-      div.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.9rem;';
-      div.textContent = `${r.item.name}, ${r.item.county||''}`;
-      div.onmouseover = () => div.style.backgroundColor='#f5f5f5';
-      div.onmouseout  = () => div.style.backgroundColor='';
+      div.style.cssText = 'padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee; font-size:0.9rem;';
+      div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+      div.onmouseover = () => div.style.backgroundColor = '#f5f5f5';
+      div.onmouseout = () => div.style.backgroundColor = '';
       div.onclick = () => selectPlace(r.item);
       searchDropdown.appendChild(div);
     });
-    searchDropdown.style.display='block';
-  };
-  const selectPlace = place => {
+    searchDropdown.style.display = 'block';
+  }
+  function selectPlace(place) {
     if (searchMarker) map.removeLayer(searchMarker);
-    searchMarker = L.marker([place.lat, place.lon]).addTo(map)
-      .bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
+    searchMarker = L.marker([place.lat, place.lon]).addTo(map).bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
     map.setView([place.lat, place.lon], 11);
-    searchDropdown.style.display='none';
+    searchDropdown.style.display = 'none';
     searchInput.value = place.name;
     setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
-  };
-  const showCountyFromPoint = (lat, lon) => {
-    const pt = turf.point([lon, lat]);
+  }
+  function showCountyFromPoint(lat, lon) {
+    const point = turf.point([lon, lat]);
     let found = null;
     map.eachLayer(l => {
       if (l instanceof L.GeoJSON) {
         l.eachLayer(cl => {
-          if (cl.getBounds && cl.getBounds().contains([lat, lon]) && turf.booleanPointInPolygon(pt, cl.feature)) found = cl;
+          if (cl.getBounds && cl.getBounds().contains([lat, lon]) && turf.booleanPointInPolygon(point, cl.feature)) {
+            found = cl;
+          }
         });
       }
     });
     if (found) {
-      const name = found.feature.properties.NAME;
-      const c = turf.centroid(found.feature);
-      updateCountyCard(name, found, c.geometry.coordinates[1], c.geometry.coordinates[0]);
+      const englishName = found.feature.properties.NAME;
+      const centroid = turf.centroid(found.feature);
+      window.updateCountyCard(englishName, found, centroid.geometry.coordinates[1], centroid.geometry.coordinates[0]);
       if (window.innerWidth <= 1024) sidebar.classList.add('visible');
-    } else infoDiv.innerHTML = '<em>County not found.</em>';
-  };
-
+    } else {
+      infoDiv.innerHTML = '<em>County not found.</em>';
+    }
+  }
   fetch('places_clean.csv')
     .then(r => r.text())
-    .then(txt => {
-      const lines = txt.trim().split('\n'); lines.shift();
+    .then(text => {
+      const lines = text.trim().split('\n'); lines.shift();
       lines.forEach(line => {
         const c = parseCSVLine(line);
         const name = c[0], desc = c[2], county = c[3], lat = parseFloat(c[6]), lon = parseFloat(c[7]);
-        if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon))
+        if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
           window.places.push({ name, county, lat, lon });
+        }
       });
       initFuse();
     });
-
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.trim();
-    if (!q || !fuse) { searchDropdown.style.display='none'; return; }
+    if (!q || !fuse) { searchDropdown.style.display = 'none'; return; }
     showDropdown(fuse.search(q));
   });
   searchInput.addEventListener('keydown', e => {
@@ -539,8 +505,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   document.addEventListener('click', e => {
-    if (!searchDropdown.contains(e.target) && e.target !== searchInput)
-      searchDropdown.style.display='none';
+    if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
+      searchDropdown.style.display = 'none';
+    }
   });
-});
+};
 </script>
+</body>
+</html>
