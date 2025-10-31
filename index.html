@@ -200,35 +200,64 @@ window.onload = function() {
   let currentLayer = null;
   let photoTimeout;
   function updateCountyCard(englishName, layer, lat, lon) {
-    const details = countyData[englishName] || {};
-    const langEntry = countyLanguages[englishName];
-    const events = details.events || [];
-    const landmarks = details.landmarks || [];
+  const details = countyData[englishName] || {};
+  const langEntry = countyLanguages[englishName];
+  const events = details.events || [];
+  const landmarks = details.landmarks || [];
+  const area = details.area || 0;
+  const pop = details.population || 0;
 
-    fetchWeather(lat, lon).then(weather => {
-      const weatherBlock = weather
-        ? `<div style="text-align:center;">
-             <div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} km/h</div>
-             <div class="weather-underline"></div>
-           </div>`
-        : '';
+  // CALCULATE DENSITY
+  const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
 
-      infoDiv.innerHTML = `
-        <div class="county-card">
-        	<h3 style="text-align:center; margin-top:0;">${englishName}</h3>
-          ${weatherBlock}
-          ${langEntry ? `<p><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
-          <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
-          <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
-          ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
-          ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
-        </div>`;
-    });
+  // DENSITY BADGE COLOR
+  let badgeStyle = '';
+  if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
+  else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
+  else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
+  else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
+  else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
+  else badgeStyle = 'background:#66BB6A; color:white;';
 
-    if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
-    layer.setStyle({ weight: 3, fillOpacity: 0.6 });
-    currentLayer = layer;
-  }
+  fetchWeather(lat, lon).then(weather => {
+    const weatherBlock = weather
+      ? `<div style="text-align:center;">
+           <div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} km/h</div>
+           <div class="weather-underline"></div>
+         </div>`
+      : '';
+
+    infoDiv.innerHTML = `
+      <div class="county-card">
+        ${weatherBlock}
+        <h3 style="text-align:center; margin:0 0 10px;">${englishName}</h3>
+        ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+
+        <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
+          <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
+          <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+        </div>
+
+        <!-- DENSITY BADGE -->
+        <div style="text-align:center; margin:12px 0;">
+          <span style="display:inline-block; ${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+            Density: ${density} people/sq mi
+          </span>
+        </div>
+
+        ${events.length ? `<h4 style="margin:12px 0 6px; font-size:1rem; color:var(--accent);">Events</h4><ul style="margin:0; padding-left:18px; font-size:0.9rem;">${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
+        ${landmarks.length ? `<h4 style="margin:12px 0 6px; font-size:1rem; color:var(--accent);">Landmarks</h4><ul style="margin:0; padding-left:18px; font-size:0.9rem;">${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
+      </div>`;
+  }).catch(() => {
+    // Fallback without weather
+    infoDiv.innerHTML = `<div class="county-card">... same content without weather ...</div>`;
+  });
+
+  // Highlight selected county
+  if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
+  layer.setStyle({ weight: 3, fillOpacity: 0.6 });
+  currentLayer = layer;
+}
 
   function showPhoto(landmark, e) {
     clearTimeout(photoTimeout);
