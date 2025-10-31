@@ -388,10 +388,10 @@ window.onload = function() {
 
           const cardHTML = `
             <div class="county-card" style="margin-bottom:16px;">
+              ${weatherBlock}
               ${flagHTML}
               <div class="card-body">
                 <h3>${englishName}</h3>
-                ${weatherBlock}
                 ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
                 <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
                   <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
