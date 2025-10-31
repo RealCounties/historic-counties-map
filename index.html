@@ -384,19 +384,6 @@ const countyFlags = {
           const flagUrl = countyFlags[englishName];
           const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
 
-infoDiv.innerHTML = `
-  <div class="county-card">
-    ${flagHTML}
-    <h3>${englishName}</h3>
-
-    <!-- ==== WEATHER (centered) ==== -->
-    <div style="text-align:center; margin-bottom:12px;">
-      ${weather?.temp !== undefined
-        ? `<div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div>
-           <div class="weather-underline"></div>`
-        : ''}
-    </div>
-
     <div class="card-body">
       ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
 
