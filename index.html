@@ -32,13 +32,21 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 
 /* ---- NEW CARD LAYOUT WITH FLAG ---- */
 .county-card { 
-  background:var(--card-bg); padding:14px; border-radius:10px; 
-  box-shadow:0 2px 6px var(--shadow); transition:all .3s ease; 
-  cursor:pointer; position:relative; display:flex; gap:12px; align-items:flex-start; 
+  background:var(--card-bg); padding:14px; border-radius:10px;
+  box-shadow:0 2px 6px var(--shadow); transition:all .3s ease;
+  cursor:pointer; text-align:center;
 }
 .county-card:hover { transform:translateY(-6px); box-shadow:0 8px 18px var(--shadow); }
-.county-card .flag { width:48px; height:auto; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.2); flex-shrink:0; }
-.county-card .card-body { flex:1; }
+.county-card .flag {
+  width:64px; height:auto; border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,.25); margin:0 auto 12px;
+  display:block;
+}
+.county-card .card-body { }
+.county-card h3 {
+  margin:0 0 12px; font-size:1.25rem; color:var(--text);
+  word-wrap:break-word; line-height:1.3;
+}
 .county-card h3 { margin:0 0 12px; font-size:1.25rem; color:var(--text); word-wrap:break-word; text-align:center; line-height:1.3; }
 .weather-badge { display:inline-block; font-size:0.82rem; background:rgba(0,0,0,0.1); color:var(--text); padding:6px 12px; border-radius:16px; font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.12); }
 .weather-underline { width:60px; height:2px; background:var(--accent); margin:8px auto 12px; border-radius:1px; }
@@ -374,7 +382,7 @@ const countyFlags = {
         fetchWeather(lat, lon).then(weather => {
           const weatherBlock = weather ? `<div style="text-align:center;"><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div><div class="weather-underline"></div></div>` : '';
           const flagUrl = countyFlags[englishName];
-          const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag">` : '';
+          const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
 
           infoDiv.innerHTML = `
             <div class="county-card">
