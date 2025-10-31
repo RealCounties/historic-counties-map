@@ -401,8 +401,8 @@ window.onload = function() {
                     Density: ${density} people/sq mi
                   </span>
                 </div>
-                ${details.events?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:left;">Events</h4><ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block;">${details.events.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
-                ${details.landmarks?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:left;">Landmarks</h4><ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block;">${details.landmarks.map(l => `<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
+                ${details.events?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:left;">Events</h4><ul style="margin:0 auto; padding-left:0px; font-size:0.9rem; text-align:left; display:inline-block;">${details.events.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+                ${details.landmarks?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:left;">Landmarks</h4><ul style="margin:0 auto; padding-left:0px; font-size:0.9rem; text-align:left; display:inline-block;">${details.landmarks.map(l => `<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
                 ${weatherBlock}
               </div>
             </div>`;
