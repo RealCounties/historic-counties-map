@@ -129,105 +129,464 @@ window.onload = function() {
     }, 300);
   }
 
-  // === ALL DATA + FUNCTIONS INSIDE FETCH ===
-  fetch('./counties_simplified8.json')
-    .then(res => res.ok ? res.json() : Promise.reject(`Failed: ${res.status}`))
-    .then(data => {
-      // COUNTY DATA (NUMBERS ONLY)
-      const countyData = {
-        "Aberdeenshire": { area: 1950, population: 380495, events: ["Battle of Harlaw (1411)", "Aberdeen University founded (1495)"], landmarks: ["Slains Castle", "Balmoral Castle", "Dunnottar Castle"] },
-        "Anglesey": { area: 277, population: 69751, events: ["Roman invasion repelled (60 AD)", "Menai Bridge opened (1826)"], landmarks: ["Beaumaris Castle", "South Stack Lighthouse", "Menai Suspension Bridge"] },
-        "Antrim": { area: 1175, population: 615701, events: ["Titanic built in Belfast (1912)", "Giant's Causeway formed (~60M BC)"], landmarks: ["Giant's Causeway", "Carrickfergus Castle", "Dark Hedges"] },
-        "Argyllshire": { area: 3110, population: 64819, events: ["Iona Abbey founded (563 AD)", "Massacre of Glencoe (1692)"], landmarks: ["Iona Abbey", "Inveraray Castle", "Oban Distillery"] },
-        "Armagh": { area: 512, population: 178598, events: ["St. Patrick founds cathedral (445 AD)", "Armagh Observatory opens (1790)"], landmarks: ["Armagh Cathedral", "Navan Fort", "Armagh Planetarium"] },
-        "Ayrshire": { area: 1129, population: 367676, events: ["Robert Burns born (1759)", "Ayr Racecourse founded (1907)"], landmarks: ["Culzean Castle", "Burns Cottage", "Ailsa Craig"] },
-        "Banffshire": { area: 641, population: 46537, events: ["Whisky boom begins (1820s)", "Banff Bridge built (1779)"], landmarks: ["Duff House", "Balvenie Castle", "Glenfiddich Distillery"] },
-        "Bedfordshire": { area: 468, population: 602847, events: ["Bunyan writes Pilgrim's Progress (1678)", "Woburn Safari Park opens (1970)"], landmarks: ["Woburn Abbey", "Whipsnade Zoo", "Shuttleworth Collection"] },
-        "Berkshire": { area: 722, population: 842804, events: ["Magna Carta at Runnymede (1215)", "Ascot Racecourse founded (1711)"], landmarks: ["Windsor Castle", "Ascot Racecourse", "Highclere Castle"] },
-        "Berwickshire": { area: 457, population: 26458, events: ["Flodden Field aftermath (1513)", "Union of Crowns impacts (1603)"], landmarks: ["Paxton House", "Duns Castle", "St Abb’s Head"] },
-        "Brecknockshire": { area: 742, population: 67598, events: ["Norman conquest of Brycheiniog (1093)", "Brecon & Merthyr Railway (1863)"], landmarks: ["Brecon Beacons", "Brecon Cathedral", "Llangorse Lake"] },
-        "Buckinghamshire": { area: 746, population: 916903, events: ["Bletchley Park breaks Enigma (1940)", "Eton College founded (1440)"], landmarks: ["Bletchley Park", "Stowe House", "Eton College"] },
-        "Buteshire": { area: 225, population: 12534, events: ["Rothesay Castle built (1200s)", "Mount Stuart completed (1879)"], landmarks: ["Rothesay Castle", "Mount Stuart House", "Bute Museum"] },
-        "Caernarfonshire": { area: 563, population: 139065, events: ["Edward I builds castle (1283)", "Prince Charles investiture (1969)"], landmarks: ["Caernarfon Castle", "Snowdon", "Llanberis Slate Museum"] },
-        "Caithness": { area: 618, population: 26486, events: ["Norse earldom (871)", "Dounreay nuclear site (1955)"], landmarks: ["Castle of Mey", "John o’ Groats", "Duncansby Stacks"] },
-        "Cambridgeshire": { area: 858, population: 460448, events: ["University founded (1209)", "Fens drained (1630s)"], landmarks: ["King’s College Chapel", "Ely Cathedral", "Duxford IWM"] },
-        "Cardiganshire": { area: 693, population: 75784, events: ["Aberystwyth Castle built (1277)", "Aberystwyth University (1872)"], landmarks: ["Devil’s Bridge", "Strata Florida Abbey", "Vale of Rheidol Railway"] },
-        "Carmarthenshire": { area: 937, population: 184232, events: ["Rebecca Riots (1839-43)", "National Botanic Garden opens (2000)"], landmarks: ["Carreg Cennen Castle", "Laugharne Castle", "National Botanic Garden"] },
-        "Cheshire": { area: 1035, population: 1668894, events: ["Roman Deva fortress (70 AD)", "Jodrell Bank telescope (1957)"], landmarks: ["Chester Cathedral", "Beeston Castle", "Jodrell Bank"] },
-        "Clackmannanshire": { area: 48, population: 50957, events: ["Sauchieburn Battle aftermath (1488)", "Gartmorn Dam completed (1713)"], landmarks: ["Alloa Tower", "Castle Campbell", "Dollar Glen"] },
-        "Cornwall": { area: 1365, population: 533594, events: ["Tin mining peak (1800s)", "Eden Project opens (2001)"], landmarks: ["St Michael’s Mount", "Eden Project", "Tintagel Castle"] },
-        "Cromartyshire": { area: 370, population: 7074, events: ["Hugh Miller fossils (1820s)", "Cromarty Courthouse built (1773)"], landmarks: ["Cromarty Courthouse", "Hugh Miller’s Cottage", "Invergordon"] },
-        "Cumberland": { area: 1525, population: 306241, events: ["Hadrian’s Wall built (122 AD)", "Lake District National Park (1951)"], landmarks: ["Carlisle Castle", "Hadrian’s Wall", "Scafell Pike"] },
-        "Denbighshire": { area: 668, population: 227680, events: ["Denbigh Castle built (1282)", "Pontcysyllte Aqueduct opens (1805)"], landmarks: ["Denbigh Castle", "Pontcysyllte Aqueduct", "Llangollen Railway"] },
-        "Derbyshire": { area: 1017, population: 1148373, events: ["Cromford Mill opens (1771)", "Peak District National Park (1951)"], landmarks: ["Chatsworth House", "Cromford Mill", "Peak Cavern"] },
-        "Devon": { area: 2621, population: 1133463, events: ["Drake plays bowls (1588)", "Jurassic Coast UNESCO (2001)"], landmarks: ["Dartmoor", "Exeter Cathedral", "Jurassic Coast"] },
-        "Dorset": { area: 1005, population: 543296, events: ["Tolpuddle Martyrs (1834)", "Dorset Coast UNESCO (2001)"], landmarks: ["Cerne Abbas Giant", "Lulworth Cove", "Durdlestone Head"] },
-        "Down": { area: 950, population: 528983, events: ["St. Patrick lands (432 AD)", "Scrabo Tower built (1857)"], landmarks: ["Mourne Mountains", "Downpatrick Cathedral", "Scrabo Tower"] },
-        "Dumfriesshire": { area: 1063, population: 77160, events: ["Robert the Bruce kills Comyn (1306)", "Devorgilla Bridge built (1432)"], landmarks: ["Caerlaverock Castle", "Sweetheart Abbey", "Devorgilla Bridge"] },
-        "Dunbartonshire": { area: 241, population: 262419, events: ["Viking siege of Dumbarton (870)", "Hill House designed (1904)"], landmarks: ["Dumbarton Castle", "Loch Lomond", "Hill House"] },
-        "Durham": { area: 1022, population: 1467037, events: ["Durham Cathedral founded (1093)", "Beamish Museum opens (1970)"], landmarks: ["Durham Cathedral", "Beamish Museum", "High Force Waterfall"] },
-        "East Lothian": { area: 267, population: 74882, events: ["Battle of Prestonpans (1745)", "John Muir born (1838)"], landmarks: ["Tantallon Castle", "Dirleton Castle", "Bass Rock"] },
-        "Essex": { area: 1591, population: 2999248, events: ["Battle of Maldon (991)", "Southend Pier opens (1830)"], landmarks: ["Colchester Castle", "Audley End House", "Southend Pier"] },
-        "Fermanagh": { area: 715, population: 61170, events: ["Devenish Island monastery (6th c.)", "Marble Arch Caves discovered (1895)"], landmarks: ["Enniskillen Castle", "Devenish Island", "Marble Arch Caves"] },
-        "Fife": { area: 504, population: 365493, events: ["St Andrews University founded (1413)", "Culross Palace completed (1597)"], landmarks: ["St Andrews Cathedral", "Falkland Palace", "Culross Palace"] },
-        "Flintshire": { area: 260, population: 215390, events: ["Flint Castle built (1277)", "Greenfield Valley mills (1780s)"], landmarks: ["Flint Castle", "St Winifred’s Well", "Basingwerk Abbey"] },
-        "Glamorgan": { area: 827, population: 1321460, events: ["Coal boom begins (1800s)", "Castell Coch rebuilt (1870s)"], landmarks: ["Cardiff Castle", "Castell Coch", "National Museum Cardiff"] },
-        "Gloucestershire": { area: 1293, population: 1147106, events: ["Berkeley Castle: Edward II murdered (1327)", "Cotswold Way opens (1970)"], landmarks: ["Gloucester Cathedral", "Berkeley Castle", "Cotswold Way"] },
-        "Hampshire": { area: 1656, population: 2099640, events: ["Jane Austen at Chawton (1809)", "Winchester Cathedral begun (1079)"], landmarks: ["Portsmouth Dockyard", "Winchester Cathedral", "New Forest"] },
-        "Herefordshire": { area: 837, population: 183631, events: ["Offa’s Dyke built (8th c.)", "Mappa Mundi created (1300)"], landmarks: ["Hereford Cathedral", "Goodrich Castle", "Black & White Villages"] },
-        "Hertfordshire": { area: 633, population: 1157166, events: ["St Albans Roman city (43 AD)", "Warner Bros. Studio opens (2012)"], landmarks: ["St Albans Cathedral", "Hatfield House", "Warner Bros. Studio"] },
-        "Huntingdonshire": { area: 366, population: 211776, events: ["Cromwell born (1599)", "Grafham Water opens (1965)"], landmarks: ["Hinchingbrooke House", "Ramsey Abbey Gatehouse", "Grafham Water"] },
-        "Inverness-shire": { area: 4211, population: 118077, events: ["Urquhart Castle built (1200s)", "Loch Ness Monster reported (1933)"], landmarks: ["Loch Ness", "Urquhart Castle", "Eilean Donan Castle"] },
-        "Kent": { area: 1611, population: 2747715, events: ["Canterbury Cathedral founded (597)", "Dover Castle built (1180s)"], landmarks: ["Canterbury Cathedral", "Leeds Castle", "White Cliffs of Dover"] },
-        "Kincardineshire": { area: 380, population: 77670, events: ["Dunnottar Castle siege (1651)", "Fetteresso Castle rebuilt (1782)"], landmarks: ["Dunnottar Castle", "Stonehaven Harbour", "Muchalls Castle"] },
-        "Kinross-shire": { area: 73, population: 11223, events: ["Mary Queen imprisoned (1567)", "Loch Leven Castle ruins (1300s)"], landmarks: ["Loch Leven Castle", "Kinross House", "RSPB Vane Farm"] },
-        "Kirkcudbrightshire": { area: 899, population: 47546, events: ["Artists’ colony begins (1880s)", "Broughton House museum (1920s)"], landmarks: ["Threave Castle", "Broughton House", "Dundrennan Abbey"] },
-        "Lanarkshire": { area: 879, population: 1008014, events: ["New Lanark founded (1800)", "Chatelherault built (1740s)"], landmarks: ["New Lanark", "Chatelherault", "Falls of Clyde"] },
-        "Lancashire": { area: 1909, population: 4942364, events: ["Peterloo Massacre (1819)", "Blackpool Tower opens (1894)"], landmarks: ["Lancaster Castle", "Blackpool Tower", "Ribblehead Viaduct"] },
-        "Leicestershire": { area: 836, population: 975403, events: ["Bosworth Battle (1485)", "National Space Centre (2001)"], landmarks: ["Bosworth Battlefield", "Belvoir Castle", "National Space Centre"] },
-        "Lincolnshire": { area: 2687, population: 1038510, events: ["Lincoln Cathedral tallest (1311)", "Tattershall Castle built (1430s)"], landmarks: ["Lincoln Cathedral", "Tattershall Castle", "Theddlethorpe Dunes"] },
-        "Londonderry": { area: 816, population: 247971, events: ["City walls built (1613)", "Peace Bridge opens (2011)"], landmarks: ["Derry City Walls", "Guildhall", "Peace Bridge"] },
-        "Merionethshire": { area: 676, population: 37874, events: ["Glyndŵr parliament (1404)", "Bala Lake railway (1868)"], landmarks: ["Harlech Castle", "Portmeirion Village", "Cader Idris"] },
-        "Middlesex": { area: 285, population: 4000927, events: ["Hampton Court built (1515)", "Kew Gardens UNESCO (2003)"], landmarks: ["Hampton Court Palace", "Kew Gardens", "Wembley Stadium"] },
-        "Midlothian": { area: 362, population: 621610, events: ["Edinburgh Castle founded (1100s)", "Scottish Parliament opens (2004)"], landmarks: ["Edinburgh Castle", "Rosslyn Chapel", "Scottish Parliament"] },
-        "Monmouthshire": { area: 542, population: 514723, events: ["Chartist March (1839)", "Big Pit opens as museum (1983)"], landmarks: ["Tintern Abbey", "Raglan Castle", "Big Pit"] },
-        "Montgomeryshire": { area: 796, population: 61956, events: ["Powis Castle gardens (1700s)", "Lake Vyrnwy dam (1880s)"], landmarks: ["Powis Castle", "Montgomery Castle", "Lake Vyrnwy"] },
-        "Morayshire": { area: 476, population: 67654, events: ["Elgin Cathedral founded (1224)", "Glen Moray Distillery (1897)"], landmarks: ["Elgin Cathedral", "Pluscarden Abbey", "Duffus Castle"] },
-        "Nairnshire": { area: 200, population: 13894, events: ["Cawdor Castle built (1300s)", "Nairn Golf Club founded (1887)"], landmarks: ["Cawdor Castle", "Nairn Museum", "Nairn Viaduct"] },
-        "Norfolk": { area: 2057, population: 807721, events: ["Norwich Castle built (1067)", "Sandringham bought (1862)"], landmarks: ["Norwich Cathedral", "Sandringham House", "Holkham Hall"] },
-        "Northamptonshire": { area: 998, population: 838786, events: ["Naseby Battle (1645)", "Silverstone Circuit opens (1948)"], landmarks: ["Althorp", "Rockingham Castle", "Silverstone"] },
-        "Northumberland": { area: 2019, population: 797006, events: ["Hadrian’s Wall built (122 AD)", "Lindisfarne Priory (634)"], landmarks: ["Hadrian’s Wall", "Alnwick Castle", "Lindisfarne"] },
-        "Nottinghamshire": { area: 843, population: 1096617, events: ["Sherwood Forest outlaws (1200s)", "Wollaton Hall built (1580s)"], landmarks: ["Sherwood Forest", "Nottingham Castle", "Wollaton Hall"] },
-        "Orkney": { area: 376, population: 21349, events: ["Skara Brae settled (3100 BC)", "Scapa Flow scuttling (1919)"], landmarks: ["Skara Brae", "St Magnus Cathedral", "Ring of Brodgar"] },
-        "Oxfordshire": { area: 754, population: 512345, events: ["Oxford University founded (1096)", "Mini car production (1959)"], landmarks: ["Oxford Colleges", "Blenheim Palace", "Christ Church Cathedral"] },
-        "Peeblesshire": { area: 548, population: 19074, events: ["Traquair House oldest (1107)", "Dawyck Botanic Garden (1600s)"], landmarks: ["Traquair House", "Neidpath Castle", "Dawyck Botanic Garden"] },
-        "Pembrokeshire": { area: 625, population: 122122, events: ["St Davids Cathedral (1181)", "Coast Path opens (1970)"], landmarks: ["St Davids Cathedral", "Pembroke Castle", "Skomer Island"] },
-        "Perthshire": { area: 2493, population: 156371, events: ["Scone Palace: Stone of Destiny (800s)", "Tay Bridge collapse (1879)"], landmarks: ["Scone Palace", "Blair Castle", "Loch Tay"] },
-        "Radnorshire": { area: 470, population: 25821, events: ["Offa’s Dyke (8th c.)", "Elan Valley dams (1893)"], landmarks: ["Elan Valley", "Radnor Forest", "Llandrindod Wells"] },
-        "Renfrewshire": { area: 245, population: 508064, events: ["Paisley Abbey founded (1163)", "Coats Observatory opens (1883)"], landmarks: ["Paisley Abbey", "Coats Observatory", "Castle Semple"] },
-        "Ross-shire": { area: 3089, population: 69503, events: ["Eilean Donan Castle (1200s)", "Beinn Eighe reserve (1951)"], landmarks: ["Eilean Donan Castle", "Inverewe Garden", "Loch Maree"] },
-        "Roxburghshire": { area: 666, population: 50800, events: ["Kelso Abbey founded (1128)", "Hermitage Castle (1300s)"], landmarks: ["Floors Castle", "Kelso Abbey", "Hermitage Castle"] },
-        "Rutland": { area: 152, population: 37677, events: ["Oakham Castle founded (1180)", "Rutland Water created (1976)"], landmarks: ["Rutland Water", "Oakham Castle", "Rockingham Castle"] },
-        "Selkirkshire": { area: 267, population: 16010, events: ["Philiphaugh Battle (1645)", "Ettrick Forest royal (1100s)"], landmarks: ["Bowhill House", "Philiphaugh Battlefield", "Loch of the Lowes"] },
-        "Shetland": { area: 551, population: 23167, events: ["Jarlshof settled (2500 BC)", "Mousa Broch (100 BC)"], landmarks: ["Jarlshof", "Shetland Museum", "Mousa Broch"] },
-        "Shropshire": { area: 1342, population: 472027, events: ["Ironbridge built (1779)", "Ludlow Castle (1080s)"], landmarks: ["Ironbridge Gorge", "Shrewsbury Castle", "Ludlow Castle"] },
-        "Somerset": { area: 1633, population: 1053504, events: ["Sedgemoor Battle (1685)", "Glastonbury Festival (1970)"], landmarks: ["Glastonbury Tor", "Wells Cathedral", "Cheddar Gorge"] },
-        "Staffordshire": { area: 1176, population: 2159392, events: ["Wedgwood pottery (1759)", "Alton Towers opens (1980)"], landmarks: ["Lichfield Cathedral", "Alton Towers", "Trentham Estate"] },
-        "Stirlingshire": { area: 447, population: 244092, events: ["Bannockburn Battle (1314)", "Wallace Monument (1869)"], landmarks: ["Stirling Castle", "Bannockburn", "Wallace Monument"] },
-        "Suffolk": { area: 1505, population: 775099, events: ["Sutton Hoo burial (625 AD)", "Southwold Pier (1900)"], landmarks: ["Sutton Hoo", "Framlingham Castle", "Southwold Pier"] },
-        "Surrey": { area: 759, population: 2975836, events: ["Magna Carta at Runnymede (1215)", "Brooklands racetrack (1907)"], landmarks: ["Runnymede", "Hampton Court", "Brooklands Museum"] },
-        "Sussex": { area: 1466, population: 1612454, events: ["Battle of Hastings (1066)", "Brighton Pavilion (1815)"], landmarks: ["Battle Abbey", "Arundel Castle", "Brighton Pavilion"] },
-        "Sutherland": { area: 2028, population: 12803, events: ["Highland Clearances (1810s)", "Cape Wrath lighthouse (1828)"], landmarks: ["Dunrobin Castle", "Cape Wrath", "Smoo Cave"] },
-        "Tyrone": { area: 1260, population: 178440, events: ["Flight of the Earls (1607)", "Ulster Folk Park (1976)"], landmarks: ["Ulster American Folk Park", "Sperrin Mountains", "Beaghmore Stone Circles"] },
-        "Warwickshire": { area: 918, population: 1632885, events: ["Shakespeare born (1564)", "Kenilworth Castle (1100s)"], landmarks: ["Stratford-upon-Avon", "Warwick Castle", "Kenilworth Castle"] },
-        "West Lothian": { area: 120, population: 154830, events: ["Mary Queen born (1542)", "Shale oil boom (1850s)"], landmarks: ["Linlithgow Palace", "Blackness Castle", "Almond Valley"] },
-        "Westmorland": { area: 785, population: 87466, events: ["Appleby Horse Fair (1100s)", "Levens Hall topiary (1694)"], landmarks: ["Kendal Castle", "Levens Hall", "Rydal Mount"] },
-        "Wigtownshire": { area: 487, population: 26618, events: ["St Ninian at Whithorn (397 AD)", "Logan Botanic Garden (1869)"], landmarks: ["Logan Botanic Garden", "Mull of Galloway", "Whithorn Priory"] },
-        "Wiltshire": { area: 1374, population: 682380, events: ["Stonehenge built (3000 BC)", "Salisbury Cathedral (1220)"], landmarks: ["Stonehenge", "Avebury", "Salisbury Cathedral"] },
-        "Worcestershire": { area: 709, population: 1125037, events: ["Worcester Battle (1651)", "Malvern Hills (ancient)"], landmarks: ["Worcester Cathedral", "Malvern Hills", "Broadway Tower"] },
-        "Yorkshire": { area: 6081, population: 5218838, events: ["York Minster founded (627)", "Castle Howard (1699)"], landmarks: ["York Minster", "Castle Howard", "Whitby Abbey"] }
-      };
-
+  // COUNTY DATA (NUMBERS ONLY) – 92 HISTORIC COUNTIES – NO EVENT/LANDMARK OVERLAP
+const countyData = {
+  "Aberdeenshire": {
+    area: 1950, population: 380495,
+    events: ["Battle of Harlaw (1411)", "Aberdeen University founded (1495)", "North Sea oil boom begins (1970s)"],
+    landmarks: ["Slains Castle", "Balmoral Castle", "Dunnottar Castle"]
+  },
+  "Anglesey": {
+    area: 277, population: 69751,
+    events: ["Roman invasion repelled (60 AD)", "Menai Suspension Bridge opens (1826)", "RAF Valley established (1941)"],
+    landmarks: ["Beaumaris Castle", "South Stack Lighthouse", "Plas Newydd"]
+  },
+  "Antrim": {
+    area: 1175, population: 615701,
+    events: ["Titanic launched from Belfast (1911)", "Dark Hedges planted (1775)", "Belfast Blitz air raids (1941)"],
+    landmarks: ["Giant's Causeway", "Carrickfergus Castle", "Antrim Castle Gardens"]
+  },
+  "Argyllshire": {
+    area: 3110, population: 64819,
+    events: ["Massacre of Glencoe (1692)", "Oban Distillery founded (1794)", "Kilmartin Glen excavations (1860s)"],
+    landmarks: ["Iona Abbey", "Inveraray Castle", "Kilmartin Glen"]
+  },
+  "Armagh": {
+    area: 512, population: 178598,
+    events: ["St Patrick founds cathedral (445 AD)", "Armagh Observatory opens (1790)", "Troubles begin in region (1969)"],
+    landmarks: ["Armagh Cathedral", "Navan Fort", "Armagh Planetarium"]
+  },
+  "Ayrshire": {
+    area: 1129, population: 367676,
+    events: ["Battle of Largs (1263)", "Robert Burns born in Alloway (1759)", "Ayr Racecourse founded (1907)"],
+    landmarks: ["Culzean Castle", "Burns Cottage", "Ailsa Craig"]
+  },
+  "Banffshire": {
+    area: 641, population: 46537,
+    events: ["Banff Bridge rebuilt (1779)", "Glenfiddich Distillery founded (1887)", "Portsoy Marble discovered (1700s)"],
+    landmarks: ["Duff House", "Balvenie Castle", "Portsoy Harbour"]
+  },
+  "Bedfordshire": {
+    area: 468, population: 602847,
+    events: ["Roman settlement at Sandy (1st c. AD)", "John Bunyan writes in prison (1678)", "Woburn Safari Park opens (1970)"],
+    landmarks: ["Woburn Abbey", "Whipsnade Zoo", "Shuttleworth Collection"]
+  },
+  "Berkshire": {
+    area: 722, population: 842804,
+    events: ["Battle of Reading (871 AD)", "Magna Carta sealed at Runnymede (1215)", "Ascot Racecourse founded (1711)"],
+    landmarks: ["Windsor Castle", "Ascot Racecourse", "Shaw House"]
+  },
+  "Berwickshire": {
+    area: 457, population: 26458,
+    events: ["Flodden Field aftermath (1513)", "Union of Crowns impacts trade (1603)", "Eyemouth fishing disaster (1881)"],
+    landmarks: ["Paxton House", "Duns Castle", "St Abb’s Head"]
+  },
+  "Brecknockshire": {
+    area: 742, population: 67598,
+    events: ["Norman conquest of Brycheiniog (1093)", "Brecon & Merthyr Railway opens (1863)", "Llangorse Lake drained (1800s)"],
+    landmarks: ["Brecon Beacons", "Brecon Cathedral", "Llangorse Lake"]
+  },
+  "Buckinghamshire": {
+    area: 746, population: 916903,
+    events: ["John Milton writes in Chalfont (1667)", "Bletchley Park breaks Enigma (1940)", "Pinewood Studios founded (1936)"],
+    landmarks: ["Bletchley Park", "Stowe House", "Eton College"]
+  },
+  "Buteshire": {
+    area: 225, population: 12534,
+    events: ["Rothesay Castle siege (1401)", "Mount Stuart completed (1879)", "Bute Highland Games begin (1800s)"],
+    landmarks: ["Rothesay Castle", "Mount Stuart House", "Bute Museum"]
+  },
+  "Caernarfonshire": {
+    area: 563, population: 139065,
+    events: ["Edward I builds Caernarfon Castle (1283)", "Snowdon Mountain Railway opens (1896)", "Prince Charles investiture (1969)"],
+    landmarks: ["Caernarfon Castle", "Snowdon", "Llanberis Slate Museum"]
+  },
+  "Caithness": {
+    area: 618, population: 26486,
+    events: ["Norse earldom established (871)", "Castle of Mey acquired by Queen Mother (1952)", "Dounreay nuclear site opens (1955)"],
+    landmarks: ["Castle of Mey", "John o’ Groats", "Duncansby Stacks"]
+  },
+  "Cambridgeshire": {
+    area: 858, population: 460448,
+    events: ["Iceni revolt led by Boudicca (60 AD)", "University of Cambridge founded (1209)", "Fens drainage begins (1630s)"],
+    landmarks: ["King’s College Chapel", "Ely Cathedral", "Duxford IWM"]
+  },
+  "Cardiganshire": {
+    area: 693, population: 75784,
+    events: ["Aberystwyth Castle built (1277)", "Aberystwyth University founded (1872)", "Devil’s Bridge built (1753)"],
+    landmarks: ["Devil’s Bridge", "Strata Florida Abbey", "Vale of Rheidol Railway"]
+  },
+  "Carmarthenshire": {
+    area: 937, population: 184232,
+    events: ["Carreg Cennen Castle falls (1277)", "Rebecca Riots begin (1839)", "National Botanic Garden opens (2000)"],
+    landmarks: ["Carreg Cennen Castle", "Laugharne Castle", "National Botanic Garden"]
+  },
+  "Cheshire": {
+    area: 1035, population: 1668894,
+    events: ["Roman Deva fortress founded (75 AD)", "Civil War siege of Chester (1645)", "Jodrell Bank telescope opens (1957)"],
+    landmarks: ["Chester Cathedral", "Beeston Castle", "Jodrell Bank"]
+  },
+  "Clackmannanshire": {
+    area: 48, population: 50957,
+    events: ["Gartmorn Dam completed (1713)", "Alloa Glass Cone built (1770s)", "Dollar Glen opened to public (1880s)"],
+    landmarks: ["Alloa Tower", "Castle Campbell", "Dollar Glen"]
+  },
+  "Cornwall": {
+    area: 1365, population: 533594,
+    events: ["Tin mining in Roman era (1st c.)", "Prayer Book Rebellion (1549)", "Eden Project opens (2001)"],
+    landmarks: ["St Michael’s Mount", "Eden Project", "Tintagel Castle"]
+  },
+  "Cromartyshire": {
+    area: 370, population: 7074,
+    events: ["Cromarty sheriffdom created (1685)", "Hugh Miller discovers fossils (1820s)", "Ullapool founded (1788)"],
+    landmarks: ["Cromarty Courthouse", "Hugh Miller’s Cottage", "Ullapool Harbour"]
+  },
+  "Cumberland": {
+    area: 1525, population: 306241,
+    events: ["Border Reivers peak (16th c.)", "Carlisle Citadel built (1541)", "Lake District National Park (1951)"],
+    landmarks: ["Carlisle Castle", "Hadrian’s Wall", "Scafell Pike"]
+  },
+  "Denbighshire": {
+    area: 668, population: 277680,
+    events: ["Denbigh Castle built (1282)", "Pontcysyllte Aqueduct opens (1805)", "Llangollen Eisteddfod begins (1947)"],
+    landmarks: ["Denbigh Castle", "Pontcysyllte Aqueduct", "Llangollen Railway"]
+  },
+  "Derbyshire": {
+    area: 1017, population: 1148373,
+    events: ["Creswell Crags rock art (13,000 BC)", "Cromford Mill opens (1771)", "Peak District National Park (1951)"],
+    landmarks: ["Chatsworth House", "Cromford Mill", "Peak Cavern"]
+  },
+  "Devon": {
+    area: 2621, population: 1133463,
+    events: ["Roman Isca Dumnoniorum founded (50 AD)", "Spanish Armada wrecks (1588)", "Dartmoor Prison opens (1809)"],
+    landmarks: ["Dartmoor", "Exeter Cathedral", "Jurassic Coast"]
+  },
+  "Dorset": {
+    area: 1005, population: 543296,
+    events: ["Cerne Abbas Giant carved (pre-1000)", "Tolpuddle Martyrs trial (1834)", "Dorset Coast UNESCO (2001)"],
+    landmarks: ["Cerne Abbas Giant", "Lulworth Cove", "Durdlestone Head"]
+  },
+  "Down": {
+    area: 950, population: 528983,
+    events: ["St Patrick lands in Ireland (432 AD)", "Scrabo Tower built (1857)", "Mourne granite quarried (19th c.)"],
+    landmarks: ["Mourne Mountains", "Downpatrick Cathedral", "Scrabo Tower"]
+  },
+  "Dumfriesshire": {
+    area: 1063, population: 77160,
+    events: ["Robert the Bruce kills Comyn (1306)", "Devorgilla Bridge built (1432)", "Burns Mausoleum erected (1815)"],
+    landmarks: ["Caerlaverock Castle", "Sweetheart Abbey", "Devorgilla Bridge"]
+  },
+  "Dunbartonshire": {
+    area: 241, population: 262419,
+    events: ["Viking siege of Dumbarton (870)", "Hill House designed by Mackintosh (1904)", "Loch Lomond public park (1930s)"],
+    landmarks: ["Dumbarton Castle", "Loch Lomond", "Hill House"]
+  },
+  "Durham": {
+    area: 1022, population: 1467037,
+    events: ["Lindisfarne Gospels created (698 AD)", "Durham Cathedral begun (1093)", "Beamish Museum opens (1970)"],
+    landmarks: ["Durham Cathedral", "Beamish Museum", "High Force Waterfall"]
+  },
+  "East Lothian": {
+    area: 267, population: 74882,
+    events: ["Tantallon Castle built (1350s)", "Battle of Prestonpans (1745)", "John Muir born in Dunbar (1838)"],
+    landmarks: ["Tantallon Castle", "Dirleton Castle", "Bass Rock"]
+  },
+  "Essex": {
+    area: 1591, population: 2999248,
+    events: ["Battle of Maldon (991)", "Southend Pier opens (1830)", "Harlow New Town founded (1947)"],
+    landmarks: ["Colchester Castle", "Audley End House", "Southend Pier"]
+  },
+  "Fermanagh": {
+    area: 715, population: 61170,
+    events: ["Devenish Island monastery (6th c.)", "Enniskillen Castle built (1611)", "Marble Arch Caves discovered (1895)"],
+    landmarks: ["Enniskillen Castle", "Devenish Island", "Marble Arch Caves"]
+  },
+  "Fife": {
+    area: 504, population: 365493,
+    events: ["St Andrews University founded (1413)", "Falkland Palace built (1500s)", "Culross Palace completed (1597)"],
+    landmarks: ["St Andrews Cathedral", "Falkland Palace", "Culross Palace"]
+  },
+  "Flintshire": {
+    area: 260, population: 215390,
+    events: ["St Winifred’s Well pilgrimage (7th c.)", "Flint Castle built (1277)", "Greenfield Valley mills boom (1780s)"],
+    landmarks: ["Flint Castle", "St Winifred’s Well", "Basingwerk Abbey"]
+  },
+  "Glamorgan": {
+    area: 827, population: 1321460,
+    events: ["Norman invasion of Glamorgan (1093)", "Coal export boom begins (1830s)", "Cardiff declared capital (1955)"],
+    landmarks: ["Cardiff Castle", "Castell Coch", "National Museum Cardiff"]
+  },
+  "Gloucestershire": {
+    area: 1293, population: 1147106,
+    events: ["Gloucester Cathedral begun (1089)", "Edward II murdered at Berkeley (1327)", "Cotswold Olympick Games begin (1612)"],
+    landmarks: ["Gloucester Cathedral", "Berkeley Castle", "Cotswold Way"]
+  },
+  "Hampshire": {
+    area: 1656, population: 2099640,
+    events: ["Winchester Cathedral founded (1079)", "Jane Austen settles in Chawton (1809)", "D-Day embarkation from Portsmouth (1944)"],
+    landmarks: ["Highclere Castle", "Portsmouth Dockyard", "New Forest"]
+  },
+  "Herefordshire": {
+    area: 837, population: 183631,
+    events: ["Offa’s Dyke built (8th c.)", "Mappa Mundi created (1300)", "Hereford Cathedral chained library (1611)"],
+    landmarks: ["Hereford Cathedral", "Goodrich Castle", "Black & White Villages"]
+  },
+  "Hertfordshire": {
+    area: 633, population: 1157166,
+    events: ["Verulamium Roman city founded (43 AD)", "Hatfield House built (1611)", "Warner Bros. Studio opens (2012)"],
+    landmarks: ["St Albans Cathedral", "Hatfield House", "Warner Bros. Studio"]
+  },
+  "Huntingdonshire": {
+    area: 366, population: 211776,
+    events: ["Ramsey Abbey founded (969)", "Oliver Cromwell born in Huntingdon (1599)", "Grafham Water reservoir opens (1965)"],
+    landmarks: ["Hinchingbrooke House", "Ramsey Abbey Gatehouse", "Grafham Water"]
+  },
+  "Inverness-shire": {
+    area: 4211, population: 118077,
+    events: ["Urquhart Castle built (13th c.)", "Caledonian Canal opens (1822)", "Loch Ness Monster reported (1933)"],
+    landmarks: ["Loch Ness", "Urquhart Castle", "Eilean Donan Castle"]
+  },
+  "Kent": {
+    area: 1611, population: 2747715,
+    events: ["St Augustine lands at Thanet (597)", "Dover Castle built (1180s)", "Channel Tunnel opens (1994)"],
+    landmarks: ["Canterbury Cathedral", "Leeds Castle", "White Cliffs of Dover"]
+  },
+  "Kincardineshire": {
+    area: 380, population: 77670,
+    events: ["Dunnottar Castle siege (1651)", "Fetteresso Castle rebuilt (1782)", "Stonehaven Tolbooth built (1600)"],
+    landmarks: ["Dunnottar Castle", "Stonehaven Harbour", "Muchalls Castle"]
+  },
+  "Kinross-shire": {
+    area: 73, population: 11223,
+    events: ["Loch Leven Castle built (1300s)", "Mary Queen of Scots imprisoned (1567)", "Kinross House completed (1680s)"],
+    landmarks: ["Loch Leven Castle", "Kinross House", "RSPB Vane Farm"]
+  },
+  "Kirkcudbrightshire": {
+    area: 899, population: 47546,
+    events: ["Threave Castle built (1370s)", "Artists’ colony begins (1880s)", "Broughton House museum opens (1920s)"],
+    landmarks: ["Threave Castle", "Broughton House", "Dundrennan Abbey"]
+  },
+  "Lanarkshire": {
+    area: 879, population: 1008014,
+    events: ["Bothwell Bridge Battle (1679)", "New Lanark founded (1785)", "Falls of Clyde power station (1927)"],
+    landmarks: ["New Lanark", "Chatelherault", "Falls of Clyde"]
+  },
+  "Lancashire": {
+    area: 1909, population: 4942364,
+    events: ["Lancaster Castle prison (1196)", "Peterloo Massacre in Manchester (1819)", "Blackpool Tower opens (1894)"],
+    landmarks: ["Lancaster Castle", "Blackpool Tower", "Ribblehead Viaduct"]
+  },
+  "Leicestershire": {
+    area: 836, population: 975403,
+    events: ["Richard III killed at Bosworth (1485)", "Belvoir Castle rebuilt (1801)", "National Space Centre opens (2001)"],
+    landmarks: ["Bosworth Battlefield", "Belvoir Castle", "National Space Centre"]
+  },
+  "Lincolnshire": {
+    area: 2687, population: 1038510,
+    events: ["Lincoln Cathedral tallest in world (1311)", "Tattershall Castle built (1430s)", "RAF Scampton Dambusters (1943)"],
+    landmarks: ["Lincoln Cathedral", "Tattershall Castle", "Theddlethorpe Dunes"]
+  },
+  "Londonderry": {
+    area: 816, population: 247971,
+    events: ["Derry city walls built (1613)", "Siege of Derry (1689)", "Peace Bridge opens (2011)"],
+    landmarks: ["Derry City Walls", "Guildhall", "Peace Bridge"]
+  },
+  "Merionethshire": {
+    area: 676, population: 37874,
+    events: ["Owain Glyndŵr holds parliament (1404)", "Ffestiniog Railway opens (1836)", "Mawddach Estuary bridge (1878)"],
+    landmarks: ["Harlech Castle", "Portmeirion Village", "Cader Idris"]
+  },
+  "Middlesex": {
+    area: 285, population: 4000927,
+    events: ["Westminster Abbey founded (960)", "Great Fire of London (1666)", "London Underground opens (1863)"],
+    landmarks: ["Hampton Court Palace", "Kew Gardens", "Wembley Stadium"]
+  },
+  "Midlothian": {
+    area: 362, population: 621610,
+    events: ["Edinburgh Castle built (12th c.)", "Scottish Enlightenment begins (18th c.)", "Scottish Parliament opens (2004)"],
+    landmarks: ["Edinburgh Castle", "Rosslyn Chapel", "Scottish Parliament"]
+  },
+  "Monmouthshire": {
+    area: 542, population: 514723,
+    events: ["Raglan Castle built (1430s)", "Chartist Rising in Newport (1839)", "Big Pit opens as museum (1983)"],
+    landmarks: ["Tintern Abbey", "Raglan Castle", "Big Pit"]
+  },
+  "Montgomeryshire": {
+    area: 796, population: 61956,
+    events: ["Owain Glyndŵr rebellion (1400)", "Montgomery Canal opens (1796)", "Lake Vyrnwy dam opens (1880s)"],
+    landmarks: ["Powis Castle", "Montgomery Castle", "Lake Vyrnwy"]
+  },
+  "Morayshire": {
+    area: 476, population: 67654,
+    events: ["Elgin Cathedral founded (1224)", "Pluscarden Abbey founded (1230)", "Glen Moray Distillery founded (1897)"],
+    landmarks: ["Elgin Cathedral", "Pluscarden Abbey", "Duffus Castle"]
+  },
+  "Nairnshire": {
+    area: 200, population: 13894,
+    events: ["Cawdor Castle built (1454)", "Battle of Auldearn (1645)", "Nairn Golf Club founded (1887)"],
+    landmarks: ["Cawdor Castle", "Nairn Museum", "Nairn Viaduct"]
+  },
+  "Norfolk": {
+    area: 2057, population: 807721,
+    events: ["Venta Icenorum Roman capital (1st c.)", "Norwich Cathedral begun (1096)", "Sandringham bought by royals (1862)"],
+    landmarks: ["Norwich Cathedral", "Sandringham House", "Holkham Hall"]
+  },
+  "Northamptonshire": {
+    area: 998, population: 838786,
+    events: ["Battle of Naseby (1645)", "Althorp House built (1508)", "Silverstone Circuit opens (1948)"],
+    landmarks: ["Althorp", "Rockingham Castle", "Silverstone"]
+  },
+  "Northumberland": {
+    area: 2019, population: 797006,
+    events: ["Lindisfarne Priory founded (634)", "Hadrian’s Wall built (122 AD)", "Kielder Water opens (1982)"],
+    landmarks: ["Hadrian’s Wall", "Alnwick Castle", "Lindisfarne"]
+  },
+  "Nottinghamshire": {
+    area: 843, population: 1096617,
+    events: ["Robin Hood legend begins (13th c.)", "DH Lawrence born in Eastwood (1885)", "Creswell Crags museum opens (2009)"],
+    landmarks: ["Sherwood Forest", "Nottingham Castle", "Wollaton Hall"]
+  },
+  "Orkney": {
+    area: 376, population: 21349,
+    events: ["Skara Brae occupied (3100 BC)", "St Magnus Cathedral begun (1137)", "Scapa Flow scuttling (1919)"],
+    landmarks: ["Skara Brae", "St Magnus Cathedral", "Ring of Brodgar"]
+  },
+  "Oxfordshire": {
+    area: 754, population: 512345,
+    events: ["Oxford University teaching begins (1096)", "Blenheim Palace built (1705)", "Mini car production starts (1959)"],
+    landmarks: ["Oxford Colleges", "Blenheim Palace", "Christ Church Cathedral"]
+  },
+  "Peeblesshire": {
+    area: 548, population: 19074,
+    events: ["Neidpath Castle built (14th c.)", "Tweed Bridge built (1465)", "Peebles Hydro opens (1881)"],
+    landmarks: ["Traquair House", "Neidpath Castle", "Dawyck Botanic Garden"]
+  },
+  "Pembrokeshire": {
+    area: 625, population: 122122,
+    events: ["St David’s Cathedral founded (1181)", "Last invasion of Britain at Fishguard (1797)", "Pembrokeshire Coast Path opens (1970)"],
+    landmarks: ["St David’s Cathedral", "Pembroke Castle", "Skomer Island"]
+  },
+  "Perthshire": {
+    area: 2493, population: 156371,
+    events: ["Scone Abbey founded (1114)", "Battle of Killiecrankie (1689)", "Tay Bridge collapse (1879)"],
+    landmarks: ["Scone Palace", "Blair Castle", "Loch Tay"]
+  },
+  "Radnorshire": {
+    area: 470, population: 25821,
+    events: ["Radnor Castle built (11th c.)", "Llandrindod Wells spa boom (1870s)", "Elan Valley dams open (1893)"],
+    landmarks: ["Elan Valley", "Radnor Forest", "Llandrindod Wells"]
+  },
+  "Renfrewshire": {
+    area: 245, population: 508064,
+    events: ["Paisley Abbey founded (1163)", "Weaver’s Cottage preserved (1723)", "Coats Observatory opens (1883)"],
+    landmarks: ["Paisley Abbey", "Coats Observatory", "Castle Semple"]
+  },
+  "Ross-shire": {
+    area: 3089, population: 69503,
+    events: ["Dingwall Castle built (13th c.)", "Lewis Chessmen found (1831)", "Beinn Eighe nature reserve (1951)"],
+    landmarks: ["Eilean Donan Castle", "Inverewe Garden", "Loch Maree"]
+  },
+  "Roxburghshire": {
+    area: 666, population: 50800,
+    events: ["Jedburgh Abbey founded (1138)", "Floors Castle built (1721)", "Hawick textile boom (19th c.)"],
+    landmarks: ["Floors Castle", "Kelso Abbey", "Hermitage Castle"]
+  },
+  "Rutland": {
+    area: 152, population: 37677,
+    events: ["Oakham Castle founded (1180)", "Uppingham School founded (1584)", "Rutland Water created (1976)"],
+    landmarks: ["Rutland Water", "Oakham Castle", "Rockingham Castle"]
+  },
+  "Selkirkshire": {
+    area: 267, population: 16010,
+    events: ["Ettrick Forest royal hunting (1100s)", "Battle of Philiphaugh (1645)", "Selkirk Common Riding (16th c.)"],
+    landmarks: ["Bowhill House", "Philiphaugh Battlefield", "Loch of the Lowes"]
+  },
+  "Shetland": {
+    area: 551, population: 23167,
+    events: ["Jarlshof occupied (2500 BC)", "Mousa Broch built (100 BC)", "Shetland Bus WWII operations (1940s)"],
+    landmarks: ["Jarlshof", "Shetland Museum", "Mousa Broch"]
+  },
+  "Shropshire": {
+    area: 1342, population: 472027,
+    events: ["Battle of Shrewsbury (1403)", "Iron Bridge opens (1781)", "Shrewsbury Flaxmill opens (1797)"],
+    landmarks: ["Ironbridge Gorge", "Shrewsbury Castle", "Ludlow Castle"]
+  },
+  "Somerset": {
+    area: 1633, population: 1053504,
+    events: ["Glastonbury Abbey founded (712)", "Monmouth Rebellion at Sedgemoor (1685)", "Glastonbury Festival begins (1970)"],
+    landmarks: ["Glastonbury Tor", "Wells Cathedral", "Cheddar Gorge"]
+  },
+  "Staffordshire": {
+    area: 1176, population: 2159392,
+    events: ["Lichfield Cathedral founded (669)", "Wedgwood pottery founded (1759)", "Alton Towers opens (1980)"],
+    landmarks: ["Lichfield Cathedral", "Alton Towers", "Trentham Estate"]
+  },
+  "Stirlingshire": {
+    area: 447, population: 244092,
+    events: ["Battle of Bannockburn (1314)", "Stirling Castle royal residence (15th c.)", "Wallace Monument built (1869)"],
+    landmarks: ["Stirling Castle", "Bannockburn", "Wallace Monument"]
+  },
+  "Suffolk": {
+    area: 1505, population: 775099,
+    events: ["Sutton Hoo burial (625 AD)", "Bury St Edmunds Abbey founded (1020)", "Southwold Pier opens (1900)"],
+    landmarks: ["Sutton Hoo", "Framlingham Castle", "Southwold Pier"]
+  },
+  "Surrey": {
+    area: 759, population: 2975836,
+    events: ["Farnham Castle built (1138)", "Brooklands racetrack opens (1907)", "RHS Wisley founded (1878)"],
+    landmarks: ["Runnymede", "Hampton Court", "Brooklands Museum"]
+  },
+  "Sussex": {
+    area: 1466, population: 1612454,
+    events: ["Battle of Hastings (1066)", "Brighton Pavilion built (1787)", "Gatwick Airport opens (1958)"],
+    landmarks: ["Battle Abbey", "Arundel Castle", "Brighton Pavilion"]
+  },
+  "Sutherland": {
+    area: 2028, population: 12803,
+    events: ["Dornoch Cathedral built (1222)", "Highland Clearances begin (1814)", "Cape Wrath lighthouse opens (1828)"],
+    landmarks: ["Dunrobin Castle", "Cape Wrath", "Smoo Cave"]
+  },
+  "Tyrone": {
+    area: 1260, population: 178440,
+    events: ["Beaghmore stone circles (2000 BC)", "Flight of the Earls (1607)", "Ulster American Folk Park opens (1976)"],
+    landmarks: ["Ulster American Folk Park", "Sperrin Mountains", "Beaghmore Stone Circles"]
+  },
+  "Warwickshire": {
+    area: 918, population: 1632885,
+    events: ["Kenilworth Castle built (1100s)", "Shakespeare born in Stratford (1564)", "Coventry Cathedral bombed (1940)"],
+    landmarks: ["Stratford-upon-Avon", "Warwick Castle", "Kenilworth Castle"]
+  },
+  "West Lothian": {
+    area: 120, population: 154830,
+    events: ["Linlithgow Palace built (1424)", "Battle of Linlithgow Bridge (1526)", "Shale oil industry peaks (1860s)"],
+    landmarks: ["Linlithgow Palace", "Blackness Castle", "Almond Valley"]
+  },
+  "Westmorland": {
+    area: 785, population: 87466,
+    events: ["Appleby Horse Fair begins (1100s)", "Levens Hall topiary planted (1694)", "Kendal mint cake invented (1869)"],
+    landmarks: ["Kendal Castle", "Levens Hall", "Rydal Mount"]
+  },
+  "Wigtownshire": {
+    area: 487, population: 26618,
+    events: ["St Ninian at Whithorn (397 AD)", "Stranraer ferry port opens (1862)", "Wigtown Book Town founded (1998)"],
+    landmarks: ["Logan Botanic Garden", "Mull of Galloway", "Whithorn Priory"]
+  },
+  "Wiltshire": {
+    area: 1374, population: 682380,
+    events: ["Stonehenge built (3000 BC)", "Avebury stone circle (2600 BC)", "Salisbury Cathedral spire (1320)"],
+    landmarks: ["Stonehenge", "Avebury", "Salisbury Cathedral"]
+  },
+  "Worcestershire": {
+    area: 709, population: 1125037,
+    events: ["Battle of Worcester (1651)", "Elgar born in Broadheath (1857)", "Morgan Motor Company founded (1910)"],
+    landmarks: ["Worcester Cathedral", "Malvern Hills", "Broadway Tower"]
+  },
+  "Yorkshire": {
+    area: 6081, population: 5218838,
+    events: ["Jorvik Viking settlement (866 AD)", "York Minster fire (1829)", "Bronte sisters publish (1840s)"],
+    landmarks: ["York Minster", "Fountains Abbey", "Yorkshire Dales"]
+  }
+};
       const countyLanguages = {
         "Anglesey": { name: "Sir Fôn", lang: "Welsh" },
         "Brecknockshire": { name: "Sir Frycheiniog", lang: "Welsh" },
