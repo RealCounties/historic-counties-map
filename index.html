@@ -199,14 +199,37 @@ window.onload = function() {
 
   let currentLayer = null;
   let photoTimeout;
-  function updateCountyCard(englishName, layer, lat, lon) {
-  const details = countyData[englishName] || {};
-  const langEntry = countyLanguages[englishName];
-  const events = details.events || [];
-  const landmarks = details.landmarks || [];
-  const area = details.area || 0;
-  const pop = details.population || 0;
+  function updateCountyCard(countyName, details) {
+  const cardContent = document.getElementById('county-card-content');
 
+  if (countyName === 'Select a county') {
+    cardContent.innerHTML = `
+      <h2 class="text-lg font-semibold mb-2">Select a county</h2>
+      <p>Click on a county on the map to see its details here.</p>
+    `;
+    return;
+  }
+
+  // Extract and clean values
+  const areaStr = details.area || "0";
+  const popStr = details.population || "0";
+
+  // Remove commas, "sq mi", and other text
+  const areaNum = parseFloat(areaStr.replace(/[^0-9.]/g, ""));
+  const popNum = parseFloat(popStr.replace(/[^0-9.]/g, ""));
+
+  // Compute density safely (rounded to nearest whole number)
+  const density = areaNum > 0 ? Math.round(popNum / areaNum) : 'N/A';
+
+  // Build HTML content
+  cardContent.innerHTML = `
+    <h2 class="text-xl font-semibold mb-2">${countyName}</h2>
+    <div><strong>Area:</strong> ${areaNum.toLocaleString()} sq mi</div>
+    <div><strong>Population:</strong> ${popNum.toLocaleString()}</div>
+    <div><strong>Density:</strong> ${density !== 'N/A' ? density + ' per sq mi' : 'N/A'}</div>
+    <div class="mt-2 text-sm text-gray-700">${details.info}</div>
+  `;
+}
   // CALCULATE DENSITY
   const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
 
