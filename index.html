@@ -225,9 +225,7 @@ window.onload = function() {
           <p><strong>Population:</strong> ${details.population || 'Unknown'}</p>
           ${events.length ? `<h4>Events</h4><ul>${events.map(e=>`<li>${e}</li>`).join('')}</ul>` : ''}
           ${landmarks.length ? `<h4>Landmarks</h4><ul>${landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()">${l}</li>`).join('')}</ul>` : ''}
-          <div style="text-align: center;">
- 						${weatherHtml}
-          </div>
+          <div style="text-align: center;">${weatherHtml}</div>
         </div>`;
     });
 
