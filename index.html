@@ -29,12 +29,11 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #search-bar button { padding:10px 18px; background:var(--accent); color:#FAF4E6; border:none; border-radius:4px; font-weight:500; box-shadow:0 3px 6px var(--shadow); cursor:pointer; transition:all .25s cubic-bezier(.4,0,.2,1); }
 #search-bar button:hover { background:#7a2222; transform:translateY(-2px) scale(1.05); box-shadow:0 6px 14px var(--shadow); }
 #map { flex:1; background:#e0f2fe; }
-
-/* ---- NEW CARD LAYOUT WITH FLAG ---- */
-.county-card { 
+/* ---- CARD LAYOUT WITH FLAG ---- */
+.county-card {
   background:var(--card-bg); padding:14px; border-radius:10px;
   box-shadow:0 2px 6px var(--shadow); transition:all .3s ease;
-  cursor:pointer; text-align:center;
+  cursor:pointer; text-align:center; margin-bottom:16px;
 }
 .county-card:hover { transform:translateY(-6px); box-shadow:0 8px 18px var(--shadow); }
 .county-card .flag {
@@ -45,9 +44,8 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .county-card .card-body { }
 .county-card h3 {
   margin:0 0 12px; font-size:1.25rem; color:var(--text);
-  word-wrap:break-word; line-height:1.3;
+  word-wrap:break-word; line-height:1.3; text-align:center;
 }
-.county-card h3 { margin:0 0 12px; font-size:1.25rem; color:var(--text); word-wrap:break-word; text-align:center; line-height:1.3; }
 .weather-badge { display:inline-block; font-size:0.82rem; background:rgba(0,0,0,0.1); color:var(--text); padding:6px 12px; border-radius:16px; font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.12); }
 .weather-underline { width:60px; height:2px; background:var(--accent); margin:8px auto 12px; border-radius:1px; }
 .county-card p, .county-card ul { margin:6px 0; }
@@ -95,14 +93,19 @@ window.onload = function() {
   const infoDiv = document.getElementById('info');
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
+  
+  // Initialize map
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
   }).addTo(map);
+
   const ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
   map.setMaxBounds(ukBounds);
   map.fitBounds(ukBounds);
+
+  // Toggle button
   const toggleButton = L.control({ position: 'topright' });
   toggleButton.onAdd = function() {
     const btn = L.DomUtil.create('button', 'leaflet-bar');
@@ -114,64 +117,63 @@ window.onload = function() {
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
-  /* ---------- FLAG DATA (YOUR REAL SITE) ---------- */
-const countyFlags = {
-  "Aberdeenshire": "https://realcounties.com/wp-content/uploads/2023/11/aberdeenshire-flag.png",
-  "Anglesey": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/anglesey.png",
-  "Banffshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/banffshire-flag-1.jpg",
-  "Berkshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/berkshire.png",
-  "Berwickshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/berwickshire.png",
-  "Buckinghamshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/buckinghamshire.png",
-  "Caernarfonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/caernarfonshire.png",
-  "Caithness": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/caithness-flag.png",
-  "Cambridgeshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cambridgeshire.png",
-  "Cheshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cheshire.png",
-  "Cornwall": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cornwall.png",
-  "Cumberland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cumberland.png",
-  "Derbyshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/derbyshire.jpg",
-  "Devon": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/devon.jpg",
-  "Dorset": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/dorset.jpg",
-  "Durham": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/county-durham.png",
-  "East Lothian": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/east-lothian-flag.png",
-  "Essex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/essex.jpg",
-  "Flintshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/flintshire.png",
-  "Glamorgan": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/glamorgan.png",
-  "Gloucestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/gloucestershire.png",
-  "Hampshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/hampshire.png",
-  "Herefordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/herefordshire.png",
-  "Hertfordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/hertfordshire.png",
-  "Huntingdonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/huntingdonshire.png",
-  "Kent": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/kent.png",
-  "Kirkcudbrightshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/kirkcudbrightshire-flag.png",
-  "Lancashire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/lancashire.png",
-  "Leicestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/leicestershire.png",
-  "Lincolnshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/lincolnshire.png",
-  "Middlesex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/middlesex.png",
-  "Monmouthshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/monmouthshire.png",
-  "Morayshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/morayshire-flag-2.jpg",
-  "Norfolk": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/norfolk.png",
-  "Northamptonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/northamptonshire.png",
-  "Northumberland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/northumberland.jpg",
-  "Nottinghamshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/nottinghamshire.jpg",
-  "Orkney": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/orkney-flag.png",
-  "Oxfordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/oxfordshire.png",
-  "Pembrokeshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/pembrokeshire.png",
-  "Rutland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/rutland.png",
-  "Shetland": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/shetland-flag.png",
-  "Shropshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/shropshire.png",
-  "Somerset": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/somerset.png",
-  "Staffordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/staffordshire.png",
-  "Suffolk": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/suffolk.png",
-  "Surrey": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/surrey.png",
-  "Sussex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/sussex.png",
-  "Sutherland": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/sutherland-flag.png",
-  "Warwickshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/warwickshire.png",
-  "Westmorland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/westmorland.jpg",
-  "Wiltshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/wiltshire.png",
-  "Worcestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/worcestershire.png",
-  "Yorkshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/yorkshire.jpg"
-  // Counties without a flag in your list will simply show the card without an image.
-};
+  // County flags
+  const countyFlags = {
+    "Aberdeenshire": "https://realcounties.com/wp-content/uploads/2023/11/aberdeenshire-flag.png",
+    "Anglesey": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/anglesey.png",
+    "Banffshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/banffshire-flag-1.jpg",
+    "Berkshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/berkshire.png",
+    "Berwickshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/berwickshire.png",
+    "Buckinghamshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/buckinghamshire.png",
+    "Caernarfonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/caernarfonshire.png",
+    "Caithness": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/caithness-flag.png",
+    "Cambridgeshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cambridgeshire.png",
+    "Cheshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cheshire.png",
+    "Cornwall": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cornwall.png",
+    "Cumberland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/cumberland.png",
+    "Derbyshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/derbyshire.jpg",
+    "Devon": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/devon.jpg",
+    "Dorset": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/dorset.jpg",
+    "Durham": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/county-durham.png",
+    "East Lothian": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/east-lothian-flag.png",
+    "Essex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/essex.jpg",
+    "Flintshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/flintshire.png",
+    "Glamorgan": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/glamorgan.png",
+    "Gloucestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/gloucestershire.png",
+    "Hampshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/hampshire.png",
+    "Herefordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/herefordshire.png",
+    "Hertfordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/hertfordshire.png",
+    "Huntingdonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/huntingdonshire.png",
+    "Kent": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/kent.png",
+    "Kirkcudbrightshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/kirkcudbrightshire-flag.png",
+    "Lancashire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/lancashire.png",
+    "Leicestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/leicestershire.png",
+    "Lincolnshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/lincolnshire.png",
+    "Middlesex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/middlesex.png",
+    "Monmouthshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/monmouthshire.png",
+    "Morayshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/morayshire-flag-2.jpg",
+    "Norfolk": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/norfolk.png",
+    "Northamptonshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/northamptonshire.png",
+    "Northumberland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/northumberland.jpg",
+    "Nottinghamshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/nottinghamshire.jpg",
+    "Orkney": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/orkney-flag.png",
+    "Oxfordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/oxfordshire.png",
+    "Pembrokeshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/pembrokeshire.png",
+    "Rutland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/rutland.png",
+    "Shetland": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/shetland-flag.png",
+    "Shropshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/shropshire.png",
+    "Somerset": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/somerset.png",
+    "Staffordshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/staffordshire.png",
+    "Suffolk": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/suffolk.png",
+    "Surrey": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/surrey.png",
+    "Sussex": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/sussex.png",
+    "Sutherland": "https://realcounties.wordpress.com/wp-content/uploads/2023/10/sutherland-flag.png",
+    "Warwickshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/warwickshire.png",
+    "Westmorland": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/westmorland.jpg",
+    "Wiltshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/wiltshire.png",
+    "Worcestershire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/worcestershire.png",
+    "Yorkshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/yorkshire.jpg"
+  };
 
   async function fetchWeather(lat, lon) {
     try {
@@ -211,7 +213,7 @@ const countyFlags = {
     }, 300);
   }
 
-  // === ALL DATA + FUNCTIONS INSIDE FETCH ===
+  // Load county data
   fetch('./counties_simplified8.json')
     .then(res => res.ok ? res.json() : Promise.reject(`Failed: ${res.status}`))
     .then(data => {
@@ -364,7 +366,7 @@ const countyFlags = {
         "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
       };
 
-// UPDATE CARD FUNCTION (injects flag from your site)
+      // Update card function
       window.updateCountyCard = function(englishName, layer, lat, lon) {
         const details = countyData[englishName] || {};
         const langEntry = countyLanguages[englishName];
@@ -384,34 +386,31 @@ const countyFlags = {
           const flagUrl = countyFlags[englishName];
           const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
 
-    <div class="card-body">
-      ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+          const cardHTML = `
+            <div class="county-card" style="margin-bottom:16px;">
+              ${flagHTML}
+              <div class="card-body">
+                <h3>${englishName}</h3>
+                ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+                <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
+                  <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
+                  <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+                </div>
+                <div style="text-align:center; margin:12px 0;">
+                  <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                    Density: ${density} people/sq mi
+                  </span>
+                </div>
+                ${weatherBlock}
+                ${details.events?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:center;">Events</h4><ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block;">${details.events.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+                ${details.landmarks?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:center;">Landmarks</h4><ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block;">${details.landmarks.map(l => `<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
+              </div>
+            </div>`;
 
-      <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
-        <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
-        <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
-      </div>
+          infoDiv.innerHTML = cardHTML;
+          infoDiv.scrollTop = 0;
+        });
 
-      <div style="text-align:center; margin:12px 0;">
-        <span style="display:inline-block; ${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
-          Density: ${density} people/sq mi
-        </span>
-      </div>
-
-      ${details.events?.length ? `
-        <h4 style="margin:12px 0 6px; color:var(--accent); text-align:center;">Events</h4>
-        <ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block; max-width:100%;">
-          ${details.events.map(e => `<li>${e}</li>`).join('')}
-        </ul>` : ''}
-
-      ${details.landmarks?.length ? `
-        <h4 style="margin:12px 0 6px; color:var(--accent); text-align:center;">Landmarks</h4>
-        <ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block; max-width:100%;">
-          ${details.landmarks.map(l => `<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}
-        </ul>` : ''}
-      </div>
-    </div>`;
-});        
         if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
         layer.setStyle({ weight: 3, fillOpacity: 0.6 });
         currentLayer = layer;
@@ -440,32 +439,38 @@ const countyFlags = {
           `, { direction: 'center', className: 'county-tooltip' });
 
           layer.on('click', () => {
+            layer._cardLayer = layer; // Bind layer to card
             window.updateCountyCard(englishName, layer, lat, lon);
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             map.fitBounds(layer.getBounds());
           });
+
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
         }
       }).addTo(map);
 
-      setTimeout(() => map.invalidateSize(), 200);
+      // Fix map size after load
+      setTimeout(() => map.invalidateSize(), 300);
       infoDiv.innerHTML = '<em>Click a county to explore.</em>';
     })
     .catch(err => {
       console.error(err);
-      infoDiv.innerHTML = '<em style="color:red;">Failed to load map data.</em>';
+      infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Check console.</em>';
     });
 
-  // SEARCH & PLACES (unchanged)
+  // Search & Geocoder
   L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
   window.places = []; let fuse = null; let searchMarker = null;
+
   function parseCSVLine(line) {
     const cols = []; const regex = /(?:\"([^\"]*)\"|([^,]+))/g; let m;
     while ((m = regex.exec(line)) !== null) cols.push(m[1] || m[2] || '');
     return cols;
   }
+
   function initFuse() { if (window.places.length) fuse = new Fuse(window.places, { keys: ['name', 'county'], threshold: 0.3 }); }
+
   function showDropdown(results) {
     searchDropdown.innerHTML = '';
     if (!results.length) { searchDropdown.style.display = 'none'; return; }
@@ -480,6 +485,7 @@ const countyFlags = {
     });
     searchDropdown.style.display = 'block';
   }
+
   function selectPlace(place) {
     if (searchMarker) map.removeLayer(searchMarker);
     searchMarker = L.marker([place.lat, place.lon]).addTo(map).bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
@@ -488,6 +494,7 @@ const countyFlags = {
     searchInput.value = place.name;
     setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
   }
+
   function showCountyFromPoint(lat, lon) {
     const point = turf.point([lon, lat]);
     let found = null;
@@ -509,6 +516,7 @@ const countyFlags = {
       infoDiv.innerHTML = '<em>County not found.</em>';
     }
   }
+
   fetch('places_clean.csv')
     .then(r => r.text())
     .then(text => {
@@ -522,17 +530,20 @@ const countyFlags = {
       });
       initFuse();
     });
+
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.trim();
     if (!q || !fuse) { searchDropdown.style.display = 'none'; return; }
     showDropdown(fuse.search(q));
   });
+
   searchInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && fuse) {
       const res = fuse.search(searchInput.value.trim());
       if (res.length) selectPlace(res[0].item);
     }
   });
+
   document.addEventListener('click', e => {
     if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
       searchDropdown.style.display = 'none';
