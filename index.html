@@ -328,14 +328,13 @@ window.onload = function() {
         else badgeStyle = 'background:#66BB6A; color:white;';
 
         // === WEATHER STATE & TOGGLE ===
-let useCelsius = true;
-let useMph = true;
-
-document.getElementById('tempToggle').onclick = () => {
-  useCelsius = !useCelsius;
-  useMph = !useMph;
-  document.getElementById('tempToggle').textContent = 
-    (useCelsius ? '°C' : '°F') + ' / ' + (useMph ? 'mph' : 'kmh');
+const weatherBlock = weather ? `
+  <div style="text-align:center;">
+    <div class="weather-badge">
+      ${weather.temp}${weather.unit} • ${weather.desc} • Wind ${weather.wind} ${weather.windUnit}
+    </div>
+    <div class="weather-underline"></div>
+  </div>` : '';
   
   // Re-fetch weather for current county if visible
   if (currentLayer) {
