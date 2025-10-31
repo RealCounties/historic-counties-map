@@ -208,7 +208,6 @@ const countyFlags = {
     .then(res => res.ok ? res.json() : Promise.reject(`Failed: ${res.status}`))
     .then(data => {
       const countyData = {
-      const countyData = {
         "Aberdeenshire": { area: 1950, population: 380495, events: ["Battle of Harlaw (1411)", "Aberdeen University founded (1495)"], landmarks: ["Slains Castle", "Balmoral Castle", "Dunnottar Castle"] },
         "Anglesey": { area: 277, population: 69751, events: ["Roman invasion repelled (60 AD)", "Menai Bridge opened (1826)"], landmarks: ["Beaumaris Castle", "South Stack Lighthouse", "Menai Suspension Bridge"] },
         "Antrim": { area: 1175, population: 615701, events: ["Titanic built in Belfast (1912)", "Giant's Causeway formed (~60M BC)"], landmarks: ["Giant's Causeway", "Carrickfergus Castle", "Dark Hedges"] },
