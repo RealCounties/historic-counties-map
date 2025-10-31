@@ -66,11 +66,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   background:#333;
   transform:scale(1.05);
 }
-#tempToggle {
-  padding:8px 12px; background:#555; color:#fff; border:none; border-radius:4px;
-  font-size:0.8rem; font-weight:500; cursor:pointer; transition:all .25s; min-width:60px;
-}
-#tempToggle:hover { background:#333; transform:scale(1.05); }
 </style>
 </head>
 <body>
@@ -333,13 +328,14 @@ window.onload = function() {
         else badgeStyle = 'background:#66BB6A; color:white;';
 
         // === WEATHER STATE & TOGGLE ===
-const weatherBlock = weather ? `
-  <div style="text-align:center;">
-    <div class="weather-badge">
-      ${weather.temp}${weather.unit} • ${weather.desc} • Wind ${weather.wind} ${weather.windUnit}
-    </div>
-    <div class="weather-underline"></div>
-  </div>` : '';
+let useCelsius = true;
+let useMph = true;
+
+document.getElementById('tempToggle').onclick = () => {
+  useCelsius = !useCelsius;
+  useMph = !useMph;
+  document.getElementById('tempToggle').textContent = 
+    (useCelsius ? '°C' : '°F') + ' / ' + (useMph ? 'mph' : 'kmh');
   
   // Re-fetch weather for current county if visible
   if (currentLayer) {
