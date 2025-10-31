@@ -70,7 +70,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .county-card:hover { transform:translateY(-6px); box-shadow:0 8px 18px var(--shadow); }
 
 .county-card h3::after {
-  content: '';
+  content: ${weatherHtml}
   display: block;
   width: 60px;
   height: 2px;
@@ -219,7 +219,7 @@ window.onload = function() {
 
       infoDiv.innerHTML = `
       	<div class="county-card">
-        	<div style="text-align: center;">${weatherHtml}</div>
+        	${weatherHtml}
           <h3>${englishName}</h3>
           ${langEntry ? `<p><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
           <p><strong>Area:</strong> ${details.area || 'Unknown'}</p>
