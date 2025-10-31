@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -295,7 +295,61 @@ window.onload = function() {
     "Yorkshire": { area: 6081, population: 5218838, events: ["York Minster founded (627)", "Industrial Revolution (1760s)", "Castle Howard (1699)"], landmarks: ["York Minster", "Castle Howard", "Whitby Abbey"] }
   });
 
-  const countyLanguages = { /* same as before — unchanged */ };
+  const countyLanguages = {
+    "Anglesey": { name: "Sir Fôn", lang: "Welsh" },
+    "Brecknockshire": { name: "Sir Frycheiniog", lang: "Welsh" },
+    "Caernarfonshire": { name: "Sir Gaernarfon", lang: "Welsh" },
+    "Cardiganshire": { name: "Sir Aberteifi", lang: "Welsh" },
+    "Carmarthenshire": { name: "Sir Gaerfyrddin", lang: "Welsh" },
+    "Denbighshire": { name: "Sir Ddinbych", lang: "Welsh" },
+    "Flintshire": { name: "Sir y Fflint", lang: "Welsh" },
+    "Glamorgan": { name: "Morgannwg", lang: "Welsh" },
+    "Merionethshire": { name: "Meirionnydd", lang: "Welsh" },
+    "Monmouthshire": { name: "Sir Fynwy", lang: "Welsh" },
+    "Montgomeryshire": { name: "Sir Drefaldwyn", lang: "Welsh" },
+    "Pembrokeshire": { name: "Sir Benfro", lang: "Welsh" },
+    "Radnorshire": { name: "Sir Faesyfed", lang: "Welsh" },
+    "Aberdeenshire": { name: "Siorrachd Obar Dheathain", lang: "Scottish Gaelic" },
+    "Angus": { name: "Aonghas", lang: "Scottish Gaelic" },
+    "Argyllshire": { name: "Siorrachd Earra-Ghàidheal", lang: "Scottish Gaelic" },
+    "Ayrshire": { name: "Siorrachd Inbhir Àir", lang: "Scottish Gaelic" },
+    "Banffshire": { name: "Siorrachd Bhanbh", lang: "Scottish Gaelic" },
+    "Berwickshire": { name: "Siorrachd Bhearaig", lang: "Scottish Gaelic" },
+    "Buteshire": { name: "Siorrachd Bhùth", lang: "Scottish Gaelic" },
+    "Caithness": { name: "Gallaibh", lang: "Scottish Gaelic" },
+    "Clackmannanshire": { name: "Siorrachd Chlach Mhanainn", lang: "Scottish Gaelic" },
+    "Cromartyshire": { name: "Siorrachd Chròmbaidh", lang: "Scottish Gaelic" },
+    "Dumfriesshire": { name: "Siorrachd Dhùn Phris", lang: "Scottish Gaelic" },
+    "Dunbartonshire": { name: "Siorrachd Dhùn Bhreatainn", lang: "Scottish Gaelic" },
+    "East Lothian": { name: "Siorrachd an Ear Leothain", lang: "Scottish Gaelic" },
+    "Fife": { name: "Fìobha", lang: "Scottish Gaelic" },
+    "Inverness-shire": { name: "Siorrachd Inbhir Nis", lang: "Scottish Gaelic" },
+    "Kincardineshire": { name: "Siorrachd Chinn Chàrdainn", lang: "Scottish Gaelic" },
+    "Kinross-shire": { name: "Siorrachd Cheann Rois", lang: "Scottish Gaelic" },
+    "Kirkcudbrightshire": { name: "Siorrachd Chille Chuithbeirt", lang: "Scottish Gaelic" },
+    "Lanarkshire": { name: "Siorrachd Lanraig", lang: "Scottish Gaelic" },
+    "Midlothian": { name: "Meadhan Labhdaidh", lang: "Scottish Gaelic" },
+    "Morayshire": { name: "Moireibh", lang: "Scottish Gaelic" },
+    "Nairnshire": { name: "Siorrachd Inbhir Narann", lang: "Scottish Gaelic" },
+    "Orkney": { name: "Arcaibh", lang: "Scottish Gaelic" },
+    "Peeblesshire": { name: "Siorrachd nam Pùballan", lang: "Scottish Gaelic" },
+    "Perthshire": { name: "Siorrachd Pheairt", lang: "Scottish Gaelic" },
+    "Renfrewshire": { name: "Siorrachd Rinn Friù", lang: "Scottish Gaelic" },
+    "Ross-shire": { name: "Siorrachd Rois", lang: "Scottish Gaelic" },
+    "Roxburghshire": { name: "Siorrachd Rosbroig", lang: "Scottish Gaelic" },
+    "Selkirkshire": { name: "Siorrachd Shailcirc", lang: "Scottish Gaelic" },
+    "Shetland": { name: "Sealtainn", lang: "Scottish Gaelic" },
+    "Stirlingshire": { name: "Siorrachd Shruighlea", lang: "Scottish Gaelic" },
+    "Sutherland": { name: "Cataibh", lang: "Scottish Gaelic" },
+    "West Lothian": { name: "Lothian an Iar", lang: "Scottish Gaelic" },
+    "Wigtownshire": { name: "Siorrachd Bhaile na h-Ùige", lang: "Scottish Gaelic" },
+    "Antrim": { name: "Aontroim", lang: "Irish Gaelic" },
+    "Armagh": { name: "Árd Mhacha", lang: "Irish Gaelic" },
+    "Down": { name: "An Dún", lang: "Irish Gaelic" },
+    "Fermanagh": { name: "Fear Manach", lang: "Irish Gaelic" },
+    "Londonderry": { name: "Doire", lang: "Irish Gaelic" },
+    "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
+  };
 
   function updateCountyCard(englishName, layer, lat, lon) {
     const details = countyData[englishName] || {};
