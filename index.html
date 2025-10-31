@@ -404,7 +404,7 @@ infoDiv.innerHTML = `
       ${details.landmarks?.length ? `<h4 style="margin:12px 0 6px; color:var(--accent); text-align:center;">Landmarks</h4><ul style="margin:0 auto; padding-left:18px; font-size:0.9rem; text-align:left; display:inline-block; max-width:100%;">${details.landmarks.map(l=>`<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc;">${l}</li>`).join('')}</ul>` : ''}
     </div>
   </div>`;
-        });
+});
 
         if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
         layer.setStyle({ weight: 3, fillOpacity: 0.6 });
