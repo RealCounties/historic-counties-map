@@ -366,56 +366,79 @@ window.onload = function() {
         "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
       };
 
-      // Update card function
-      window.updateCountyCard = function(englishName, layer, lat, lon) {
-        const  = countyData[englishName] || {};
-        const langEntry = countyLanguages[englishName];
-        const area = .area || 0;
-        const pop = .population || 0;
-        const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
-        let badgeStyle = '';
-        if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
-        else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
-        else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
-        else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
-        else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
-        else badgeStyle = 'background:#66BB6A; color:white;';
-     
-        fetchWeather(lat, lon).then(weather => {
-          const weatherBlock = weather ? `<div style="text-align:center; margin:14px 0 8px;"><div class="weather-underline" style="margin:0 auto 14px;"></div><div class="weather-badge">${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph</div></div>` : '';
-          const flagUrl = countyFlags[englishName];
-          const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
+// Update card function
+window.updateCountyCard = function(englishName, layer, lat, lon) {
+  const details = countyData[englishName] || {};          // <-- fixed
+  const langEntry = countyLanguages[englishName];
+  const area = details.area || 0;                        // <-- fixed
+  const pop = details.population || 0;                   // <-- fixed
+  const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
 
-          const cardHTML = `
-            <div class="county-card" style="margin-bottom:16px;">
-              ${flagHTML}
-              <div class="card-body">
-                <h3>${englishName}</h3>
-                ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
-                <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
-                  <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
-                  <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
-                </div>
-                <div style="text-align:center; margin:12px 0;">
-                  <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
-                    Density: ${density} people/sq mi
-                  </span>
-                </div>
-                ${details.events?.length ? `<div style="margin:14px 0 8px;"><h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Key Events</h4><ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">${details.events.map(e => `<li>${e}</li>`).join('')}</ul></div>` : ''}
-                ${details.landmarks?.length ? `<div style="margin:14px 0 8px;"><h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4><ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">${details.landmarks.map(l => `<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc; text-decoration:underline;">${l}</li>`).join('')}</ul></div>` : ''}
-                ${weatherBlock}
-              </div>
-            </div>`;
+  let badgeStyle = '';
+  if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
+  else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
+  else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
+  else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
+  else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
+  else badgeStyle = 'background:#66BB6A; color:white;';
 
-          infoDiv.innerHTML = cardHTML;
-          infoDiv.scrollTop = 0;
-        });
+  fetchWeather(lat, lon).then(weather => {
+    const weatherBlock = weather ? `
+      <div style="text-align:center; margin:14px 0 8px;">
+        <div class="weather-underline" style="margin:0 auto 14px;"></div>
+        <div class="weather-badge">
+          ${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph
+        </div>
+      </div>` : '';
 
-        if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
-        layer.setStyle({ weight: 3, fillOpacity: 0.6 });
-        currentLayer = layer;
-      };
+    const flagUrl = countyFlags[englishName];
+    const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
 
+    const cardHTML = `
+      <div class="county-card" style="margin-bottom:16px;">
+        ${flagHTML}
+        <div class="card-body">
+          <h3>${englishName}</h3>
+          ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+          <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
+            <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
+            <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+          </div>
+          <div style="text-align:center; margin:12px 0;">
+            <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+              Density: ${density} people/sq mi
+            </span>
+          </div>
+
+          ${details.events?.length ? `
+            <div style="margin:14px 0 8px;">
+              <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Key Events</h4>
+              <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                ${details.events.map(e => `<li>${e}</li>`).join('')}
+              </ul>
+            </div>` : ''}
+
+          ${details.landmarks?.length ? `
+            <div style="margin:14px 0 8px;">
+              <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
+              <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                ${details.landmarks.map(l => `<li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc; text-decoration:underline;">${l}</li>`).join('')}
+              </ul>
+            </div>` : ''}
+
+          ${weatherBlock}
+        </div>
+      </div>`;
+
+    infoDiv.innerHTML = cardHTML;
+    infoDiv.scrollTop = 0;
+  });
+
+  // Highlight selected county
+  if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
+  layer.setStyle({ weight: 3, fillOpacity: 0.6 });
+  currentLayer = layer;
+};
       const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
       data.features.forEach((f, i) => f.properties.color = pastelColors[i % pastelColors.length]);
 
