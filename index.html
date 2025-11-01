@@ -99,9 +99,6 @@ window.onload = function() {
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
 
-  let currentLayer = null;
-  let searchMarker = null;
-
   // Initialize Leaflet map
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
