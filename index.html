@@ -99,11 +99,10 @@ window.onload = function() {
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
 
-  let currentLayer = null;     // Add this
-  let searchMarker = null;     // Add this
-  let countyFlags = null;  // Add this line
+  let currentLayer = null;
+  let searchMarker = null;
+  let countyFlags = null;
   
-  // Initialize map
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
@@ -114,7 +113,6 @@ window.onload = function() {
   map.setMaxBounds(ukBounds);
   map.fitBounds(ukBounds);
 
-  // Toggle button
   const toggleButton = L.control({ position: 'topright' });
   toggleButton.onAdd = function() {
     const btn = L.DomUtil.create('button', 'leaflet-bar');
@@ -126,34 +124,30 @@ window.onload = function() {
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
-  function resetMapAndSidebar() {
-    // Reset map view
+  // ✅ Make reset function accessible globally
+  window.resetMapAndSidebar = function() {
     map.fitBounds(ukBounds);
-
-    // Clear sidebar info
     infoDiv.innerHTML = '<em>Click a county to explore.</em>';
 
-    // Remove county highlight
     if (currentLayer) {
       currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
       currentLayer = null;
     }
 
-    // Remove search marker
     if (searchMarker) {
       map.removeLayer(searchMarker);
       searchMarker = null;
     }
 
-    // Clear search
     searchInput.value = '';
     searchDropdown.style.display = 'none';
 
-    // Close mobile sidebar
     if (window.innerWidth <= 1024) {
       sidebar.classList.remove('visible');
     }
-  }
+  };
+};
+
   // County flags
   const countyFlags = {
     "Aberdeenshire": "https://realcounties.com/wp-content/uploads/2023/11/aberdeenshire-flag.png",
