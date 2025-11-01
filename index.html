@@ -63,6 +63,11 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 }
 @media (max-width:480px) { #sidebar { width:90vw; left:5vw; max-width:none; } #sidebar-logo { max-width:55%; } }
 #sidebar h2 { text-align:center; margin:5px 0 10px; color:var(--accent); }
+#logo-link:hover img {
+  opacity: 0.8;
+  transform: scale(0.98);
+  transition: all 0.2s ease;
+}
 </style>
 </head>
 <body>
@@ -117,6 +122,24 @@ window.onload = function() {
   toggleButton.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
+  function resetMapAndSidebar() {
+  // Reset map view
+  map.fitBounds(ukBounds);
+
+  // Clear sidebar info
+  infoDiv.innerHTML = '<em>Click a county to explore.</em>';
+
+  // Remove county highlight
+  if (currentLayer) {
+    currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
+    currentLayer = null;
+  }
+
+  // Close mobile sidebar
+  if (window.innerWidth <= 1024) {
+    sidebar.classList.remove('visible');
+  }
+}
   // County flags
   const countyFlags = {
     "Aberdeenshire": "https://realcounties.com/wp-content/uploads/2023/11/aberdeenshire-flag.png",
