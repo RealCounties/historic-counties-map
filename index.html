@@ -98,6 +98,9 @@ window.onload = function() {
   const infoDiv = document.getElementById('info');
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
+
+  let currentLayer = null;     // Add this
+  let searchMarker = null;     // Add this
   
   // Initialize map
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
