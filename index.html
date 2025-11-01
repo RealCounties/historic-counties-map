@@ -123,23 +123,23 @@ window.onload = function() {
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
   function resetMapAndSidebar() {
-  // Reset map view
-  map.fitBounds(ukBounds);
+    // Reset map view
+    map.fitBounds(ukBounds);
 
-  // Clear sidebar info
-  infoDiv.innerHTML = '<em>Click a county to explore.</em>';
+    // Clear sidebar info
+    infoDiv.innerHTML = '<em>Click a county to explore.</em>';
 
-  // Remove county highlight
-  if (currentLayer) {
-    currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
-    currentLayer = null;
+    // Remove county highlight
+    if (currentLayer) {
+      currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
+      currentLayer = null;
+    }
+
+    // Close mobile sidebar
+    if (window.innerWidth <= 1024) {
+      sidebar.classList.remove('visible');
+    }
   }
-
-  // Close mobile sidebar
-  if (window.innerWidth <= 1024) {
-    sidebar.classList.remove('visible');
-  }
-}
   // County flags
   const countyFlags = {
     "Aberdeenshire": "https://realcounties.com/wp-content/uploads/2023/11/aberdeenshire-flag.png",
