@@ -68,7 +68,15 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   transform: scale(0.98);
   transition: all 0.2s ease;
 }
-@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -82,7 +90,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     </div>
     <h2>Interactive Map</h2>
     <p>Select a county to view details.</p>
-    <div id="info"><em>Loading counties... <span style="animation:spin 1s linear infinite;">Loading</span></em></div>
+    <div id="info"><em>Loading counties... <span class="spinner">Loading</span></em></div>
     <div id="search-bar">
       <input type="text" id="placeSearch" placeholder="Search for a place...">
       <button id="searchBtn">Search</button>
