@@ -543,6 +543,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
       // Fix map size after load
       setTimeout(() => map.invalidateSize(), 300);
       infoDiv.innerHTML = '<em>Click a county to explore.</em>';
+      infoDiv.classList.remove('loading');
     })
     .catch(err => {
       console.error(err);
