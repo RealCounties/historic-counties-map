@@ -503,7 +503,11 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 
   // Highlight selected county
   if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
-  layer.setStyle({ weight: 3, fillOpacity: 0.6 });
+  layer.setStyle({ 
+  weight: 4,           // thicker border
+  color: '#9B2C2C',    // your accent red
+  fillOpacity: 0.35    // same as others (no change!)
+});
   currentLayer = layer;
 };
       const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
