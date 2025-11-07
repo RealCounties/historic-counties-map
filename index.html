@@ -619,19 +619,26 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
     }
   }
 
-  fetch('places_clean.csv')
-    .then(r => r.text())
-    .then(text => {
-      const lines = text.trim().split('\n'); lines.shift();
-      lines.forEach(line => {
-        const c = parseCSVLine(line);
-        const name = c[0], desc = c[2], county = c[3], lat = parseFloat(c[6]), lon = parseFloat(c[7]);
-        if ((desc === 'LOC' || desc === 'PAR' || desc === 'COM' || desc === 'CTYHIST'|| desc === 'NPARK' ) && name && !isNaN(lat) && !isNaN(lon)) {
-          window.places.push({ name, county, lat, lon });
-        }
-      });
-      initFuse();
+fetch('places_clean.csv')
+  .then(r => r.text())
+  .then(text => {
+    const lines = text.trim().split('\n'); 
+    lines.shift(); // remove header
+    lines.forEach(line => {
+      const c = parseCSVLine(line);
+      const name = c[0]?.trim();
+      const desc = c[2]?.trim();
+      const county = c[3]?.trim();
+      const lat = parseFloat(c[6]);
+      const lon = parseFloat(c[7]);
+
+      if ((desc === 'LOC' || desc === 'PAR' || desc === 'COM' || desc === 'CTYHIST' || desc === 'NPARK') 
+          && name && !isNaN(lat) && !isNaN(lon)) {
+        window.places.push({ name, county, lat, lon });
+      }
     });
+    initFuse();
+  });
 
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.trim();
