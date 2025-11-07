@@ -564,7 +564,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
     return cols;
   }
 
-  function initFuse() { if (window.places.length) fuse = new Fuse(window.places, { keys: ['name', 'county'], // include county names in search! threshold: 0.4 }); }
+  function initFuse() { if (window.places.length) fuse = new Fuse(window.places, { keys: ['name', 'county'], // include county names in search! threshold: 0.4 }); }}
 
   function showDropdown(results) {
     searchDropdown.innerHTML = '';
