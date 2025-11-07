@@ -619,7 +619,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
       lines.forEach(line => {
         const c = parseCSVLine(line);
         const name = c[0], desc = c[2], county = c[3], lat = parseFloat(c[6]), lon = parseFloat(c[7]);
-        if ((desc === 'LOC' || desc === 'PAR') && name && !isNaN(lat) && !isNaN(lon)) {
+        if ((desc === 'LOC' || desc === 'PAR' || desc === 'COM' || desc === 'CTYHIST'|| desc === 'NPARK' ) && name && !isNaN(lat) && !isNaN(lon)) {
           window.places.push({ name, county, lat, lon });
         }
       });
