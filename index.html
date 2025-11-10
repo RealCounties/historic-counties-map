@@ -16,17 +16,20 @@
 :root {
   --bg: #faf4e6; --card-bg: #f3e9da; --text: #333; --border: #ccc;
   --shadow: rgba(0,0,0,0.2); --accent: #9B2C2C; --tooltip-bg: rgba(255,255,255,0.9);
-
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --bg: #1a1a2e; --card-bg: #16213e; --text: #e0e0e0; --border: #333;
-    --shadow: rgba(0,0,0,0.5); --accent: #e63946; --tooltip-bg: rgba(0,0,0,0.8);
-  }
 }
-  --bg: #faf4e6; --card-bg: #f3e9da; --text: #333; --border: #ccc;
-  --shadow: rgba(0,0,0,0.2); --accent: #9B2C2C; --tooltip-bg: rgba(255,255,255,0.9);
-
+html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
+#container { display:flex; height:100%; }
+#logo-container { text-align:center; margin-bottom:10px; }
+#sidebar-logo { max-width:50%; height:auto; display:block; margin:0 auto; opacity:0; transform:scale(0.9); animation:logoLoad 1.4s ease-out forwards; }
+@keyframes logoLoad { 0% { opacity:0; transform:scale(0.9) translateY(10px); } 60% { opacity:1; transform:scale(1.02); } 100% { opacity:1; transform:scale(1); } }
+#logo-link { display:block; transition:opacity .25s ease; } #logo-link:hover { opacity:.85; }
+#sidebar { width:340px; background:var(--bg); padding:15px; overflow-y:auto; border-right:1px solid var(--border); transition:all .3s ease; position:relative; color:var(--text); }
+#search-bar { margin-top:15px; display:flex; gap:6px; align-items:center; justify-content:center; }
+#search-bar input { flex:1; min-width:140px; padding:10px 12px; border:1px solid var(--border); border-radius:4px; font-size:.9rem; color:var(--text); background:#fff; box-shadow:0 2px 4px var(--shadow); transition:all .25s; }
+#search-bar input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(155,44,44,.2); }
+#search-bar button { padding:10px 18px; background:var(--accent); color:#FAF4E6; border:none; border-radius:4px; font-weight:500; box-shadow:0 3px 6px var(--shadow); cursor:pointer; transition:all .25s cubic-bezier(.4,0,.2,1); }
+#search-bar button:hover { background:#7a2222; transform:translateY(-2px) scale(1.05); box-shadow:0 6px 14px var(--shadow); }
+#map { flex:1; background:#e0f2fe; }
 /* ---- CARD LAYOUT WITH FLAG ---- */
 .county-card {
   background:var(--card-bg); padding:14px; border-radius:10px;
@@ -79,38 +82,12 @@
   animation: spin 0.8s linear infinite;
   vertical-align: middle;
 }
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
 /* Hide spinner when not loading */
 #info:not(.loading)::after {
   display: none;
-}
-/* FORCE DARK MODE ON LEAFLET CONTROLS */
-.leaflet-control,
-.leaflet-control a,
-.leaflet-control button,
-.leaflet-bar,
-.leaflet-bar a {
-  background: var(--card-bg) !important;
-  color: var(--text) !important;
-  border-color: var(--border) !important;
-  box-shadow: 0 1px 5px var(--shadow) !important;
-}
-
-.leaflet-control button:hover {
-  background: var(--accent) !important;
-  color: white !important;
-}
-:root {
-  --bg: #faf4e6;
-  --card-bg: #f3e9da;
-  --text: #333;
-  --border: #ccc;
-  --shadow: rgba(0,0,0,0.2);
-  --accent: #9B2C2C;
 }
 </style>
 </head>
