@@ -160,6 +160,69 @@ window.onload = function() {
 
   // Initialize Leaflet map
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
+    // === DARK MODE TOGGLE (WORKING - MOON to SUN) ===
+  const darkToggle = L.control({ position: 'topright' });
+  darkToggle.onAdd = function () {
+    const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
+    btn.innerHTML = 'Dark Mode'; // Moon icon
+    btn.title = 'Toggle dark mode';
+    btn.setAttribute('aria-label', 'Toggle dark mode');
+    btn.style.cssText = `
+      background: var(--card-bg); 
+      color: var(--text); 
+      border: 1px solid var(--border); 
+      width: 36px; height: 36px; 
+      font-size: 16px; line-height: 36px; 
+      text-align: center; cursor: pointer; 
+      border-radius: 6px; margin: 8px 0 0 0;
+      display: flex; align-items: center; justify-content: center;
+    `;
+
+    // Toggle function
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const isDark = document.documentElement.dataset.theme === 'dark';
+      const newTheme = isDark ? 'light' : 'dark';
+      
+      // Apply theme
+      document.documentElement.dataset.theme = newTheme;
+      localStorage.setItem('theme', newTheme);
+      
+      // Update button
+      btn.innerHTML = isDark ? 'Dark Mode' : 'Light Mode'; // Sun icon
+      
+      // Swap logo
+      const logo = document.getElementById('sidebar-logo');
+      if (logo) {
+        logo.src = newTheme === 'dark' 
+          ? 'logo-light-trans.png' 
+          : 'https://realcounties.wordpress.com/wp-content/uploads/2025/06/logo-full-trans-16-6-25.png';
+      }
+    };
+
+    return btn;
+  };
+  darkToggle.addTo(map);
+
+  // === APPLY SAVED THEME ON LOAD ===
+  const savedTheme = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+  document.documentElement.dataset.theme = theme;
+
+  // Update button text after load
+  setTimeout(() => {
+    const btn = document.querySelector('.leaflet-control button');
+    if (btn) {
+      btn.innerHTML = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+    }
+    const logo = document.getElementById('sidebar-logo');
+    if (logo) {
+      logo.src = theme === 'dark' 
+        ? 'logo-light-trans.png' 
+        : 'https://realcounties.wordpress.com/wp-content/uploads/2025/06/logo-full-trans-16-6-25.png';
+    }
+  }, 200);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
