@@ -16,6 +16,23 @@
 :root {
   --bg: #faf4e6; --card-bg: #f3e9da; --text: #333; --border: #ccc;
   --shadow: rgba(0,0,0,0.2); --accent: #9B2C2C; --tooltip-bg: rgba(255,255,255,0.9);
+  --toggle-icon: "🌙";
+
+[data-theme="dark"] {
+  --bg: #1a1a2e; --card-bg: #16213e; --text: #e0e0e0; --border: #333;
+  --shadow: rgba(0,0,0,0.5); --accent: #e63946; --tooltip-bg: rgba(0,0,0,0.8);
+  --toggle-icon: "☀️";
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #1a1a2e; --card-bg: #16213e; --text: #e0e0e0; --border: #333;
+    --shadow: rgba(0,0,0,0.5); --accent: #e63946; --tooltip-bg: rgba(0,0,0,0.8);
+    --toggle-icon: "☀️";
+  }
+}
+  --bg: #faf4e6; --card-bg: #f3e9da; --text: #333; --border: #ccc;
+  --shadow: rgba(0,0,0,0.2); --accent: #9B2C2C; --tooltip-bg: rgba(255,255,255,0.9);
 
 /* Dark Mode */
 [data-theme="dark"] {
@@ -23,21 +40,17 @@
   --shadow: rgba(0,0,0,0.5); --accent: #e63946; --tooltip-bg: rgba(0,0,0,0.8);
   --toggle-icon: "Day";
 }
-@media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --bg: #1a1a2e; --card-bg: #16213e; --text: #e0e0e0; --border: #333;
     --shadow: rgba(0,0,0,0.5); --accent: #e63946; --tooltip-bg: rgba(0,0,0,0.8);
   }
 }
-#themeToggle {
   position: fixed; top: 16px; right: 16px; z-index: 10000;
   background: var(--card-bg); color: var(--text); border: 1px solid var(--border);
   width: 44px; height: 44px; border-radius: 50%; font-size: 20px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; box-shadow: 0 2px 8px var(--shadow); transition: all .3s;
 }
-#themeToggle:hover { transform: scale(1.1); }
-#themeToggle::before { content: var(--toggle-icon); }
   --toggle-icon: "Night";
 }
 html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
@@ -120,7 +133,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 <div id="container">
   <div id="sidebar">
     <button id="closeSidebar">x</button>
-        <button id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">Night</button>
     <div id="logo-container">
       <div id="logo-link" style="cursor:pointer;" onclick="resetMapAndSidebar()" title="Reset map">
         <img src="https://realcounties.wordpress.com/wp-content/uploads/2025/06/logo-full-trans-16-6-25.png" alt="Reset Map - Historic Counties" id="sidebar-logo">
@@ -171,6 +183,22 @@ window.onload = function() {
     return btn;
   };
   toggleButton.addTo(map);
+  // Dark Mode Toggle (Leaflet Control)
+  const darkModeControl = L.control({ position: "topright" });
+  darkModeControl.onAdd = function() {
+    const btn = L.DomUtil.create("button", "leaflet-bar");
+    btn.innerHTML = "🌙";
+    btn.title = "Toggle dark mode";
+    btn.setAttribute("aria-label", "Toggle dark mode");
+    btn.style.cssText = "background:var(--card-bg); color:var(--text); border:1px solid var(--border); width:34px; height:34px; font-size:18px; cursor:pointer; border-radius:4px; margin-top:8px; display:flex; align-items:center; justify-content:center;";
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const isDark = document.documentElement.dataset.theme === "dark";
+      setTheme(isDark ? "light" : "dark");
+    };
+    return btn;
+  };
+  darkModeControl.addTo(map);
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
   // ✅ Make reset function global
