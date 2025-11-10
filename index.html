@@ -1,6 +1,6 @@
 <meta name="color-scheme" content="light dark">
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light"></html>
 <head>
 <meta charset="utf-8">
 <title>Historic Counties Interactive Map</title>
@@ -127,6 +127,22 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #info:not(.loading)::after {
   display: none;
 }
+/* FORCE DARK MODE ON LEAFLET CONTROLS */
+.leaflet-control,
+.leaflet-control a,
+.leaflet-control button,
+.leaflet-bar,
+.leaflet-bar a {
+  background: var(--card-bg) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 1px 5px var(--shadow) !important;
+}
+
+.leaflet-control button:hover {
+  background: var(--accent) !important;
+  color: white !important;
+}
 </style>
 </head>
 <body>
@@ -164,7 +180,7 @@ window.onload = function() {
   const darkToggle = L.control({ position: 'topright' });
   darkToggle.onAdd = function () {
     const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
-    btn.innerHTML = 'Dark Mode'; // Moon icon
+    btn.innerHTML = 'Moon'; // Will show Sun/Moon from CSS
     btn.title = 'Toggle dark mode';
     btn.setAttribute('aria-label', 'Toggle dark mode');
     btn.style.cssText = `
@@ -214,7 +230,7 @@ window.onload = function() {
   setTimeout(() => {
     const btn = document.querySelector('.leaflet-control button');
     if (btn) {
-      btn.innerHTML = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+      btn.innerHTML = theme === 'dark' ? 'Sun' : 'Moon';
     }
     const logo = document.getElementById('sidebar-logo');
     if (logo) {
