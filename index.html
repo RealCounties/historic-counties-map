@@ -246,22 +246,7 @@ window.onload = function() {
     return btn;
   };
   toggleButton.addTo(map);
-  // Dark Mode Toggle (Leaflet Control)
-  const darkModeControl = L.control({ position: "topright" });
-  darkModeControl.onAdd = function() {
-    const btn = L.DomUtil.create("button", "leaflet-bar");
-    btn.innerHTML = "🌙";
-    btn.title = "Toggle dark mode";
-    btn.setAttribute("aria-label", "Toggle dark mode");
-    btn.style.cssText = "background:var(--card-bg); color:var(--text); border:1px solid var(--border); width:34px; height:34px; font-size:18px; cursor:pointer; border-radius:4px; margin-top:8px; display:flex; align-items:center; justify-content:center;";
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      const isDark = document.documentElement.dataset.theme === "dark";
-      setTheme(isDark ? "light" : "dark");
-    };
-    return btn;
-  };
-  darkModeControl.addTo(map);
+
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
   // ✅ Make reset function global
