@@ -156,12 +156,12 @@ toggleButton.onAdd = function() {
 };
 toggleButton.addTo(map);
 
-// Wait until the geocoder button exists in the DOM
-map.on('layeradd', () => {
+// Wait for the geocoder button to exist
+const styleSearchButton = () => {
   const searchBtn = document.querySelector('.leaflet-control-geocoder-icon');
   if (!searchBtn) return;
 
-  // Apply branded styles
+  // Apply brand colours but *don't replace* innerHTML
   searchBtn.style.background = '#f3e9da';
   searchBtn.style.border = '1px solid #9B2C2C';
   searchBtn.style.width = '34px';
@@ -172,26 +172,22 @@ map.on('layeradd', () => {
   searchBtn.style.justifyContent = 'center';
   searchBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
   searchBtn.style.transition = 'all 0.25s ease';
-  searchBtn.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-         fill="#9B2C2C" viewBox="0 0 16 16">
-      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 
-               1.398h-.001l3.85 3.85a1 1 0 0 0 
-               1.415-1.414l-3.85-3.85zm-5.242 
-               1.156a5 5 0 1 1 0-10 5 5 0 0 1 
-               0 10z"/>
-    </svg>`;
+  searchBtn.style.color = '#9B2C2C'; // sets magnifying glass colour
+  searchBtn.style.fontSize = '16px'; // makes the icon balanced
 
-  // Hover effects
+  // Hover styles
   searchBtn.addEventListener('mouseover', () => {
     searchBtn.style.background = '#9B2C2C';
-    searchBtn.querySelector('svg').setAttribute('fill', '#f3e9da');
+    searchBtn.style.color = '#f3e9da';
   });
   searchBtn.addEventListener('mouseout', () => {
     searchBtn.style.background = '#f3e9da';
-    searchBtn.querySelector('svg').setAttribute('fill', '#9B2C2C');
+    searchBtn.style.color = '#9B2C2C';
   });
-});
+};
+
+// Run after map + geocoder loaded
+map.whenReady(styleSearchButton);
 
   // Reset function
   window.resetMapAndSidebar = function() {
