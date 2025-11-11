@@ -55,29 +55,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #closeSidebar { display:none; position:absolute; top:10px; right:12px; width:32px; height:32px; font-size:20px; color:#666; background:rgba(255,255,255,0.9); border:none; border-radius:50%; cursor:pointer; align-items:center; justify-content:center; z-index:1001; }
 #closeSidebar:hover { background:#fff; }
 
-  /* BRAND THE MAGNIFYING GLASS SEARCH BUTTON */
-.leaflet-control-geocoder-icon {
-  background: #f3e9da !important;
-  color: #9B2C2C !important;
-  border: 1px solid #9B2C2C !important;
-  width: 34px !important;
-  height: 34px !important;
-  font-size: 18px !important;
-  font-weight: bold !important;
-  font-family: Arial, sans-serif !important;
-  border-radius: 4px !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
-  transition: all 0.25s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: 6px 0 0 6px !important;
-}
-
-.leaflet-control-geocoder-icon:hover {
-  background: #9B2C2C !important;
-  color: #f3e9da !important;
-}
 /* MOBILE: RESPONSIVENESS */
 @media (max-width:1024px) {
   #container { flex-direction:column; }
@@ -110,7 +87,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
         <img src="https://realcounties.wordpress.com/wp-content/uploads/2025/06/logo-full-trans-16-6-25.png" alt="Reset Map - Historic Counties" id="sidebar-logo">
       </div>
     </div>
-    <h2>UK Geographical Counties Interactive Map</h2>
+    <h2>Interactive Map</h2>
     <p>Select a county to view details.</p>
     <div id="info" class="loading"><em>Loading counties...</em></div>
     <div id="search-bar">
@@ -142,48 +119,44 @@ window.onload = function() {
   map.fitBounds(ukBounds);
   setTimeout(() => map.invalidateSize(), 400);
 
-// === BRANDED INFO BUTTON (i ICON) ===
-const toggleButton = L.control({ position: 'topright' });
-toggleButton.onAdd = function() {
-  const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
-  btn.innerHTML = 'i';
-  btn.title = 'Show county info';
-  btn.setAttribute('aria-label', 'Show county info');
-  btn.style.cssText = `
-    background: #f3e9da;
-    color: #9B2C2C;
-    border: 1px solid #9B2C2C;
-    width: 34px;
-    height: 34px;
-    font-size: 18px;
-    font-weight: bold;
-    font-family: Arial, sans-serif;
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    transition: all 0.25s ease;
-  `;
-  btn.onmouseover = () => {
-    btn.style.background = '#9B2C2C';
-    btn.style.color = '#f3e9da';
+  // === BRANDED INFO BUTTON (i ICON) ===
+  const toggleButton = L.control({ position: 'topright' });
+  toggleButton.onAdd = function() {
+    const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
+    btn.innerHTML = 'i';
+    btn.title = 'Show county info';
+    btn.setAttribute('aria-label', 'Show county info');
+    btn.style.cssText = `
+      background: #f3e9da;
+      color: #9B2C2C;
+      border: 1px solid #9B2C2C;
+      width: 34px;
+      height: 34px;
+      font-size: 18px;
+      font-weight: bold;
+      font-family: Arial, sans-serif;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: all 0.25s ease;
+    `;
+    btn.onmouseover = () => {
+      btn.style.background = '#9B2C2C';
+      btn.style.color = '#f3e9da';
+    };
+    btn.onmouseout = () => {
+      btn.style.background = '#f3e9da';
+      btn.style.color = '#9B2C2C';
+    };
+    btn.onclick = () => sidebar.classList.toggle('visible');
+    return btn;
   };
-  btn.onmouseout = () => {
-    btn.style.background = '#f3e9da';
-    btn.style.color = '#9B2C2C';
-  };
-  btn.onclick = () => sidebar.classList.toggle('visible');
-  return btn;
-};
-toggleButton.addTo(map);
+  toggleButton.addTo(map);
 
-const styleSearchButton = () => {
-  const searchBtn = document.querySelector('.leaflet-control-geocoder-icon');
-  if (!searchBtn) return;
-
-   // Reset function
+  // Reset function
   window.resetMapAndSidebar = function() {
     map.fitBounds(ukBounds);
     infoDiv.innerHTML = '<em>Click a county to explore.</em>';
@@ -678,7 +651,8 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
     if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
       searchDropdown.style.display = 'none';
     }
-});
+  });
+};
 </script>
 </body>
 </html>
