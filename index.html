@@ -76,29 +76,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 }
 }
 }
-/* === Brand-styled OSM search button === */
-.leaflet-control-geocoder .leaflet-control-geocoder-icon {
-  background-color: #f3e9da !important;     /* cream background */
-  border: 1px solid #9B2C2C !important;     /* red border */
-  width: 34px !important;
-  height: 34px !important;
-  border-radius: 4px !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: 18px 18px !important;
-  filter: invert(14%) sepia(100%) saturate(6244%) hue-rotate(350deg) brightness(90%) contrast(95%) !important; /* recolours the magnifying glass red */
-  transition: all 0.25s ease !important;
-}
-
-/* === Hover: invert colours to match “i” button === */
-.leaflet-control-geocoder .leaflet-control-geocoder-icon:hover {
-  background-color: #9B2C2C !important;     /* red background */
-  filter: invert(95%) sepia(8%) saturate(380%) hue-rotate(15deg) brightness(104%) contrast(101%) !important; /* recolours icon cream */
-}
 </style>
 </head>
 <body>
@@ -183,34 +160,29 @@ const styleSearchButton = () => {
   const searchBtn = document.querySelector('.leaflet-control-geocoder-icon');
   if (!searchBtn) return;
 
-  // Base style (matches your “i” button)
-  searchBtn.style.background = '#f3e9da';
-  searchBtn.style.border = '1px solid #9B2C2C';
-  searchBtn.style.width = '34px';
-  searchBtn.style.height = '34px';
-  searchBtn.style.borderRadius = '4px';
-  searchBtn.style.display = 'flex';
-  searchBtn.style.alignItems = 'center';
-  searchBtn.style.justifyContent = 'center';
-  searchBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
-  searchBtn.style.transition = 'all 0.25s ease';
+  /* BRAND THE MAGNIFYING GLASS SEARCH BUTTON */
+.leaflet-control-geocoder-icon {
+  background: #f3e9da !important;
+  color: #9B2C2C !important;
+  border: 1px solid #9B2C2C !important;
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  font-family: Arial, sans-serif !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+  transition: all 0.25s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 6px 0 0 6px !important;
+}
 
-  // Recolour the default OSM magnifying glass (which is a background image)
-  // This filter makes the grey icon match your #9B2C2C red tone
-  searchBtn.style.filter = 'invert(23%) sepia(95%) saturate(612%) hue-rotate(340deg) brightness(95%) contrast(90%)';
-
-  // Hover effects
-  searchBtn.addEventListener('mouseover', () => {
-    searchBtn.style.background = '#9B2C2C';
-    searchBtn.style.filter = 'invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(110%) contrast(100%)'; // makes icon cream
-  });
-  searchBtn.addEventListener('mouseout', () => {
-    searchBtn.style.background = '#f3e9da';
-    searchBtn.style.filter = 'invert(23%) sepia(95%) saturate(612%) hue-rotate(340deg) brightness(95%) contrast(90%)'; // back to red
-  });
-};
-
-map.whenReady(styleSearchButton);
+.leaflet-control-geocoder-icon:hover {
+  background: #9B2C2C !important;
+  color: #f3e9da !important;
+}
 
   // Reset function
   window.resetMapAndSidebar = function() {
