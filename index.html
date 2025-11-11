@@ -554,7 +554,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
   const searchControl = L.control({ position: 'topright' });
   searchControl.onAdd = function() {
     const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
-    btn.innerHTML = 'Search';
+    btn.innerHTML = "🔍";
     btn.title = 'Search towns, villages, postcodes…';
     btn.setAttribute('aria-label', 'Search map');
     btn.style.cssText = `
