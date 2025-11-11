@@ -76,10 +76,10 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 }
 }
 }
-  const css = `
+/* === Brand-styled OSM search button === */
 .leaflet-control-geocoder .leaflet-control-geocoder-icon {
-  background-color: #f3e9da !important;
-  border: 1px solid #9B2C2C !important;
+  background-color: #f3e9da !important;     /* cream background */
+  border: 1px solid #9B2C2C !important;     /* red border */
   width: 34px !important;
   height: 34px !important;
   border-radius: 4px !important;
@@ -90,16 +90,15 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   background-position: center !important;
   background-repeat: no-repeat !important;
   background-size: 18px 18px !important;
+  filter: invert(14%) sepia(100%) saturate(6244%) hue-rotate(350deg) brightness(90%) contrast(95%) !important; /* recolours the magnifying glass red */
+  transition: all 0.25s ease !important;
 }
-.leaflet-control-geocoder .leaflet-control-geocoder-icon:hover {
-  background-color: #9B2C2C !important;
-  color: #f3e9da !important;
-}
-`;
-const styleEl = document.createElement('style');
-styleEl.textContent = css;
-document.head.appendChild(styleEl);
 
+/* === Hover: invert colours to match “i” button === */
+.leaflet-control-geocoder .leaflet-control-geocoder-icon:hover {
+  background-color: #9B2C2C !important;     /* red background */
+  filter: invert(95%) sepia(8%) saturate(380%) hue-rotate(15deg) brightness(104%) contrast(101%) !important; /* recolours icon cream */
+}
 </style>
 </head>
 <body>
