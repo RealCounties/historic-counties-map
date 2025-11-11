@@ -120,11 +120,9 @@ window.onload = function() {
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
 
-
   // Initialize Leaflet map
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
-  
-   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
   }).addTo(map);
@@ -132,8 +130,6 @@ window.onload = function() {
   const ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
   map.setMaxBounds(ukBounds);
   map.fitBounds(ukBounds);
-
-  // Ensure map is displayed correctly after load
   setTimeout(() => map.invalidateSize(), 400);
 
   // Sidebar toggle button
@@ -150,24 +146,20 @@ window.onload = function() {
 
   closeBtn.onclick = () => sidebar.classList.remove('visible');
 
-  // ✅ Make reset function global
+  // Reset function
   window.resetMapAndSidebar = function() {
     map.fitBounds(ukBounds);
     infoDiv.innerHTML = '<em>Click a county to explore.</em>';
-
     if (currentLayer) {
       currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
       currentLayer = null;
     }
-
     if (searchMarker) {
       map.removeLayer(searchMarker);
       searchMarker = null;
     }
-
     searchInput.value = '';
     searchDropdown.style.display = 'none';
-
     if (window.innerWidth <= 1024) {
       sidebar.classList.remove('visible');
     }
@@ -426,92 +418,84 @@ window.onload = function() {
 
 // Update card function
 window.updateCountyCard = function(englishName, layer, lat, lon) {
-  const details = countyData[englishName] || {};          // <-- fixed
-  const langEntry = countyLanguages[englishName];
-  const area = details.area || 0;                        // <-- fixed
-  const pop = details.population || 0;                   // <-- fixed
-  const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
+        const details = countyData[englishName] || {};
+        const langEntry = countyLanguages[englishName];
+        const area = details.area || 0;
+        const pop = details.population || 0;
+        const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
 
-  let badgeStyle = '';
-  if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
-  else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
-  else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
-  else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
-  else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
-  else badgeStyle = 'background:#66BB6A; color:white;';
+        let badgeStyle = '';
+        if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
+        else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
+        else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
+        else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
+        else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
+        else badgeStyle = 'background:#66BB6A; color:white;';
 
-  fetchWeather(lat, lon).then(weather => {
-    const weatherBlock = weather ? `
-      <div style="text-align:center; margin:14px 0 8px;">
-        <div class="weather-underline" style="margin:0 auto 14px;"></div>
-        <div class="weather-badge">
-          ${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph
-        </div>
-      </div>` : '';
+        fetchWeather(lat, lon).then(weather => {
+          const weatherBlock = weather ? `
+            <div style="text-align:center; margin:14px 0 8px;">
+              <div class="weather-underline" style="margin:0 auto 14px;"></div>
+              <div class="weather-badge">
+                ${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph
+              </div>
+            </div>` : '';
 
-    const flagUrl = countyFlags[englishName];
-    const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
+          const flagUrl = countyFlags[englishName];
+          const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
 
-    const cardHTML = `
-      <div class="county-card" style="margin-bottom:16px;">
-        ${flagHTML}
-        <div class="card-body">
-          <h3>${englishName}</h3>
-          ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
-          <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
-            <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
-            <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
-          </div>
-          <div style="text-align:center; margin:12px 0;">
-            <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
-              Density: ${density} people/sq mi
-            </span>
-          </div>
+          const cardHTML = `
+            <div class="county-card" style="margin-bottom:16px;">
+              ${flagHTML}
+              <div class="card-body">
+                <h3>${englishName}</h3>
+                ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+                <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
+                  <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
+                  <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+                </div>
+                <div style="text-align:center; margin:12px 0;">
+                  <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                    Density: ${density} people/sq mi
+                  </span>
+                </div>
 
-          ${details.events?.length ? `
-            <div style="margin:14px 0 8px;">
-              <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Key Events</h4>
-              <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-                ${details.events.map(e => `<li>${e}</li>`).join('')}
-              </ul>
-            </div>` : ''}
+                ${details.events?.length ? `
+                  <div style="margin:14px 0 8px;">
+                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Key Events</h4>
+                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                      ${details.events.map(e => `<li>${e}</li>`).join('')}
+                    </ul>
+                  </div>` : ''}
 
-          ${details.landmarks?.length ? `
-            <div style="margin:14px 0 8px;">
-              <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
-              <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-                ${details.landmarks.map(l => `
-                  <li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc; text-decoration:underline;">
-                    ${l}
-                  </li>`).join('')}
-              </ul>
-            </div>` : ''}
+                ${details.landmarks?.length ? `
+                  <div style="margin:14px 0 8px;">
+                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
+                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                      ${details.landmarks.map(l => `
+                        <li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc; text-decoration:underline;">
+                          ${l}
+                        </li>`).join('')}
+                    </ul>
+                  </div>` : ''}
 
-          ${details.notablePersons?.length ? `
-            <div style="margin:14px 0 8px;">
-              <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Persons</h4>
-              <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-                ${details.notablePersons.slice(0, 3).map(p => `<li>${p}</li>`).join('')}
-              </ul>
-            </div>` : ''}
+                ${details.notablePersons?.length ? `
+                  <div style="margin:14px 0 8px;">
+                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Persons</h4>
+                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                      ${details.notablePersons.slice(0, 3).map(p => `<li>${p}</li>`).join('')}
+                    </ul>
+                  </div>` : ''}
 
-          ${weatherBlock}
-        </div>
-      </div>`;
+                ${weatherBlock}
+              </div>
+            </div>`;
 
-    infoDiv.innerHTML = cardHTML;
-    infoDiv.scrollTop = 0;
-  });
+          infoDiv.innerHTML = cardHTML;
+          infoDiv.scrollTop = 0;
+        });
+      };
 
-  // Highlight selected county
-  if (currentLayer) currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
-  layer.setStyle({ 
-  weight: 4,           // thicker border
-  color: '#9B2C2C',    // your accent red
-  fillOpacity: 0.35    // same as others (no change!)
-});
-  currentLayer = layer;
-};
       const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
       data.features.forEach((f, i) => f.properties.color = pastelColors[i % pastelColors.length]);
 
@@ -535,7 +519,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
           `, { direction: 'center', className: 'county-tooltip' });
 
           layer.on('click', () => {
-            layer._cardLayer = layer; // Bind layer to card
+            layer._cardLayer = layer;
             window.updateCountyCard(englishName, layer, lat, lon);
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             map.fitBounds(layer.getBounds());
@@ -546,7 +530,6 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
         }
       }).addTo(map);
 
-      // Fix map size after load
       setTimeout(() => map.invalidateSize(), 300);
       infoDiv.innerHTML = '<em>Click a county to explore.</em>';
       infoDiv.classList.remove('loading');
@@ -567,13 +550,13 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
   }
 
   function initFuse() {
-  if (window.places.length) {
-    fuse = new Fuse(window.places, {
-      keys: ['name', 'county'], // include county names in search!
-      threshold: 0.4
-    });
+    if (window.places.length) {
+      fuse = new Fuse(window.places, {
+        keys: ['name', 'county'],
+        threshold: 0.4
+      });
+    }
   }
-}
 
   function showDropdown(results) {
     searchDropdown.innerHTML = '';
@@ -585,7 +568,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
       div.onmouseover = () => div.style.backgroundColor = '#f5f5f5';
       div.onmouseout = () => div.style.backgroundColor = '';
       div.onclick = () => selectPlace(r.item);
-      searchDropdown.appendChild(makeDropdownItem(r.item));
+      searchDropdown.appendChild(div);
     });
     searchDropdown.style.display = 'block';
   }
@@ -621,26 +604,25 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
     }
   }
 
-fetch('places_clean.csv')
-  .then(r => r.text())
-  .then(text => {
-    const lines = text.trim().split('\n'); 
-    lines.shift(); // remove header
-    lines.forEach(line => {
-      const c = parseCSVLine(line);
-      const name = c[0]?.trim();
-      const desc = c[2]?.trim();
-      const county = c[3]?.trim();
-      const lat = parseFloat(c[6]);
-      const lon = parseFloat(c[7]);
-
-      if ((desc === 'LOC' || desc === 'PAR' || desc === 'COM' || desc === 'CTYHIST' || desc === 'NPARK') 
-          && name && !isNaN(lat) && !isNaN(lon)) {
-        window.places.push({ name, county, lat, lon });
-      }
+  fetch('places_clean.csv')
+    .then(r => r.text())
+    .then(text => {
+      const lines = text.trim().split('\n');
+      lines.shift(); // remove header
+      lines.forEach(line => {
+        const c = parseCSVLine(line);
+        const name = c[0]?.trim();
+        const desc = c[2]?.trim();
+        const county = c[3]?.trim();
+        const lat = parseFloat(c[6]);
+        const lon = parseFloat(c[7]);
+        if ((desc === 'LOC' || desc === 'PAR' || desc === 'COM' || desc === 'CTYHIST' || desc === 'NPARK')
+            && name && !isNaN(lat) && !isNaN(lon)) {
+          window.places.push({ name, county, lat, lon });
+        }
+      });
+      initFuse();
     });
-    initFuse();
-  });
 
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.trim();
