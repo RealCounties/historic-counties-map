@@ -55,6 +55,29 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #closeSidebar { display:none; position:absolute; top:10px; right:12px; width:32px; height:32px; font-size:20px; color:#666; background:rgba(255,255,255,0.9); border:none; border-radius:50%; cursor:pointer; align-items:center; justify-content:center; z-index:1001; }
 #closeSidebar:hover { background:#fff; }
 
+  /* BRAND THE MAGNIFYING GLASS SEARCH BUTTON */
+.leaflet-control-geocoder-icon {
+  background: #f3e9da !important;
+  color: #9B2C2C !important;
+  border: 1px solid #9B2C2C !important;
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  font-family: Arial, sans-serif !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+  transition: all 0.25s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 6px 0 0 6px !important;
+}
+
+.leaflet-control-geocoder-icon:hover {
+  background: #9B2C2C !important;
+  color: #f3e9da !important;
+}
 /* MOBILE: RESPONSIVENESS */
 @media (max-width:1024px) {
   #container { flex-direction:column; }
@@ -160,31 +183,7 @@ const styleSearchButton = () => {
   const searchBtn = document.querySelector('.leaflet-control-geocoder-icon');
   if (!searchBtn) return;
 
-  /* BRAND THE MAGNIFYING GLASS SEARCH BUTTON */
-.leaflet-control-geocoder-icon {
-  background: #f3e9da !important;
-  color: #9B2C2C !important;
-  border: 1px solid #9B2C2C !important;
-  width: 34px !important;
-  height: 34px !important;
-  font-size: 18px !important;
-  font-weight: bold !important;
-  font-family: Arial, sans-serif !important;
-  border-radius: 4px !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
-  transition: all 0.25s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: 6px 0 0 6px !important;
-}
-
-.leaflet-control-geocoder-icon:hover {
-  background: #9B2C2C !important;
-  color: #f3e9da !important;
-}
-
-  // Reset function
+   // Reset function
   window.resetMapAndSidebar = function() {
     map.fitBounds(ukBounds);
     infoDiv.innerHTML = '<em>Click a county to explore.</em>';
