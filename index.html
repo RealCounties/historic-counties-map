@@ -119,42 +119,85 @@ window.onload = function() {
   map.fitBounds(ukBounds);
   setTimeout(() => map.invalidateSize(), 400);
 
-  // === BRANDED INFO BUTTON (i ICON) ===
-  const toggleButton = L.control({ position: 'topright' });
-  toggleButton.onAdd = function() {
-    const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
-    btn.innerHTML = 'i';
-    btn.title = 'Show county info';
-    btn.setAttribute('aria-label', 'Show county info');
-    btn.style.cssText = `
-      background: #f3e9da;
-      color: #9B2C2C;
-      border: 1px solid #9B2C2C;
-      width: 34px;
-      height: 34px;
-      font-size: 18px;
-      font-weight: bold;
-      font-family: Arial, sans-serif;
-      cursor: pointer;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      transition: all 0.25s ease;
-    `;
-    btn.onmouseover = () => {
-      btn.style.background = '#9B2C2C';
-      btn.style.color = '#f3e9da';
-    };
-    btn.onmouseout = () => {
-      btn.style.background = '#f3e9da';
-      btn.style.color = '#9B2C2C';
-    };
-    btn.onclick = () => sidebar.classList.toggle('visible');
-    return btn;
+// === BRANDED INFO BUTTON (i ICON) ===
+const toggleButton = L.control({ position: 'topright' });
+toggleButton.onAdd = function() {
+  const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
+  btn.innerHTML = 'i';
+  btn.title = 'Show county info';
+  btn.setAttribute('aria-label', 'Show county info');
+  btn.style.cssText = `
+    background: #f3e9da;
+    color: #9B2C2C;
+    border: 1px solid #9B2C2C;
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: all 0.25s ease;
+  `;
+  btn.onmouseover = () => {
+    btn.style.background = '#9B2C2C';
+    btn.style.color = '#f3e9da';
   };
-  toggleButton.addTo(map);
+  btn.onmouseout = () => {
+    btn.style.background = '#f3e9da';
+    btn.style.color = '#9B2C2C';
+  };
+  btn.onclick = () => sidebar.classList.toggle('visible');
+  return btn;
+};
+toggleButton.addTo(map);
+
+
+// === OSM SEARCH CONTROL (STYLED TO MATCH) ===
+const geocoder = L.Control.geocoder({
+  defaultMarkGeocode: false
+})
+  .on('markgeocode', function(e) {
+    map.fitBounds(e.geocode.bbox);
+  })
+  .addTo(map);
+
+// Once it’s added, restyle the button
+const searchBtn = document.querySelector('.leaflet-control-geocoder-icon');
+if (searchBtn) {
+  searchBtn.style.background = '#f3e9da';
+  searchBtn.style.border = '1px solid #9B2C2C';
+  searchBtn.style.width = '34px';
+  searchBtn.style.height = '34px';
+  searchBtn.style.borderRadius = '4px';
+  searchBtn.style.display = 'flex';
+  searchBtn.style.alignItems = 'center';
+  searchBtn.style.justifyContent = 'center';
+  searchBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+  searchBtn.style.transition = 'all 0.25s ease';
+  searchBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+         fill="#9B2C2C" viewBox="0 0 16 16">
+      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 
+               1.398h-.001l3.85 3.85a1 1 0 0 0 
+               1.415-1.414l-3.85-3.85zm-5.242 
+               1.156a5 5 0 1 1 0-10 5 5 0 0 1 
+               0 10z"/>
+    </svg>`;
+  searchBtn.onmouseover = () => {
+    searchBtn.style.background = '#9B2C2C';
+    searchBtn.querySelector('svg').setAttribute('fill', '#f3e9da');
+  };
+  searchBtn.onmouseout = () => {
+    searchBtn.style.background = '#f3e9da';
+    searchBtn.querySelector('svg').setAttribute('fill', '#9B2C2C');
+  };
+}
+
 
   // Reset function
   window.resetMapAndSidebar = function() {
