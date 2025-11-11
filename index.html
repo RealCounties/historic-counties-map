@@ -550,168 +550,75 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
     });
 
   // Search & Geocoder
-  // === BRANDED OSM SEARCH BUTTON (MAGNIFYING GLASS) ===
-  const searchControl = L.control({ position: 'topright' });
-  searchControl.onAdd = function() {
-    const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
-    btn.innerHTML = "Search";
-    btn.title = 'Search towns, villages, postcodes…';
-    btn.setAttribute('aria-label', 'Search map');
-    btn.style.cssText = `
-      background: #f3e9da;
-      color: #9B2C2C;
-      border: 1px solid #9B2C2C;
-      width: 34px;
-      height: 34px;
-      font-size: 18px;
-      font-weight: bold;
-      font-family: Arial, sans-serif;
-      cursor: pointer;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      transition: all 0.25s ease;
-      margin-top: 8px;
-    `;
-    btn.onmouseover = () => {
-      btn.style.background = '#9B2C2C';
-      btn.style.color = '#f3e9da';
-    };
-    btn.onmouseout = () => {
-      btn.style.background = '#f3e9da';
-      btn.style.color = '#9B2C2C';
-    };
+  L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
+  window.places = []; let fuse = null; let searchMarker = null;
 
-    btn.onclick = () => {
-      const geocoder = L.Control.geocoder({
-        defaultMarkGeocode: false,
-        placeholder: 'Search town, village, postcode…',
-        collapsed: false,
-        position: 'topright',
-        geocoder: new L.Control.Geocoder.Nominatim()
-      }).addTo(map);
-
-      geocoder.on('markgeocode', e => {
-        const r = e.geocode;
-        const wrapped = {
-          display_name: r.display_name,
-          lat: r.center.lat,
-          lon: r.center.lng
-        };
-        showDropdown([wrapped]);
-      });
-
-      setTimeout(() => {
-        const input = document.querySelector('.leaflet-control-geocoder input');
-        if (input) input.focus();
-      }, 100);
-
-      map.removeControl(searchControl);
-    };
-
-    return btn;
-  };
-  searchControl.addTo(map);
-
-  // === SINGLE SOURCE OF TRUTH ===
-  function getHistoricCountyFromPoint(lat, lon) {
-    if (!lat || !lon || isNaN(lat) || isNaN(lon)) return '';
-    const point = turf.point([lon, lat]);
-    let countyName = null;
-    map.eachLayer(layer => {
-      if (layer instanceof L.GeoJSON) {
-        layer.eachLayer(countyLayer => {
-          if (
-            countyLayer.feature &&
-            countyLayer.getBounds &&
-            countyLayer.getBounds().contains([lat, lon]) &&
-            turf.booleanPointInPolygon(point, countyLayer.feature)
-          ) {
-            countyName = countyLayer.feature.properties.NAME;
-          }
-        });
-      }
-    });
-    return countyName || '';
+  function parseCSVLine(line) {
+    const cols = []; const regex = /(?:\"([^\"]*)\"|([^,]+))/g; let m;
+    while ((m = regex.exec(line)) !== null) cols.push(m[1] || m[2] || '');
+    return cols;
   }
 
-  function findCountyLayerByName(name) {
-    let found = null;
-    map.eachLayer(l => {
-      if (l instanceof L.GeoJSON) {
-        l.eachLayer(cl => {
-          if (cl.feature && cl.feature.properties.NAME === name) {
-            found = cl;
-          }
-        });
-      }
-    });
-    return found;
+  function initFuse() {
+    if (window.places.length) {
+      fuse = new Fuse(window.places, {
+        keys: ['name', 'county'],
+        threshold: 0.4
+      });
+    }
   }
 
   function showDropdown(results) {
     searchDropdown.innerHTML = '';
-    if (!results.length) {
-      searchDropdown.style.display = 'none';
-      return;
-    }
+    if (!results.length) { searchDropdown.style.display = 'none'; return; }
     results.slice(0, 10).forEach(r => {
       const div = document.createElement('div');
-      div.style.cssText = `
-        padding: 10px 14px; 
-        cursor: pointer; 
-        border-bottom: 1px solid #eee; 
-        font-size: 0.92rem; 
-        background: #f9f5f0;
-        transition: background 0.2s;
-      `;
-      const isCSV = !!r.item?.name;
-      const name = isCSV ? r.item.name : r.display_name?.split(',')[0].trim() || 'Unknown';
-      const lat = isCSV ? r.item.lat : r.lat;
-      const lon = isCSV ? r.item.lon : r.lon;
-      const county = isCSV && r.item.county ? r.item.county : getHistoricCountyFromPoint(lat, lon);
-
-      div.textContent = `${name}${county ? ', ' + county : ''}`;
-      div.onmouseover = () => div.style.background = '#f0e6d6';
-      div.onmouseout = () => div.style.background = '#f9f5f0';
-      div.onclick = () => selectPlace(r);
+      div.style.cssText = 'padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee; font-size:0.9rem;';
+      div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+      div.onmouseover = () => div.style.backgroundColor = '#f5f5f5';
+      div.onmouseout = () => div.style.backgroundColor = '';
+      div.onclick = () => selectPlace(r.item);
       searchDropdown.appendChild(div);
     });
     searchDropdown.style.display = 'block';
   }
 
-  function selectPlace(result) {
-    const isCSV = !!result.item?.name;
-    const lat = isCSV ? result.item.lat : result.lat;
-    const lon = isCSV ? result.item.lon : result.lon;
-    const name = isCSV ? result.item.name : result.display_name?.split(',')[0].trim() || 'Unknown';
-    const county = isCSV && result.item.county ? result.item.county : getHistoricCountyFromPoint(lat, lon);
-
+  function selectPlace(place) {
     if (searchMarker) map.removeLayer(searchMarker);
-    searchMarker = L.marker([lat, lon]).addTo(map)
-      .bindPopup(`<b>${name}</b>${county ? '<br>' + county : ''}`).openPopup();
-    map.setView([lat, lon], 12);
+    searchMarker = L.marker([place.lat, place.lon]).addTo(map).bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
+    map.setView([place.lat, place.lon], 11);
     searchDropdown.style.display = 'none';
-    searchInput.value = name;
+    searchInput.value = place.name;
+    setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+  }
 
-    if (county) {
-      const countyLayer = findCountyLayerByName(county);
-      if (countyLayer) {
-        const centroid = turf.centroid(countyLayer.feature);
-        window.updateCountyCard(county, countyLayer, centroid.geometry.coordinates[1], centroid.geometry.coordinates[0]);
-        if (window.innerWidth <= 1024) sidebar.classList.add('visible');
+  function showCountyFromPoint(lat, lon) {
+    const point = turf.point([lon, lat]);
+    let found = null;
+    map.eachLayer(l => {
+      if (l instanceof L.GeoJSON) {
+        l.eachLayer(cl => {
+          if (cl.getBounds && cl.getBounds().contains([lat, lon]) && turf.booleanPointInPolygon(point, cl.feature)) {
+            found = cl;
+          }
+        });
       }
+    });
+    if (found) {
+      const englishName = found.feature.properties.NAME;
+      const centroid = turf.centroid(found.feature);
+      window.updateCountyCard(englishName, found, centroid.geometry.coordinates[1], centroid.geometry.coordinates[0]);
+      if (window.innerWidth <= 1024) sidebar.classList.add('visible');
+    } else {
+      infoDiv.innerHTML = '<em>County not found.</em>';
     }
   }
 
-  // === LOAD CSV & INITIALIZE FUSE ===
   fetch('places_clean.csv')
     .then(r => r.text())
     .then(text => {
       const lines = text.trim().split('\n');
-      lines.shift();
+      lines.shift(); // remove header
       lines.forEach(line => {
         const c = parseCSVLine(line);
         const name = c[0]?.trim();
@@ -727,22 +634,9 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
       initFuse();
     });
 
-  function initFuse() {
-    if (window.places.length) {
-      fuse = new Fuse(window.places, {
-        keys: ['name', 'county'],
-        threshold: 0.4
-      });
-    }
-  }
-
-  // === INPUT LISTENERS (SAFE — fuse may be null at first) ===
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.trim();
-    if (!q || !fuse) {
-      searchDropdown.style.display = 'none';
-      return;
-    }
+    if (!q || !fuse) { searchDropdown.style.display = 'none'; return; }
     showDropdown(fuse.search(q));
   });
 
@@ -758,6 +652,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
       searchDropdown.style.display = 'none';
     }
   });
+};
 </script>
 </body>
 </html>
