@@ -119,19 +119,42 @@ window.onload = function() {
   map.fitBounds(ukBounds);
   setTimeout(() => map.invalidateSize(), 400);
 
-  // Sidebar toggle button
+  // === BRANDED INFO BUTTON (i ICON) ===
   const toggleButton = L.control({ position: 'topright' });
   toggleButton.onAdd = function() {
-    const btn = L.DomUtil.create('button', 'leaflet-bar');
-    btn.innerHTML = 'Info';
+    const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
+    btn.innerHTML = 'i';
     btn.title = 'Show county info';
-    btn.style.cssText = 'background:white; border:1px solid #999; width:34px; height:34px; font-size:18px; cursor:pointer; border-radius:4px;';
+    btn.setAttribute('aria-label', 'Show county info');
+    btn.style.cssText = `
+      background: #f3e9da;
+      color: #9B2C2C;
+      border: 1px solid #9B2C2C;
+      width: 34px;
+      height: 34px;
+      font-size: 18px;
+      font-weight: bold;
+      font-family: Arial, sans-serif;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: all 0.25s ease;
+    `;
+    btn.onmouseover = () => {
+      btn.style.background = '#9B2C2C';
+      btn.style.color = '#f3e9da';
+    };
+    btn.onmouseout = () => {
+      btn.style.background = '#f3e9da';
+      btn.style.color = '#9B2C2C';
+    };
     btn.onclick = () => sidebar.classList.toggle('visible');
     return btn;
   };
   toggleButton.addTo(map);
-
-  closeBtn.onclick = () => sidebar.classList.remove('visible');
 
   // Reset function
   window.resetMapAndSidebar = function() {
