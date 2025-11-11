@@ -29,7 +29,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #search-bar input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(155,44,44,.2); }
 #search-bar button { padding:10px 18px; background:var(--accent); color:#FAF4E6; border:none; border-radius:4px; font-weight:500; box-shadow:0 3px 6px var(--shadow); cursor:pointer; transition:all .25s cubic-bezier(.4,0,.2,1); }
 #search-bar button:hover { background:#7a2222; transform:translateY(-2px) scale(1.05); box-shadow:0 6px 14px var(--shadow); }
-#map { flex:1; background:#e0f2fe; }
+#map { flex:1; background:#e0f2fe; height: 100vh; }
 /* ---- CARD LAYOUT WITH FLAG ---- */
 .county-card {
   background:var(--card-bg); padding:14px; border-radius:10px;
@@ -54,13 +54,105 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .leaflet-tooltip.county-tooltip { background:var(--tooltip-bg); border:1px solid var(--accent); color:var(--text); font-weight:bold; padding:2px 6px; border-radius:4px; }
 #closeSidebar { display:none; position:absolute; top:10px; right:12px; width:32px; height:32px; font-size:20px; color:#666; background:rgba(255,255,255,0.9); border:none; border-radius:50%; cursor:pointer; align-items:center; justify-content:center; z-index:1001; }
 #closeSidebar:hover { background:#fff; }
-@media (max-width:1024px) {
-  #container { flex-direction:column; }
-  #sidebar { position:fixed; bottom:16px; left:16px; width:45vw; max-width:380px; max-height:50vh; background:var(--bg); border-radius:14px; box-shadow:0 6px 20px var(--shadow); padding:14px; overflow-y:auto; transform:translateY(120%); transition:transform .32s cubic-bezier(.4,0,.2,1); z-index:1000; display:block !important; font-size:.94rem; }
-  #sidebar.visible { transform:translateY(0); }
-  #map { height:100vh !important; }
-  #sidebar-logo { max-width:50%; }
-  #closeSidebar { display:flex; }
+
+/* MOBILE: PERFECT RESPONSIVENESS */
+@media (max-width: 1024px) {
+  #container {
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  #sidebar {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto !important;
+    max-width: none;
+    max-height: 70vh;
+    background: var(--bg);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px var(--shadow);
+    padding: 16px;
+    overflow-y: auto;
+    transform: translateY(120%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    font-size: 0.95rem;
+    border: 1px solid var(--border);
+  }
+
+  #sidebar.visible {
+    transform: translateY(0);
+  }
+
+  #map {
+    height: 100vh !important;
+    width: 100%;
+  }
+
+  #closeSidebar {
+    display: flex !important;
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  #sidebar-logo {
+    max-width: 60%;
+  }
+
+  #search-bar {
+    margin-top: 12px;
+  }
+
+  #search-bar input {
+    font-size: 1rem;
+    padding: 12px;
+  }
+
+  #search-bar button {
+    padding: 12px 20px;
+    font-size: 1rem;
+  }
+
+  .leaflet-control button {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 20px !important;
+    margin: 6px 0 0 0 !important;
+  }
+
+  .leaflet-popup-content {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #sidebar {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    padding: 14px;
+    max-height: 75vh;
+  }
+
+  #sidebar h2 {
+    font-size: 1.1rem;
+  }
+
+  .county-card {
+    padding: 12px;
+  }
+
+  .flag {
+    width: 56px;
+  }
 }
 @media (max-width:480px) { #sidebar { width:90vw; left:5vw; max-width:none; } #sidebar-logo { max-width:55%; } }
 #sidebar h2 { text-align:center; margin:5px 0 10px; color:var(--accent); }
