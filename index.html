@@ -56,7 +56,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #closeSidebar:hover { background:#fff; }
 
 /* MOBILE: PERFECT RESPONSIVENESS */
-/* MOBILE: SLIDE-UP SIDEBAR (TRIGGERS ON REAL PHONES) */
+/* MOBILE: SLIDE-UP SIDEBAR + PERFECT CARD + VISIBLE CLOSE */
 @media (max-width: 768px) {
   #container {
     flex-direction: column;
@@ -74,12 +74,12 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     background: var(--bg);
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
-    padding: 16px;
+    padding: 14px;
     overflow-y: auto;
     transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     border-top: 1px solid var(--border);
   }
 
@@ -92,16 +92,51 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     width: 100%;
   }
 
+  /* CLOSE BUTTON: VISIBLE, BIG, TAPPABLE */
   #closeSidebar {
     display: flex !important;
-    top: 8px;
-    right: 8px;
-    width: 40px;
-    height: 40px;
-    font-size: 24px;
-    background: rgba(255,255,255,0.95);
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    position: fixed !important;
+    top: 12px !important;
+    right: 12px !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 26px !important;
+    font-weight: bold;
+    background: white !important;
+    color: #666 !important;
+    border: 2px solid #ddd !important;
+    border-radius: 50% !important;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25) !important;
+    z-index: 1001 !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  #closeSidebar:hover {
+    background: #f0f0f0 !important;
+    transform: scale(1.05);
+  }
+
+  /* COUNTY CARD: COMPACT & READABLE */
+  .county-card {
+    padding: 12px !important;
+    margin-bottom: 14px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .county-card h3 {
+    font-size: 1.15rem !important;
+    margin: 8px 0 !important;
+  }
+
+  .flag {
+    width: 56px !important;
+  }
+
+  .weather-badge {
+    font-size: 0.8rem !important;
+    padding: 5px 10px !important;
   }
 
   #sidebar-logo {
@@ -109,13 +144,13 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   }
 
   #search-bar {
-    margin-top: 14px;
+    margin-top: 12px;
   }
 
   #search-bar input,
   #search-bar button {
     font-size: 1rem;
-    padding: 12px;
+    padding: 11px;
   }
 
   .leaflet-control button {
@@ -126,8 +161,9 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   }
 
   .leaflet-popup-content {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
+}
 }
 </style>
 </head>
