@@ -255,42 +255,6 @@ window.onload = function() {
     }
   }
 
-let currentLayer = null;
-let photoTimeout;
-
-window.showPhoto = function(landmark, e) {
-    console.log('showPhoto triggered for', landmark); // test line
-    clearTimeout(photoTimeout);
-    window.hidePhoto(); // remove any old image
-
-    const img = document.createElement('img');
-    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
-    img.style.cssText = `
-        position: fixed;
-        top: ${e.clientY + 10}px;
-        left: ${e.clientX + 10}px;
-        width: 200px;
-        height: auto;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 99999;
-        pointer-events: none;
-    `;
-
-    document.body.appendChild(img); // append immediately
-    window.photoImg = img;
-};
-
-window.hidePhoto = function() {
-    console.log('hidePhoto triggered'); // test line
-    photoTimeout = setTimeout(() => {
-        if (window.photoImg) {
-            window.photoImg.remove();
-            delete window.photoImg;
-        }
-    }, 300);
-};
-
   // Load county data
   fetch('./counties_simplified8.json')
     .then(res => res.ok ? res.json() : Promise.reject(`Failed: ${res.status}`))
@@ -446,28 +410,24 @@ window.hidePhoto = function() {
         "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
       };
 
-// Update card function
-      function showPhoto(landmark, e) {
-  clearTimeout(photoTimeout);
-  hidePhoto(); // remove old image if any
+      let photoTimeout;
 
-  const img = document.createElement('img');
-  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
-  img.alt = landmark;
-  img.style.cssText = `
-    position: fixed;
-    top: ${e.clientY + 10}px;
-    left: ${e.clientX + 10}px;
-    width: 200px;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 99999;
-    pointer-events: none;
-  `;
+function showPhoto(photoSrc) {
+    clearTimeout(photoTimeout);
+    const photoElement = document.getElementById('photo');
+    photoElement.src = photoSrc;
+    photoElement.style.opacity = 1;
+    console.log('Showing photo:', photoSrc);
 
-  document.body.appendChild(img); // append immediately
-  window.photoImg = img;
+    photoTimeout = setTimeout(() => {
+        hidePhoto();
+    }, 5000); // hides after 5 seconds
+}
+
+function hidePhoto() {
+    const photoElement = document.getElementById('photo');
+    photoElement.style.opacity = 0;
+    console.log('Hiding photo');
 }
 window.updateCountyCard = function(englishName, layer, lat, lon) {
         const details = countyData[englishName] || {};
