@@ -258,6 +258,7 @@ window.onload = function() {
   let currentLayer = null;
   let photoTimeout;
   function showPhoto(landmark, e) {
+    console.log('showPhoto triggered for', landmark); // 👈 test line
     clearTimeout(photoTimeout);
     const img = document.createElement('img');
     img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}`;
@@ -266,6 +267,7 @@ window.onload = function() {
     window.photoImg = img;
   }
   function hidePhoto() {
+    console.log('hidePhoto triggered'); // 👈 test line
     photoTimeout = setTimeout(() => {
       if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
     }, 300);
