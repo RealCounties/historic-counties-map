@@ -73,7 +73,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   #sidebar { width:90vw; left:5vw; max-width:none; } 
   #sidebar-logo { max-width:55%; } 
 }
-}
 </style>
 </head>
 <body>
@@ -297,6 +296,7 @@ window.hidePhoto = function() {
         "Worcestershire": { area: 709, population: 1125037, events: ["Foundation of Worcester Cathedral (7thC)", "Battle of Worcester (1651)", "Canal Construction (18th century)"], landmarks: ["Malvern Hills", "Worcester & Birmingham Canal", "Worcester Cathedral"], notablePersons: ["Edward Winslow, Pilgrim leader (1595–1655)", "Jenny Lind, opera singer (1820–1887)", "Edward Elgar, composer (1857–1934)"] },
         "Yorkshire": { area: 6081, population: 5218838, events: ["Roman Conquest (43–410)", "Norse Kingdom of Jórvík (9th-10thC)", "Siege of York (1644)"], landmarks: ["Fountains Abbey, West Riding", "Hull Docks, East Riding", "York Minster, York within the Walls"], notablePersons: ["Alcuin of York, scholar (c.735–804)", "Charlotte Brontë, novelist (1816–1855)", "J.B. Priestley, writer (1894–1984)"] }
       };
+    };
   // 3. County languages
       const countyLanguages = {
         "Anglesey": { name: "Sir Fôn", lang: "Welsh" },
@@ -352,7 +352,7 @@ window.hidePhoto = function() {
         "Fermanagh": { name: "Fear Manach", lang: "Irish Gaelic" },
         "Londonderry": { name: "Doire", lang: "Irish Gaelic" },
         "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
-      };
+};
 
 // ======= WEATHER FETCH FUNCTION =======
 async function fetchWeather(lat, lon) {
