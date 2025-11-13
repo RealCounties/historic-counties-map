@@ -1,3 +1,4 @@
+<meta name="color-scheme" content="light dark">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,6 +74,8 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   #sidebar { width:90vw; left:5vw; max-width:none; } 
   #sidebar-logo { max-width:55%; } 
 }
+}
+}
 </style>
 </head>
 <body>
@@ -97,50 +100,82 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 </div>
 
 <script>
-// ======= GLOBAL VARIABLES =======
-let photoTimeout;
-window.photoImg = null; // stores the currently displayed landmark image
-window.places = [];
-let fuse = null;
-let searchMarker = null;
+window.onload = function() {
+  const sidebar = document.getElementById('sidebar');
+  const closeBtn = document.getElementById('closeSidebar');
+  const infoDiv = document.getElementById('info');
+  const searchInput = document.getElementById('placeSearch');
+  const searchDropdown = document.getElementById('searchDropdown');
 
-// ======= SHOW/HIDE PHOTO =======
-window.showPhoto = function(landmark, e) {
-  clearTimeout(photoTimeout);
-  window.hidePhoto(); // remove old image immediately
+  // Initialize Leaflet map
+  const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
+    maxZoom: 19
+  }).addTo(map);
 
-  const img = document.createElement('img');
-  img.src = `https://source.unsplash.com/random/400x300/?${encodeURIComponent(landmark + ' UK')}&sig=${Date.now()}`;
-  img.alt = landmark;
-  img.style.cssText = `
-    position: fixed;
-    top: ${e.clientY + 10}px;
-    left: ${e.clientX + 10}px;
-    width: 200px;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 99999;
-    pointer-events: none;
-  `;
+  const ukBounds = L.latLngBounds([49.5, -8.5], [60.9, 2.0]);
+  map.setMaxBounds(ukBounds);
+  map.fitBounds(ukBounds);
+  setTimeout(() => map.invalidateSize(), 400);
 
-  document.body.appendChild(img);
-  window.photoImg = img;
-};
+  // === BRANDED INFO BUTTON (i ICON) ===
+  const toggleButton = L.control({ position: 'topright' });
+  toggleButton.onAdd = function() {
+    const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
+    btn.innerHTML = 'i';
+    btn.title = 'Show county info';
+    btn.setAttribute('aria-label', 'Show county info');
+    btn.style.cssText = `
+      background: #f3e9da;
+      color: #9B2C2C;
+      border: 1px solid #9B2C2C;
+      width: 34px;
+      height: 34px;
+      font-size: 18px;
+      font-weight: bold;
+      font-family: Arial, sans-serif;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: all 0.25s ease;
+    `;
+    btn.onmouseover = () => {
+      btn.style.background = '#9B2C2C';
+      btn.style.color = '#f3e9da';
+    };
+    btn.onmouseout = () => {
+      btn.style.background = '#f3e9da';
+      btn.style.color = '#9B2C2C';
+    };
+    btn.onclick = () => sidebar.classList.toggle('visible');
+    return btn;
+  };
+  toggleButton.addTo(map);
 
-window.hidePhoto = function() {
-  photoTimeout = setTimeout(() => {
-    if (window.photoImg) {
-      window.photoImg.remove();
-      window.photoImg = null;
+  // Reset function
+  window.resetMapAndSidebar = function() {
+    map.fitBounds(ukBounds);
+    infoDiv.innerHTML = '<em>Click a county to explore.</em>';
+    if (currentLayer) {
+      currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
+      currentLayer = null;
     }
-  }, 300);
-};
+    if (searchMarker) {
+      map.removeLayer(searchMarker);
+      searchMarker = null;
+    }
+    searchInput.value = '';
+    searchDropdown.style.display = 'none';
+    if (window.innerWidth <= 1024) {
+      sidebar.classList.remove('visible');
+    }
+  };
 
-// ======= COUNTY DATA PLACEHOLDERS =======
-// Insert your data arrays/objects here:
-
-// 1. County flags
+  // County flags
   const countyFlags = {
     "Aberdeenshire": "https://realcounties.com/wp-content/uploads/2023/11/aberdeenshire-flag.png",
     "Anglesey": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/anglesey.png",
@@ -198,7 +233,45 @@ window.hidePhoto = function() {
     "Yorkshire": "https://realcounties.wordpress.com/wp-content/uploads/2023/11/yorkshire.jpg"
   };
 
-// 2. County data
+  async function fetchWeather(lat, lon) {
+    try {
+      const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
+      const temp = Math.round(res.data.current.temperature_2m);
+      const code = res.data.current.weather_code;
+      const windKmh = res.data.current.wind_speed_10m;
+      const windMph = Math.round(windKmh * 0.621371);
+      const descMap = {
+        0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+        61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
+        71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
+        80: 'Showers', 81: 'Rain showers', 82: 'Heavy showers', 95: 'Thunderstorm'
+      };
+      const desc = descMap[code] || 'Unknown';
+      return { temp, desc, wind: windMph };
+    } catch (err) {
+      console.error("Weather fetch failed:", err);
+      return null;
+    }
+  }
+
+  let currentLayer = null;
+  let photoTimeout;
+  function showPhoto(landmark, e) {
+    clearTimeout(photoTimeout);
+    const img = document.createElement('img');
+    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}`;
+    img.style.cssText = 'position:absolute; top:'+(e.clientY+10)+'px; left:'+(e.clientX+10)+'px; width:200px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10000;';
+    img.onload = () => document.body.appendChild(img);
+    window.photoImg = img;
+  }
+  function hidePhoto() {
+    photoTimeout = setTimeout(() => {
+      if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+    }, 300);
+  }
+
+  // Load county data
   fetch('./counties_simplified8.json')
     .then(res => res.ok ? res.json() : Promise.reject(`Failed: ${res.status}`))
     .then(data => {
@@ -296,9 +369,7 @@ window.hidePhoto = function() {
         "Worcestershire": { area: 709, population: 1125037, events: ["Foundation of Worcester Cathedral (7thC)", "Battle of Worcester (1651)", "Canal Construction (18th century)"], landmarks: ["Malvern Hills", "Worcester & Birmingham Canal", "Worcester Cathedral"], notablePersons: ["Edward Winslow, Pilgrim leader (1595–1655)", "Jenny Lind, opera singer (1820–1887)", "Edward Elgar, composer (1857–1934)"] },
         "Yorkshire": { area: 6081, population: 5218838, events: ["Roman Conquest (43–410)", "Norse Kingdom of Jórvík (9th-10thC)", "Siege of York (1644)"], landmarks: ["Fountains Abbey, West Riding", "Hull Docks, East Riding", "York Minster, York within the Walls"], notablePersons: ["Alcuin of York, scholar (c.735–804)", "Charlotte Brontë, novelist (1816–1855)", "J.B. Priestley, writer (1894–1984)"] }
       };
-    });
-  
-  // 3. County languages
+
       const countyLanguages = {
         "Anglesey": { name: "Sir Fôn", lang: "Welsh" },
         "Brecknockshire": { name: "Sir Frycheiniog", lang: "Welsh" },
@@ -353,128 +424,256 @@ window.hidePhoto = function() {
         "Fermanagh": { name: "Fear Manach", lang: "Irish Gaelic" },
         "Londonderry": { name: "Doire", lang: "Irish Gaelic" },
         "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
-};
+      };
 
-// ======= WEATHER FETCH FUNCTION =======
-async function fetchWeather(lat, lon) {
-  try {
-    const res = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`);
-    const temp = Math.round(res.data.current.temperature_2m);
-    const code = res.data.current.weather_code;
-    const windKmh = res.data.current.wind_speed_10m;
-    const windMph = Math.round(windKmh * 0.621371);
+// Update card function
+      function showPhoto(landmark, e) {
+  clearTimeout(photoTimeout);
+  hidePhoto(); // remove old image if any
 
-    const descMap = {
-      0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
-      45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
-      61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
-      71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
-      80: 'Showers', 81: 'Rain showers', 82: 'Heavy showers', 95: 'Thunderstorm'
-    };
-    const desc = descMap[code] || 'Unknown';
-    return { temp, desc, wind: windMph };
-  } catch (err) {
-    console.error("Weather fetch failed:", err);
-    return null;
-  }
+  const img = document.createElement('img');
+  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
+  img.alt = landmark;
+  img.style.cssText = `
+    position: fixed;
+    top: ${e.clientY + 10}px;
+    left: ${e.clientX + 10}px;
+    width: 200px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 99999;
+    pointer-events: none;
+  `;
+
+  document.body.appendChild(img); // append immediately
+  window.photoImg = img;
 }
-
-// ======= UPDATE COUNTY CARD =======
 window.updateCountyCard = function(englishName, layer, lat, lon) {
-  const details = countyData[englishName] || {};
-  const langEntry = countyLanguages[englishName];
-  const area = details.area || 0;
-  const pop = details.population || 0;
-  const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
+        const details = countyData[englishName] || {};
+        const langEntry = countyLanguages[englishName];
+        const area = details.area || 0;
+        const pop = details.population || 0;
+        const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
 
-  let badgeStyle = '';
-  if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
-  else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
-  else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
-  else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
-  else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
-  else badgeStyle = 'background:#66BB6A; color:white;';
+        let badgeStyle = '';
+        if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
+        else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
+        else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
+        else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
+        else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
+        else badgeStyle = 'background:#66BB6A; color:white;';
 
-  fetchWeather(lat, lon).then(weather => {
-    const weatherBlock = weather ? `
-      <div style="text-align:center; margin:14px 0 8px;">
-        <div class="weather-underline" style="margin:0 auto 14px;"></div>
-        <div class="weather-badge">
-          ${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph
-        </div>
-      </div>` : '';
+        fetchWeather(lat, lon).then(weather => {
+          const weatherBlock = weather ? `
+            <div style="text-align:center; margin:14px 0 8px;">
+              <div class="weather-underline" style="margin:0 auto 14px;"></div>
+              <div class="weather-badge">
+                ${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph
+              </div>
+            </div>` : '';
 
-    const flagUrl = countyFlags[englishName];
-    const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
+          const flagUrl = countyFlags[englishName];
+          const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
 
-    const landmarksHTML = details.landmarks?.length
-      ? `<div style="margin:14px 0 8px;">
-          <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
-          <ul id="landmarks-list" style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-            ${details.landmarks.map(l => `<li data-landmark="${l}" style="cursor:pointer; color:#0066cc; text-decoration:underline;">${l}</li>`).join('')}
-          </ul>
-        </div>` : '';
+          const cardHTML = `
+            <div class="county-card" style="margin-bottom:16px;">
+              ${flagHTML}
+              <div class="card-body">
+                <h3>${englishName}</h3>
+                ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+                <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
+                  <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
+                  <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+                </div>
+                <div style="text-align:center; margin:12px 0;">
+                  <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                    Density: ${density} people/sq mi
+                  </span>
+                </div>
 
-    const cardHTML = `
-      <div class="county-card" style="margin-bottom:16px;">
-        ${flagHTML}
-        <div class="card-body">
-          <h3>${englishName}</h3>
-          ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
-          <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
-            <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
-            <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
-          </div>
-          <div style="text-align:center; margin:12px 0;">
-            <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
-              Density: ${density} people/sq mi
-            </span>
-          </div>
+                ${details.events?.length ? `
+                  <div style="margin:14px 0 8px;">
+                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Key Events</h4>
+                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                      ${details.events.map(e => `<li>${e}</li>`).join('')}
+                    </ul>
+                  </div>` : ''}
 
-          ${details.events?.length ? `
-            <div style="margin:14px 0 8px;">
-              <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Key Events</h4>
-              <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-                ${details.events.map(e => `<li>${e}</li>`).join('')}
-              </ul>
-            </div>` : ''}
+                ${details.landmarks?.length ? `
+                  <div style="margin:14px 0 8px;">
+                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
+                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                      ${details.landmarks.map(l => `
+                        <li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc; text-decoration:underline;">
+                          ${l}
+                        </li>`).join('')}
+                    </ul>
+                  </div>` : ''}
 
-          ${landmarksHTML}
+                ${details.notablePersons?.length ? `
+                  <div style="margin:14px 0 8px;">
+                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Persons</h4>
+                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                      ${details.notablePersons.slice(0, 3).map(p => `<li>${p}</li>`).join('')}
+                    </ul>
+                  </div>` : ''}
 
-          ${details.notablePersons?.length ? `
-            <div style="margin:14px 0 8px;">
-              <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Persons</h4>
-              <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-                ${details.notablePersons.slice(0, 3).map(p => `<li>${p}</li>`).join('')}
-              </ul>
-            </div>` : ''}
+                ${weatherBlock}
+              </div>
+            </div>`;
 
-          ${weatherBlock}
-        </div>
-      </div>`;
+          infoDiv.innerHTML = cardHTML;
+          infoDiv.scrollTop = 0;
+        });
+      };
 
-    infoDiv.innerHTML = cardHTML;
-    infoDiv.scrollTop = 0;
+      const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
+      data.features.forEach((f, i) => f.properties.color = pastelColors[i % pastelColors.length]);
 
-    // Add hover listeners dynamically
-    const landmarkItems = document.querySelectorAll('#landmarks-list li[data-landmark]');
-    landmarkItems.forEach(li => {
-      li.onmouseover = (e) => showPhoto(li.dataset.landmark, e);
-      li.onmouseout = () => hidePhoto();
+      L.geoJSON(data, {
+        style: f => ({ color: "#333", weight: 1, fillColor: f.properties.color, fillOpacity: 0.35 }),
+        onEachFeature: (feature, layer) => {
+          const englishName = feature.properties.NAME;
+          const details = countyData[englishName] || {};
+          const langEntry = countyLanguages[englishName];
+          const density = details.area > 0 ? Math.round(details.population / details.area) : '?';
+          const centroid = turf.centroid(feature);
+          const lat = centroid.geometry.coordinates[1];
+          const lon = centroid.geometry.coordinates[0];
+
+          layer.bindTooltip(`
+            <div style="text-align:center; font-weight:bold; font-size:0.95rem;">
+              ${englishName}<br>
+              ${langEntry ? `<small>${langEntry.lang}: ${langEntry.name}</small><br>` : ''}
+              <small style="color:#555;">${density} people/sq mi</small>
+            </div>
+          `, { direction: 'center', className: 'county-tooltip' });
+
+          layer.on('click', () => {
+            layer._cardLayer = layer;
+            window.updateCountyCard(englishName, layer, lat, lon);
+            if (window.innerWidth <= 1024) sidebar.classList.add('visible');
+            map.fitBounds(layer.getBounds());
+          });
+
+          layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
+          layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
+        }
+      }).addTo(map);
+
+      setTimeout(() => map.invalidateSize(), 300);
+      infoDiv.innerHTML = '<em>Click a county to explore.</em>';
+      infoDiv.classList.remove('loading');
+    })
+    .catch(err => {
+      console.error(err);
+      infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Check console.</em>';
     });
+
+  // Search & Geocoder
+  L.Control.geocoder({ defaultMarkGeocode: true, placeholder: 'Search town, village, postcode…' }).addTo(map);
+  window.places = []; let fuse = null; let searchMarker = null;
+
+  function parseCSVLine(line) {
+    const cols = []; const regex = /(?:\"([^\"]*)\"|([^,]+))/g; let m;
+    while ((m = regex.exec(line)) !== null) cols.push(m[1] || m[2] || '');
+    return cols;
+  }
+
+  function initFuse() {
+    if (window.places.length) {
+      fuse = new Fuse(window.places, {
+        keys: ['name', 'county'],
+        threshold: 0.4
+      });
+    }
+  }
+
+  function showDropdown(results) {
+    searchDropdown.innerHTML = '';
+    if (!results.length) { searchDropdown.style.display = 'none'; return; }
+    results.slice(0, 10).forEach(r => {
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee; font-size:0.9rem;';
+      div.textContent = `${r.item.name}, ${r.item.county || ''}`;
+      div.onmouseover = () => div.style.backgroundColor = '#f5f5f5';
+      div.onmouseout = () => div.style.backgroundColor = '';
+      div.onclick = () => selectPlace(r.item);
+      searchDropdown.appendChild(div);
+    });
+    searchDropdown.style.display = 'block';
+  }
+
+  function selectPlace(place) {
+    if (searchMarker) map.removeLayer(searchMarker);
+    searchMarker = L.marker([place.lat, place.lon]).addTo(map).bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
+    map.setView([place.lat, place.lon], 11);
+    searchDropdown.style.display = 'none';
+    searchInput.value = place.name;
+    setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+  }
+
+  function showCountyFromPoint(lat, lon) {
+    const point = turf.point([lon, lat]);
+    let found = null;
+    map.eachLayer(l => {
+      if (l instanceof L.GeoJSON) {
+        l.eachLayer(cl => {
+          if (cl.getBounds && cl.getBounds().contains([lat, lon]) && turf.booleanPointInPolygon(point, cl.feature)) {
+            found = cl;
+          }
+        });
+      }
+    });
+    if (found) {
+      const englishName = found.feature.properties.NAME;
+      const centroid = turf.centroid(found.feature);
+      window.updateCountyCard(englishName, found, centroid.geometry.coordinates[1], centroid.geometry.coordinates[0]);
+      if (window.innerWidth <= 1024) sidebar.classList.add('visible');
+    } else {
+      infoDiv.innerHTML = '<em>County not found.</em>';
+    }
+  }
+
+  fetch('places_clean.csv')
+    .then(r => r.text())
+    .then(text => {
+      const lines = text.trim().split('\n');
+      lines.shift(); // remove header
+      lines.forEach(line => {
+        const c = parseCSVLine(line);
+        const name = c[0]?.trim();
+        const desc = c[2]?.trim();
+        const county = c[3]?.trim();
+        const lat = parseFloat(c[6]);
+        const lon = parseFloat(c[7]);
+        if ((desc === 'LOC' || desc === 'PAR' || desc === 'COM' || desc === 'CTYHIST' || desc === 'NPARK')
+            && name && !isNaN(lat) && !isNaN(lon)) {
+          window.places.push({ name, county, lat, lon });
+        }
+      });
+      initFuse();
+    });
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim();
+    if (!q || !fuse) { searchDropdown.style.display = 'none'; return; }
+    showDropdown(fuse.search(q));
   });
-};
 
-// ======= ONLOAD FUNCTION =======
-window.onload = function() {
-  const sidebar = document.getElementById('sidebar');
-  const closeBtn = document.getElementById('closeSidebar');
-  const infoDiv = document.getElementById('info');
-  const searchInput = document.getElementById('placeSearch');
-  const searchDropdown = document.getElementById('searchDropdown');
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && fuse) {
+      const res = fuse.search(searchInput.value.trim());
+      if (res.length) selectPlace(res[0].item);
+    }
+  });
 
-  // Initialize Leaflet map, toggle button, reset function, etc.
-  // (Insert all your map initialization, search, geoJSON, Turf, Fuse logic here)
+  document.addEventListener('click', e => {
+    if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
+      searchDropdown.style.display = 'none';
+    }
+  });
 };
 </script>
 </body>
