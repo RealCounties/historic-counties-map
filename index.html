@@ -255,23 +255,41 @@ window.onload = function() {
     }
   }
 
-  let currentLayer = null;
-  let photoTimeout;
-  function showPhoto(landmark, e) {
-    console.log('showPhoto triggered for', landmark); // 👈 test line
+let currentLayer = null;
+let photoTimeout;
+
+window.showPhoto = function(landmark, e) {
+    console.log('showPhoto triggered for', landmark); // test line
     clearTimeout(photoTimeout);
+    window.hidePhoto(); // remove any old image
+
     const img = document.createElement('img');
-    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}`;
-    img.style.cssText = 'position:absolute; top:'+(e.clientY+10)+'px; left:'+(e.clientX+10)+'px; width:200px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10000;';
-    img.onload = () => document.body.appendChild(img);
+    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
+    img.style.cssText = `
+        position: fixed;
+        top: ${e.clientY + 10}px;
+        left: ${e.clientX + 10}px;
+        width: 200px;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 99999;
+        pointer-events: none;
+    `;
+
+    document.body.appendChild(img); // append immediately
     window.photoImg = img;
-  }
-  function hidePhoto() {
-    console.log('hidePhoto triggered'); // 👈 test line
+};
+
+window.hidePhoto = function() {
+    console.log('hidePhoto triggered'); // test line
     photoTimeout = setTimeout(() => {
-      if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+        if (window.photoImg) {
+            window.photoImg.remove();
+            delete window.photoImg;
+        }
     }, 300);
-  }
+};
 
   // Load county data
   fetch('./counties_simplified8.json')
