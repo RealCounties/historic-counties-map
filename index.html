@@ -100,6 +100,45 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 </div>
 
 <script>
+  <script>
+// Hover image functions (global scope)
+let photoTimeout;
+
+window.showPhoto = function(landmark, e) {
+  clearTimeout(photoTimeout);
+  window.hidePhoto(); // remove old image if any
+
+  const img = document.createElement('img');
+  img.src = `https://source.unsplash.com/random/400x300/?${encodeURIComponent(landmark + ' UK')}&sig=${Date.now()}`;
+  img.alt = landmark;
+  img.style.cssText = `
+    position: fixed;
+    top: ${e.clientY + 10}px;
+    left: ${e.clientX + 10}px;
+    width: 200px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 99999;
+    pointer-events: none;
+  `;
+
+  document.body.appendChild(img);
+  window.photoImg = img;
+};
+
+window.hidePhoto = function() {
+  photoTimeout = setTimeout(() => {
+    if (window.photoImg) {
+      window.photoImg.remove();
+      delete window.photoImg;
+    }
+  }, 300);
+};
+
+// Then your countyData and rest of logic
+// fetch(...).then(data => { … })
+
 window.onload = function() {
   const sidebar = document.getElementById('sidebar');
   const closeBtn = document.getElementById('closeSidebar');
