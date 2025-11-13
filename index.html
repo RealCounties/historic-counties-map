@@ -427,6 +427,28 @@ window.onload = function() {
       };
 
 // Update card function
+      function showPhoto(landmark, e) {
+  clearTimeout(photoTimeout);
+  hidePhoto(); // remove old image if any
+
+  const img = document.createElement('img');
+  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
+  img.alt = landmark;
+  img.style.cssText = `
+    position: fixed;
+    top: ${e.clientY + 10}px;
+    left: ${e.clientX + 10}px;
+    width: 200px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 99999;
+    pointer-events: none;
+  `;
+
+  document.body.appendChild(img); // append immediately
+  window.photoImg = img;
+}
 window.updateCountyCard = function(englishName, layer, lat, lon) {
         const details = countyData[englishName] || {};
         const langEntry = countyLanguages[englishName];
