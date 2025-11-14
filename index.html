@@ -587,7 +587,7 @@ if (btnContainer) {
             
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             map.fitBounds(layer.getBounds());
-          };
+          }
 
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
