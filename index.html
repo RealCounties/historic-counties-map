@@ -540,8 +540,9 @@ if (btnContainer) {
     btn.onclick = () => showSubdivision(englishName, sub.key);
     btnContainer.appendChild(btn);
   });
-  }
-});
+}
+        })
+
       const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
       data.features.forEach((f, i) => f.properties.color = pastelColors[i % pastelColors.length]);
 
@@ -581,11 +582,13 @@ if (btnContainer) {
                     subdivBox.appendChild(btn);
                 });
             }
-                      
+          });
+
+            
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             map.fitBounds(layer.getBounds());
           });
-          
+
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
         }
@@ -594,7 +597,7 @@ if (btnContainer) {
       setTimeout(() => map.invalidateSize(), 300);
       infoDiv.innerHTML = '<em>Click a county to explore.</em>';
       infoDiv.classList.remove('loading');
-    }
+    })
     .catch(err => {
       console.error(err);
       infoDiv.innerHTML = '<em style="color:red;">Failed to load map data. Check console.</em>';
@@ -802,7 +805,8 @@ const subdivisionFiles = {
     if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
       searchDropdown.style.display = 'none';
     }
-});
+  });
+};
 </script>
 </body>
 </html>
