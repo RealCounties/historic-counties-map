@@ -217,6 +217,22 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+  .subdivision-label > div {
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #333 !important;
+  font-weight: 600 !important;
+  font-size: 0.78rem !important;
+  padding: 4px 8px !important;
+  border-radius: 5px !important;
+  border: 1px solid #ccc !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
+  pointer-events: none !important;
+  white-space: normal !important;     /* ← Allow wrap */
+  line-height: 1.3 !important;
+  max-width: 130px !important;        /* ← Prevent overflow */
+  word-wrap: break-word !important;
+  text-align: center !important;
+}
 </style>
 </head>
 <body>
