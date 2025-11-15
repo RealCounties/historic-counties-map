@@ -29,6 +29,32 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #search-bar input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(155,44,44,.2); }
 #search-bar button { padding:10px 18px; background:var(--accent); color:#FAF4E6; border:none; border-radius:4px; font-weight:500; box-shadow:0 3px 6px var(--shadow); cursor:pointer; transition:all .25s cubic-bezier(.4,0,.2,1); }
 #search-bar button:hover { background:#7a2222; transform:translateY(-2px) scale(1.05); box-shadow:0 6px 14px var(--shadow); }
+  /* -------------------------------------------------
+   Subdivision buttons – same style as Search / i-btn
+   ------------------------------------------------- */
+.subdivision-btn {
+  padding: 10px 18px;
+  background: var(--accent);
+  color: #FAF4E6;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: .9rem;
+  box-shadow: 0 3px 6px var(--shadow);
+  cursor: pointer;
+  transition: all .25s cubic-bezier(.4,0,.2,1);
+  margin: 0 4px;
+}
+.subdivision-btn:hover {
+  background: #7a2222;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 14px var(--shadow);
+}
+.subdivision-btn.active {
+  background: #666;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.2);
+  transform: none;
+}
 #map { flex:1; background:#e0f2fe; height: 100vh; }
 /* ---- CARD LAYOUT WITH FLAG ---- */
 .county-card {
@@ -255,7 +281,6 @@ window.onload = function() {
       return null;
     }
   }
-  let subdivisionLayer = null;
   let currentLayer = null;
   let photoTimeout;
   function showPhoto(landmark, e) {
@@ -558,15 +583,17 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
             const subdivBox = document.getElementById("subdivision-buttons");
             subdivBox.innerHTML = ""; // clear previous buttons
 
-            const subs = subdivisionFiles[englishName]; // your JSON mapping of county -> subdivision files
-            if (subs) {
-                Object.keys(subs).forEach(type => {
-                    const btn = document.createElement("button");
-                    btn.className = "subdivision-btn";
-                    btn.textContent = "Show " + type;
-                    btn.onclick = () => loadSubdivisionLayer(subs[type]);
-                    subdivBox.appendChild(btn);
-                });
+       const subs = subdivisionFiles[englishName];
+            if (subs && subdivBox) {
+              subdivBox.innerHTML = ''; // clear old buttons
+              Object.keys(subs).forEach(type => {
+                const btn = document.createElement('button');
+                btn.className = 'subdivision-btn';
+                btn.textContent = `Show ${type}`;
+                btn.dataset.type = type;
+                btn.onclick = () => loadSubdivisionLayer(subs[type], type, btn);
+                subdivBox.appendChild(btn);
+              });
             }
             
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
@@ -624,30 +651,55 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
     setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
   }
 
-  async function loadSubdivisionLayer(fileName) {
-    // Remove previous layer if any
+let activeSubdivision = null;
+
+async function loadSubdivisionLayer(fileName, type, button) {
+  if (activeSubdivision && activeSubdivision.file === fileName) {
     if (subdivisionLayer) {
-        map.removeLayer(subdivisionLayer);
-        subdivisionLayer = null;
+      map.removeLayer(subdivisionLayer);
+      subdivisionLayer = null;
     }
+    activeSubdivision = null;
+    button.textContent = `Show ${type}`;
+    button.classList.remove('active');
+    return;
+  }
 
-    try {
-        const url = `subdivisions/${fileName}.json`;
-
-        const response = await fetch(url);
-        const geojson = await response.json();
-
-        subdivisionLayer = L.geoJSON(geojson, {
-            style: {
-                color: "#444",
-                weight: 1,
-                fillOpacity: 0.15
-            }
-        }).addTo(map);
-
-    } catch (err) {
-        console.error("Failed to load subdivision layer:", fileName, err);
+  if (subdivisionLayer) {
+    map.removeLayer(subdivisionLayer);
+    subdivisionLayer = null;
+  }
+  if (activeSubdivision) {
+    const prevBtn = document.querySelector(`.subdivision-btn[data-type="${activeSubdivision.type}"]`);
+    if (prevBtn) {
+      prevBtn.textContent = `Show ${activeSubdivision.type}`;
+      prevBtn.classList.remove('active');
     }
+  }
+
+  try {
+    const url = `subdivisions/${fileName}.json`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(resp.status);
+    const geojson = await resp.json();
+
+    subdivisionLayer = L.geoJSON(geojson, {
+      style: { color: '#444', weight: 1.2, fillOpacity: 0.12, dashArray: '5,5' },
+      onEachFeature: (f, l) => {
+        const name = f.properties.NAME || f.properties.name || 'Subdivision';
+        l.bindTooltip(name, { sticky: true });
+      }
+    }).addTo(map);
+
+    activeSubdivision = { file: fileName, type, layer: subdivisionLayer };
+    button.textContent = `Hide ${type}`;
+    button.classList.add('active');
+
+  } catch (e) {
+    console.error('Subdivision load error:', e);
+    button.textContent = 'Error';
+    button.disabled = true;
+  }
 }
 const subdivisionFiles = {
     "Yorkshire": {
