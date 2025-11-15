@@ -772,7 +772,9 @@ async function loadSubdivisionLayer(fileName, type, button) {
   if (subdivisionLayer) {
     map.removeLayer(subdivisionLayer);
     subdivisionLayer = null;
-  }
+}
+subdivisionLabels.forEach(l => map.removeLayer(l));
+subdivisionLabels = [];
   }
 
   // === LOAD NEW ===
