@@ -29,29 +29,34 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #search-bar input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(155,44,44,.2); }
 #search-bar button { padding:10px 18px; background:var(--accent); color:#FAF4E6; border:none; border-radius:4px; font-weight:500; box-shadow:0 3px 6px var(--shadow); cursor:pointer; transition:all .25s cubic-bezier(.4,0,.2,1); }
 #search-bar button:hover { background:#7a2222; transform:translateY(-2px) scale(1.05); box-shadow:0 6px 14px var(--shadow); }
-  /* -------------------------------------------------
+ 
+/* -------------------------------------------------
    Subdivision buttons – same style as Search / i-btn
    ------------------------------------------------- */
 #subdivision-buttons {
   margin: 16px 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
   align-items: center;
+  max-width: 100%;
+  padding: 0 8px;
 }
 
 .subdivision-btn {
-  padding: 10px 18px;
+  padding: 8px 14px;           /* ← Smaller than before */
   background: var(--accent);
   color: #FAF4E6;
   border: none;
   border-radius: 4px;
   font-weight: 500;
-  font-size: .9rem;
+  font-size: .85rem;           /* ← Slightly smaller text */
   box-shadow: 0 3px 6px var(--shadow);
   cursor: pointer;
   transition: all .25s cubic-bezier(.4,0,.2,1);
+  white-space: nowrap;
+  min-width: 80px;             /* Prevents squashing */
 }
 
 .subdivision-btn:hover {
@@ -70,6 +75,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   background: #666 !important;
   font-weight: 600;
   order: 999;
+  min-width: 70px;
 }
 
 .subdivision-btn.clear:hover {
@@ -619,7 +625,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 
               // === ADD THIS: "Clear" button ===
               const clearBtn = document.createElement('button');
-              clearBtn.className = 'subdivision-btn';
+              clearBtn.className = 'subdivision-btn clear';
               clearBtn.textContent = 'Clear';
               clearBtn.style.background = '#555';
               clearBtn.style.fontWeight = '600';
