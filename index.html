@@ -775,14 +775,6 @@ async function loadSubdivisionLayer(fileName, type, button) {
     map.removeLayer(subdivisionLayer);
     subdivisionLayer = null;
   }
-  subdivisionLabels.forEach(l => map.removeLayer(l));
-  subdivisionLabels = [];
-  if (activeSubdivision) {
-    const prevBtn = document.querySelector(`.subdivision-btn[data-type="${activeSubdivision.type}"]`);
-    if (prevBtn) {
-      prevBtn.textContent = `Show ${activeSubdivision.type}`;
-      prevBtn.classList.remove('active');
-    }
   }
 
   // === LOAD NEW ===
