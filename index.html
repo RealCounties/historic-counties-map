@@ -791,11 +791,19 @@ async function loadSubdivisionLayer(fileName, type, button) {
         const label = L.marker(center, {
           icon: L.divIcon({
             className: 'subdivision-label',
-            html: `<div>${name}</div>`,
-            iconSize: [100, 40],
-            iconAnchor: [50, 20]
+            html: `<div style="white-space: normal; text-align: center; line-height: 1.3;">${name}</div>`,
+            iconSize: null,  // Let browser size it
+            iconAnchor: null // Will be auto-centered
           })
         }).addTo(map);
+
+        // Auto-center the label
+        const icon = label.getIcon();
+        const div = icon.getElement();
+        const width = div.offsetWidth;
+        const height = div.offsetHeight;
+        icon.options.iconAnchor = [width / 2, height / 2];
+        label.setIcon(icon); // Re-apply to update anchor
         subdivisionLabels.push(label);
       }
     }).addTo(map);
