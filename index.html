@@ -753,7 +753,6 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
   }
 
 let activeSubdivision = null;
-
 async function loadSubdivisionLayer(fileName, type, button) {
   // === TOGGLE OFF ===
   if (activeSubdivision && activeSubdivision.file === fileName) {
@@ -773,10 +772,9 @@ async function loadSubdivisionLayer(fileName, type, button) {
   if (subdivisionLayer) {
     map.removeLayer(subdivisionLayer);
     subdivisionLayer = null;
-}
-subdivisionLabels.forEach(l => map.removeLayer(l));
-subdivisionLabels = [];
   }
+  subdivisionLabels.forEach(l => map.removeLayer(l));
+  subdivisionLabels = [];
 
   // === LOAD NEW ===
   try {
@@ -784,14 +782,11 @@ subdivisionLabels = [];
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(resp.status);
     const geojson = await resp.json();
-
     subdivisionLayer = L.geoJSON(geojson, {
       style: { color: '#444', weight: 1.2, fillOpacity: 0.12, dashArray: '5,5' },
       onEachFeature: (feature, layer) => {
         const name = feature.properties.NAME || feature.properties.name || 'Unknown';
         layer.bindTooltip(name, { sticky: true });
-
-        // === ADD LABEL AT CENTROID ===
         const center = layer.getBounds().getCenter();
         const label = L.marker(center, {
           icon: L.divIcon({
@@ -804,11 +799,9 @@ subdivisionLabels = [];
         subdivisionLabels.push(label);
       }
     }).addTo(map);
-
     activeSubdivision = { file: fileName, type, layer: subdivisionLayer };
     button.textContent = `Hide ${type}`;
     button.classList.add('active');
-
   } catch (e) {
     console.error('Subdivision load error:', e);
     button.textContent = 'Error';
