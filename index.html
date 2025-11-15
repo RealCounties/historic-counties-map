@@ -594,6 +594,28 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
                 btn.onclick = () => loadSubdivisionLayer(subs[type], type, btn);
                 subdivBox.appendChild(btn);
               });
+
+              // === ADD THIS: "Clear" button ===
+              const clearBtn = document.createElement('button');
+              clearBtn.className = 'subdivision-btn';
+              clearBtn.textContent = 'Clear';
+              clearBtn.style.background = '#555';
+              clearBtn.style.fontWeight = '600';
+              clearBtn.onclick = () => {
+                if (subdivisionLayer) {
+                  map.removeLayer(subdivisionLayer);
+                  subdivisionLayer = null;
+                }
+                activeSubdivision = null;
+                document.querySelectorAll('.subdivision-btn').forEach(b => {
+                  if (b.textContent.startsWith('Hide')) {
+                    const type = b.dataset.type;
+                    b.textContent = `Show ${type}`;
+                    b.classList.remove('active');
+                  }
+                });
+              };
+              subdivBox.appendChild(clearBtn);
             }
             
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
