@@ -842,12 +842,26 @@ async function loadSubdivisionLayer(fileName, type, button) {
         layer.bindTooltip(name, { sticky: true });
 
         const center = layer.getBounds().getCenter();
+
+        // === DYNAMIC LABEL SIZE (NO DOM) ===
+        const avgCharWidth = 7.2; // ~0.78rem font → ~7.2px per char
+        const padding = 16;       // 8px left + 8px right
+        const minWidth = 60;
+        const maxWidth = 180;
+        const baseHeight = 30;
+        const lineHeight = 16;
+
+        let lines = name.split(' ');
+        let longestLine = lines.reduce((a, b) => a.length > b.length ? a : b, '');
+        let width = Math.min(Math.max(longestLine.length * avgCharWidth + padding, minWidth), maxWidth);
+        let height = baseHeight + (Math.ceil(name.length / 18) - 1) * lineHeight; // rough line count
+
         const label = L.marker(center, {
           icon: L.divIcon({
             className: 'subdivision-label',
-            html: `<div>${name}</div>`,
-            iconSize: [140, 40],
-            iconAnchor: [70, 20]
+            html: `<div style="max-width:${maxWidth}px;">${name}</div>`,
+            iconSize: [width, height],
+            iconAnchor: [width / 2, height / 2]
           })
         }).addTo(map);
         subdivisionLabels.push(label);
