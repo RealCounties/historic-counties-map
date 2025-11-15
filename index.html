@@ -111,6 +111,19 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   background: #555 !important;
   transform: translateY(-2px) scale(1.05);
 }
+  .subdivision-label > div {
+  background: rgba(255, 255, 255, 0.85);
+  color: #333;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  pointer-events: none;
+  text-align: center;
+}
 #map { flex:1; background:#e0f2fe; height: 100vh; }
 /* ---- CARD LAYOUT WITH FLAG ---- */
 .county-card {
@@ -192,6 +205,19 @@ window.onload = function() {
 
   // Initialize Leaf map
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
+  // === ADD LABEL VISIBILITY ON ZOOM ===
+  let subdivisionLabels = []; // ← Make sure this is at the top with other lets
+
+  map.on('zoomend', () => {
+    const showLabels = map.getZoom() >= 9;
+    subdivisionLabels.forEach(label => {
+      if (showLabels && !map.hasLayer(label)) {
+        label.addTo(map);
+      } else if (!showLabels && map.hasLayer(label)) {
+        map.removeLayer(label);
+      }
+    });
+  });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> | <a href="https://county-borders.co.uk" target="_blank">Historic County Borders Project</a>',
     maxZoom: 19
@@ -731,23 +757,33 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
   }
 
 let activeSubdivision = null;
+let subdivisionLabels = []; // ← NEW: Track labels to remove later
 
 async function loadSubdivisionLayer(fileName, type, button) {
+  // === TOGGLE OFF ===
   if (activeSubdivision && activeSubdivision.file === fileName) {
     if (subdivisionLayer) {
       map.removeLayer(subdivisionLayer);
       subdivisionLayer = null;
     }
+    subdivisionLabels.forEach(l => map.removeLayer(l));
+    subdivisionLabels = [];
+    // Remove all labels
+    subdivisionLabels.forEach(l => map.removeLayer(l));
+    subdivisionLabels = [];
     activeSubdivision = null;
     button.textContent = `Show ${type}`;
     button.classList.remove('active');
     return;
   }
 
+  // === REMOVE PREVIOUS ===
   if (subdivisionLayer) {
     map.removeLayer(subdivisionLayer);
     subdivisionLayer = null;
   }
+  subdivisionLabels.forEach(l => map.removeLayer(l));
+  subdivisionLabels = [];
   if (activeSubdivision) {
     const prevBtn = document.querySelector(`.subdivision-btn[data-type="${activeSubdivision.type}"]`);
     if (prevBtn) {
@@ -756,6 +792,7 @@ async function loadSubdivisionLayer(fileName, type, button) {
     }
   }
 
+  // === LOAD NEW ===
   try {
     const url = `subdivisions/${fileName}.json`;
     const resp = await fetch(url);
@@ -764,9 +801,21 @@ async function loadSubdivisionLayer(fileName, type, button) {
 
     subdivisionLayer = L.geoJSON(geojson, {
       style: { color: '#444', weight: 1.2, fillOpacity: 0.12, dashArray: '5,5' },
-      onEachFeature: (f, l) => {
-        const name = f.properties.NAME || f.properties.name || 'Subdivision';
-        l.bindTooltip(name, { sticky: true });
+      onEachFeature: (feature, layer) => {
+        const name = feature.properties.NAME || feature.properties.name || 'Unknown';
+        layer.bindTooltip(name, { sticky: true });
+
+        // === ADD LABEL AT CENTROID ===
+        const center = layer.getBounds().getCenter();
+        const label = L.marker(center, {
+          icon: L.divIcon({
+            className: 'subdivision-label',
+            html: `<div>${name}</div>`,
+            iconSize: [100, 40],
+            iconAnchor: [50, 20]
+          })
+        }).addTo(map);
+        subdivisionLabels.push(label);
       }
     }).addTo(map);
 
