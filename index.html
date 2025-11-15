@@ -92,10 +92,19 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 }
 
 .subdivision-btn.clear {
-  background: #666 !important;
-  font-weight: 500;
+  background: #777 !important;     /* Slightly lighter than active */
+  color: #FAF4E6;
+  font-weight: 500 !important;      /* ← Force same weight */
   order: 999;
   min-width: 60px;
+  opacity: 0.95;
+  box-shadow: 0 3px 6px var(--shadow); /* ← Same shadow as others */
+}
+.subdivision-btn.clear:hover {
+  background: #666 !important;
+  opacity: 1;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 14px var(--shadow);
 }
 
 .subdivision-btn.clear:hover {
