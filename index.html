@@ -36,27 +36,47 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #subdivision-buttons {
   margin: 16px 0;
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
   justify-content: center;
   align-items: center;
-  max-width: 100%;
   padding: 0 8px;
+  overflow-x: auto;           /* ← Allows scrolling if needed */
+  scrollbar-width: thin;
+  -ms-overflow-style: none;
+}
+
+#subdivision-buttons::-webkit-scrollbar {
+  display: none;
+}
+
+/* Desktop & Tablet: Force one line */
+@media (min-width: 768px) {
+  #subdivision-buttons {
+    flex-wrap: nowrap !important;
+  }
+}
+
+/* Mobile: Allow wrap */
+@media (max-width: 767px) {
+  #subdivision-buttons {
+    flex-wrap: wrap;
+  }
 }
 
 .subdivision-btn {
-  padding: 8px 14px;           /* ← Smaller than before */
+  padding: 8px 14px;
   background: var(--accent);
   color: #FAF4E6;
   border: none;
   border-radius: 4px;
   font-weight: 500;
-  font-size: .85rem;           /* ← Slightly smaller text */
+  font-size: .85rem;
   box-shadow: 0 3px 6px var(--shadow);
   cursor: pointer;
   transition: all .25s cubic-bezier(.4,0,.2,1);
   white-space: nowrap;
-  min-width: 80px;             /* Prevents squashing */
+  flex-shrink: 0;             /* ← Prevents squashing */
+  min-width: 80px;
 }
 
 .subdivision-btn:hover {
