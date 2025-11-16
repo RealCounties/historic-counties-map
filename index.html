@@ -756,33 +756,6 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
               clearBtn.className = 'subdivision-btn clear';
               clearBtn.textContent = 'Clear';
               clearBtn.onclick = () => {
-                if (subdivisionLayer) map.removeLayer(subdivisionLayer);
-                subdivisionLayer = null;
-                subdivisionLabels.forEach(l => map.removeLayer(l));
-                subdivisionLabels = [];
-                activeSubdivision = null;
-                document.querySelectorAll('.subdivision-btn').forEach(b => {
-                  if (b.textContent.startsWith('Hide')) {
-                    const type = b.dataset.type;
-                    b.textContent = `Show ${type}`;
-                    b.classList.remove('active', 'loading');
-                    b.disabled = false;
-                  }
-                });
-              };
-              subdivBox.appendChild(clearBtn);
-
-              // === ADD 2×2 GRID IF 4 BUTTONS ===
-              if (totalButtons === 4) {
-                subdivBox.classList.add('has-4');
-              }
-            }
-          });
-              // === ADD THIS: "Clear" button ===
-              const clearBtn = document.createElement('button');
-              clearBtn.className = 'subdivision-btn clear';
-              clearBtn.textContent = 'Clear';
-              clearBtn.onclick = () => {
                 if (subdivisionLayer) {
                   map.removeLayer(subdivisionLayer);
                   subdivisionLayer = null;
@@ -796,18 +769,22 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
                   if (b.textContent.startsWith('Hide')) {
                     const type = b.dataset.type;
                     b.textContent = `Show ${type}`;
-                    b.classList.remove('active');
-                    b.classList.remove('loading');
+                    b.classList.remove('active', 'loading');
                     b.disabled = false;
                   }
                 });
               };
               subdivBox.appendChild(clearBtn);
+
+              // 2×2 Grid for Lincolnshire
+              if (totalButtons === 4) {
+                subdivBox.classList.add('has-4');
+              }
             }
-            
+
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             map.fitBounds(layer.getBounds());
-          });
+          });  // ← CLOSES layer.on('click', ...)
 
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 1 }));
