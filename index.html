@@ -333,7 +333,7 @@ window.onload = function() {
     btn.onclick = () => sidebar.classList.toggle('visible');
     return btn;
   };
-  toggleButton.addTo(map);
+  toggleButton.(map);
 
   // Reset function
   window.resetMapAndSidebar = function() {
@@ -928,8 +928,8 @@ async function loadSubdivisionLayer(fileName, type, button) {
     button.classList.remove('loading');
     button.classList.add('active');
     button.disabled = false;
-
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Subdivision load error:', e);
     button.textContent = 'Error';
     button.classList.remove('loading');
