@@ -728,25 +728,19 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
               });
 
               // === ADD THIS: "Clear" button ===
+              const clearBtn = document.createElement('button');
+              clearBtn.className = 'subdivision-btn clear';
+              clearBtn.textContent = 'Clear';
               clearBtn.onclick = () => {
-                // Remove subdivision layer
                 if (subdivisionLayer) {
                   map.removeLayer(subdivisionLayer);
                   subdivisionLayer = null;
                 }
-
-                // Remove ALL labels
                 subdivisionLabels.forEach(label => {
-                  if (map.hasLayer(label)) {
-                    map.removeLayer(label);
-                  }
+                  if (map.hasLayer(label)) map.removeLayer(label);
                 });
-              subdivisionLabels = [];
-
-                // Reset active state
+                subdivisionLabels = [];
                 activeSubdivision = null;
-
-                // Reset all buttons to "Show"
                 document.querySelectorAll('.subdivision-btn').forEach(b => {
                   if (b.textContent.startsWith('Hide')) {
                     const type = b.dataset.type;
