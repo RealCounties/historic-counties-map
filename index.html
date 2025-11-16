@@ -333,7 +333,7 @@ window.onload = function() {
     btn.onclick = () => sidebar.classList.toggle('visible');
     return btn;
   };
-  toggleButton.(map);
+  toggleButton.addTo(map);
 
   // Reset function
   window.resetMapAndSidebar = function() {
