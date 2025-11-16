@@ -735,28 +735,28 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
                   subdivisionLayer = null;
                 }
 
-              // Remove ALL labels
-              subdivisionLabels.forEach(label => {
-                if (map.hasLayer(label)) {
-                  map.removeLayer(label);
-                }
-              });
+                // Remove ALL labels
+                subdivisionLabels.forEach(label => {
+                  if (map.hasLayer(label)) {
+                    map.removeLayer(label);
+                  }
+                });
               subdivisionLabels = [];
 
-              // Reset active state
-              activeSubdivision = null;
+                // Reset active state
+                activeSubdivision = null;
 
-              // Reset all buttons to "Show"
-              document.querySelectorAll('.subdivision-btn').forEach(b => {
-                if (b.textContent.startsWith('Hide')) {
-                  const type = b.dataset.type;
-                  b.textContent = `Show ${type}`;
-                  b.classList.remove('active');
-                  b.classList.remove('loading');
-                  b.disabled = false;
-                }
-              });
-            };
+                // Reset all buttons to "Show"
+                document.querySelectorAll('.subdivision-btn').forEach(b => {
+                  if (b.textContent.startsWith('Hide')) {
+                    const type = b.dataset.type;
+                    b.textContent = `Show ${type}`;
+                    b.classList.remove('active');
+                    b.classList.remove('loading');
+                    b.disabled = false;
+                  }
+                });
+              };
               subdivBox.appendChild(clearBtn);
             }
             
