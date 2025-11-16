@@ -217,23 +217,31 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-/* 2×2 Grid for Lincolnshire (4 buttons) */
+/* 2×2 Grid for Lincolnshire — FORCED 2 ROWS */
 #subdivision-buttons.has-4 {
   display: grid !important;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
   gap: 6px;
-  justify-items: center;
+  justify-items: stretch;
+  align-items: stretch;
   overflow: visible !important;
+  padding: 4px 0;
 }
+
 #subdivision-buttons.has-4 .subdivision-btn {
   width: 100%;
-  max-width: 160px;
+  max-width: none !important;
   white-space: normal;
-  padding: 8px 10px;
+  padding: 8px 6px;
   font-size: 0.82rem;
+  margin: 0;
 }
+
 #subdivision-buttons.has-4 .subdivision-btn.clear {
-  grid-column: 1 / -1; /* Full width on bottom */
+  grid-column: 1 / -1;     /* Full width */
+  grid-row: 2 / 3;         /* Force to second row */
+  margin-top: 2px;
 }
 </style>
 </head>
