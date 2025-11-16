@@ -335,20 +335,58 @@ window.onload = function() {
   };
   toggleButton.addTo(map);
 
-  // Reset function
+  // Reset function — FULL RESET INCLUDING SUBDIVISIONS
   window.resetMapAndSidebar = function() {
+    // 1. Reset map view
     map.fitBounds(ukBounds);
+
+    // 2. Reset info panel
     infoDiv.innerHTML = '<em>Click a county to explore.</em>';
+    infoDiv.scrollTop = 0;
+
+    // 3. Reset county highlight
     if (currentLayer) {
       currentLayer.setStyle({ weight: 1, fillOpacity: 0.35 });
       currentLayer = null;
     }
+
+    // 4. Reset search
     if (searchMarker) {
       map.removeLayer(searchMarker);
       searchMarker = null;
     }
     searchInput.value = '';
     searchDropdown.style.display = 'none';
+
+    // 5. === REMOVE SUBDIVISION LAYER & LABELS ===
+    if (subdivisionLayer) {
+      map.removeLayer(subdivisionLayer);
+      subdivisionLayer = null;
+    }
+    subdivisionLabels.forEach(label => {
+      if (map.hasLayer(label)) map.removeLayer(label);
+    });
+    subdivisionLabels = [];
+
+    // 6. === CLEAR SUBDIVISION STATE & BUTTONS ===
+    activeSubdivision = null;
+    const subdivBox = document.getElementById("subdivision-buttons");
+    if (subdivBox) {
+      subdivBox.innerHTML = "";
+      subdivBox.className = "";
+    }
+
+    // 7. Reset any lingering button states
+    document.querySelectorAll('.subdivision-btn').forEach(btn => {
+      if (btn.textContent.startsWith('Hide')) {
+        const type = btn.dataset.type || 'Subdivision';
+        btn.textContent = `Show ${type}`;
+        btn.classList.remove('active', 'loading');
+        btn.disabled = false;
+      }
+    });
+
+    // 8. Close sidebar on mobile
     if (window.innerWidth <= 1024) {
       sidebar.classList.remove('visible');
     }
