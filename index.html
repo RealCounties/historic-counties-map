@@ -217,7 +217,24 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
+/* 2×2 Grid for Lincolnshire (4 buttons) */
+#subdivision-buttons.has-4 {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  justify-items: center;
+  overflow: visible !important;
+}
+#subdivision-buttons.has-4 .subdivision-btn {
+  width: 100%;
+  max-width: 160px;
+  white-space: normal;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+}
+#subdivision-buttons.has-4 .subdivision-btn.clear {
+  grid-column: 1 / -1; /* Full width on bottom */
+}
 </style>
 </head>
 <body>
@@ -713,12 +730,19 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
             window.updateCountyCard(englishName, layer, lat, lon);
             // === ADD SUBDIVISION BUTTONS HERE ===
             const subdivBox = document.getElementById("subdivision-buttons");
-            subdivBox.innerHTML = ""; // clear previous buttons
+            subdivBox.innerHTML = "";
+            subdivBox.className = ""; // reset
 
-       const subs = subdivisionFiles[englishName];
-            if (subs && subdivBox) {
-              subdivBox.innerHTML = ''; // clear old buttons
-              Object.keys(subs).forEach(type => {
+            const subs = subdivisionFiles[englishName];
+            if (subs) {
+              const order = englishName === "Lincolnshire"
+                ? ["Parts", "Wapentakes", "Lindsey Ridings"]
+                : Object.keys(subs);
+
+              const buttonTypes = order.filter(type => subs[type]);
+              const totalButtons = buttonTypes.length + 1; // +1 for Clear
+
+              buttonTypes.forEach(type => {
                 const btn = document.createElement('button');
                 btn.className = 'subdivision-btn';
                 btn.textContent = `Show ${type}`;
@@ -726,6 +750,32 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
                 btn.onclick = () => loadSubdivisionLayer(subs[type], type, btn);
                 subdivBox.appendChild(btn);
               });
+
+              const clearBtn = document.createElement('button');
+              clearBtn.className = 'subdivision-btn clear';
+              clearBtn.textContent = 'Clear';
+              clearBtn.onclick = () => {
+                if (subdivisionLayer) map.removeLayer(subdivisionLayer);
+                subdivisionLayer = null;
+                subdivisionLabels.forEach(l => map.removeLayer(l));
+                subdivisionLabels = [];
+                activeSubdivision = null;
+                document.querySelectorAll('.subdivision-btn').forEach(b => {
+                  if (b.textContent.startsWith('Hide')) {
+                    const type = b.dataset.type;
+                    b.textContent = `Show ${type}`;
+                    b.classList.remove('active', 'loading');
+                    b.disabled = false;
+                  }
+                });
+              };
+              subdivBox.appendChild(clearBtn);
+
+              // === ADD 2×2 GRID IF 4 BUTTONS ===
+              if (totalButtons === 4) {
+                subdivBox.classList.add('has-4');
+              }
+            }
 
               // === ADD THIS: "Clear" button ===
               const clearBtn = document.createElement('button');
