@@ -946,34 +946,33 @@ async function loadSubdivisionLayer(fileName, type, button) {
             ' onmouseout="this.style.background=\'#f3e9da\';this.style.color=\'#9B2C2C\';this.style.transform=\'scale(1)\';">' +
             name + '</div>';
 
-          const label = L.marker(center, {
-            icon: L.divIcon({
-              className: 'subdivision-label',
-              html: labelHtml,
-              iconSize: [width, height],
-              iconAnchor: [width / 2, height / 2]
-            })
-          }).addTo(map);
+const label = L.marker(center, {
+  icon: L.divIcon({
+    className: 'subdivision-label',
+    html: labelHtml,
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height / 2]
+  })
+}).addTo(map);
 
-          subdivisionLabels.push(label);
+subdivisionLabels.push(label);
+activeSubdivision = { file: fileName, type, layer: subdivisionLayer };
+button.textContent = `Hide ${type}`;
+button.classList.remove('loading');
+button.classList.add('active');
+button.disabled = false;
+} catch (e) {
+  console.error('Subdivision load error:', e);
+  button.textContent = 'Error';
+  button.classList.remove('loading');
+  button.disabled = true;
+}
+} // ← CLOSES onEachFeature
+} // ← CLOSES geojson options object (style, onEachFeature)
+).addTo(map); // ← CLOSES L.geoJSON(...).addTo(map)
 
-          activeSubdivision = { file: fileName, type, layer: subdivisionLayer };
-          button.textContent = `Hide ${type}`;
-          button.classList.remove('loading');
-          button.classList.add('active');
-          button.disabled = false;
-        } catch (e) {
-          console.error('Subdivision load error:', e);
-          button.textContent = 'Error';
-          button.classList.remove('loading');
-          button.disabled = true;
-        }
-      }  // ← CLOSES onEachFeature
-    }  // ← CLOSES the geojson layer
-  }).addTo(map);  // ← CLOSES L.geoJSON
-
-  // ← NOW SAFE: TOP-LEVEL DECLARATION
-  const subdivisionFiles = {
+// ← NOW SAFE: TOP-LEVEL
+const subdivisionFiles = {
     "Yorkshire": {
       "Ridings": "YorkshireRidingsA",
       "Wapentakes": "YorkshireWapentakesA"
