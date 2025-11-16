@@ -728,6 +728,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
           layer.on('click', () => {
             layer._cardLayer = layer;
             window.updateCountyCard(englishName, layer, lat, lon);
+            
             // === ADD SUBDIVISION BUTTONS HERE ===
             const subdivBox = document.getElementById("subdivision-buttons");
             subdivBox.innerHTML = "";
@@ -776,7 +777,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
                 subdivBox.classList.add('has-4');
               }
             }
-
+          });
               // === ADD THIS: "Clear" button ===
               const clearBtn = document.createElement('button');
               clearBtn.className = 'subdivision-btn clear';
@@ -802,7 +803,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
                 });
               };
               subdivBox.appendChild(clearBtn);
-          })
+            }
             
             if (window.innerWidth <= 1024) sidebar.classList.add('visible');
             map.fitBounds(layer.getBounds());
