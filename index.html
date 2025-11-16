@@ -883,46 +883,6 @@ async function loadSubdivisionLayer(fileName, type, button) {
         const center = layer.getBounds().getCenter();
 
         // === DYNAMIC LABEL SIZE (NO DOM) ===
-        const avgCharWidth = 7.2; // ~0.78rem font → ~7.2px per char
-        const padding = 16;       // 8px left + 8px right
-        const minWidth = 60;
-        const maxWidth = 180;
-        const baseHeight = 30;
-        const lineHeight = 16;
-
-        let lines = name.split(' ');
-        let longestLine = lines.reduce((a, b) => a.length > b.length ? a : b, '');
-        let width = Math.min(Math.max(longestLine.length * avgCharWidth + padding, minWidth), maxWidth);
-        let height = baseHeight + (Math.ceil(name.length / 18) - 1) * lineHeight; // rough line count
-
-        const label = L.marker(center, {
-          icon: L.divIcon({
-            className: 'subdivision-label',
-            html: '<div style="' +
-              'background: #f3e9da;' +
-              'color: #9B2C2C;' +
-              'border: 1px solid #9B2C2C;' +
-              'padding: 4px 8px;' +
-              'border-radius: 6px;' +
-              'font-weight: 600;' +
-              'font-size: 0.78rem;' +
-              'text-align: center;' +
-              'white-space: normal;' +
-              'line-height: 1.3;' +
-              'max-width: ' + maxWidth + 'px;' +
-              'word-wrap: break-word;' +
-              'box-shadow: 0 1px 3px rgba(0,0,0,0.2);' +
-              'transition: all 0.2s ease;' +
-              '" ' +
-              'onmouseover="this.style.background=\'#9B2C2C\'; this.style.color=\'#f3e9da\'; this.style.transform=\'scale(1.03)\';"' +
-              ' onmouseout="this.style.background=\'#f3e9da\'; this.style.color=\'#9B2C2C\'; this.style.transform=\'scale(1)\';">' +
-              name +
-            '</div>',
-            iconSize: [width, height],
-            iconAnchor: [width / 2, height / 2]
-          })
-        }).addTo(map);
-
         try {
           // === DYNAMIC LABEL (SAFE) ===
           const avgCharWidth = 7.2;
