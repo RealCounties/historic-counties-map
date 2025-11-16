@@ -843,6 +843,8 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
   }
 
 let activeSubdivision = null;
+
+// === MOVE loadSubdivisionLayer OUTSIDE the main fetch block ===
 async function loadSubdivisionLayer(fileName, type, button) {
   // === TOGGLE OFF ===
   if (activeSubdivision && activeSubdivision.file === fileName) {
@@ -869,22 +871,19 @@ async function loadSubdivisionLayer(fileName, type, button) {
     button.disabled = true;
 
     const url = `subdivisions/${fileName}.json`;
-    console.log('Fetching:', url); // ← Debug
+    console.log('Fetching:', url);
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
     const geojson = await resp.json();
+
     subdivisionLayer = L.geoJSON(geojson, {
       style: { color: '#444', weight: 1.2, fillOpacity: 0.12, dashArray: '5,5' },
       onEachFeature: (feature, layer) => {
         const name = feature.properties.NAME || feature.properties.name || 'Unknown';
         layer.bindTooltip(name, { sticky: true });
-
         const center = layer.getBounds().getCenter();
 
-        // === DYNAMIC LABEL SIZE (NO DOM) ===
         try {
-          // === DYNAMIC LABEL (SAFE) ===
           const avgCharWidth = 7.2;
           const padding = 16;
           const minWidth = 60;
@@ -902,112 +901,106 @@ async function loadSubdivisionLayer(fileName, type, button) {
             'padding:4px 8px;border-radius:6px;font-weight:600;font-size:0.78rem;' +
             'text-align:center;white-space:normal;line-height:1.3;max-width:' + maxWidth + 'px;' +
             'word-wrap:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:all 0.2s ease;' +
-            '" onmouseover="this.style.background=\'#9B2C2C\';this.style.color=\'#f3e9da\';this.style.transform=\'scale(1.03)\';" ' +
-            'onmouseout="this.style.background=\'#f3e9da\';this.style.color=\'#9B2C2C\';this.style.transform=\'scale(1)\';"' +
-            '>' +
+            '" onmouseover="this.style.background=\'#9B2C2C\';this.style.color=\'#f3e9da\';this.style.transform=\'scale(1.03)\';"' +
+            ' onmouseout="this.style.background=\'#f3e9da\';this.style.color=\'#9B2C2C\';this.style.transform=\'scale(1)\';">' +
             name + '</div>';
 
-const label = L.marker(center, {
-  icon: L.divIcon({
-    className: 'subdivision-label',
-    html: labelHtml,
-    iconSize: [width, height],
-    iconAnchor: [width / 2, height / 2]
-  })
-}).addTo(map);
+          const label = L.marker(center, {
+            icon: L.divIcon({
+              className: 'subdivision-label',
+              html: labelHtml,
+              iconSize: [width, height],
+              iconAnchor: [width / 2, height / 2]
+            })
+          }).addTo(map);
 
-subdivisionLabels.push(label);
-activeSubdivision = { file: fileName, type, layer: subdivisionLayer };
-button.textContent = `Hide ${type}`;
-button.classList.remove('loading');
-button.classList.add('active');
-button.disabled = false;
-} catch (e) {
-  console.error('Subdivision load error:', e);
-  button.textContent = 'Error';
-  button.classList.remove('loading');
-  button.disabled = true;
-}
-} // ← CLOSES onEachFeature
-} // ← CLOSES geojson options object (style, onEachFeature)
-).addTo(map); // ← CLOSES L.geoJSON(...).addTo(map)
+          subdivisionLabels.push(label);
+        } catch (e) {
+          console.error('Label creation error:', e);
+        }
+      }
+    }).addTo(map);
 
-// ← NOW SAFE: TOP-LEVEL
+    activeSubdivision = { file: fileName, type, layer: subdivisionLayer };
+    button.textContent = `Hide ${type}`;
+    button.classList.remove('loading');
+    button.classList.add('active');
+    button.disabled = false;
+  } catch (e) {
+    console.error('Subdivision load error:', e);
+    button.textContent = 'Error';
+    button.classList.remove('loading');
+    button.disabled = true;
+  }
+} // ← FUNCTION CLOSED
+
+// === NOW SAFE: TOP-LEVEL ===
 const subdivisionFiles = {
-    "Yorkshire": {
-      "Ridings": "YorkshireRidingsA",
-      "Wapentakes": "YorkshireWapentakesA"
-    },
-    "Lincolnshire": {
-      "Parts": "LincolnshirePartsA",
-      "Wapentakes": "LincolnshireWapentakesA",
-      "Lindsey Ridings": "LindseyRidingsA"
-    },
-    "Sussex": {
-        "Rapes": "SussexRapesA",
-        "Hundreds": "SussexHundredsA"
-    },
-    "Kent": {
-        "Lathes": "KentLathes",
-        "Hundreds": "KentHundreds"
-    },
-    "Cumberland": {
-        "Wards": "CumberlandWards"
-    },
-    "Durham": {
-        "Wards": "DurhamWardsA"
-    },
-    "Northumberland": {
-        "Wards": "NorthumberlandWardsA"
-    },
-    "Westmorland": {
-        "Wards": "WestmorlandWardsA"
-    },
-    // Everything else = Hundreds by default
-    "Bedfordshire": { "Hundreds": "BedfordshireHundredsA" },
-    "Berkshire": { "Hundreds": "BerkshireHundredsA" },
-    "Buckinghamshire": { "Hundreds": "BuckinghamshireHundredsA" },
-    "Caernarfonshire": { "Hundreds": "CaernarfonshireHundredsA" },
-    "Cambridgeshire": { "Hundreds": "CambridgeshireHundreds" },
-    "Cardiganshire": { "Hundreds": "CardiganshireHundreds" },
-    "Carmarthenshire": { "Hundreds": "CarmarthenshireHundreds" },
-    "Cheshire": { "Hundreds": "CheshireHundreds" },
-    "Cornwall": { "Hundreds": "CornwallHundredsA" },
-    "Derbyshire": { "Hundreds": "DerbyshireHundredsA" },
-    "Devon": { "Hundreds": "DevonHundredsA" },
-    "Dorset": { "Hundreds": "DorsetHundredsA" },
-    "Essex": { "Hundreds": "EssexHundreds" },
-    "Flintshire": { "Hundreds": "FlintshireHundredsA" },
-    "Glamorgan": { "Hundreds": "GlamorganHundreds" },
-    "Gloucestershire": { "Hundreds": "GloucestershireHundredsA" },
-    "Hampshire": { "Hundreds": "HampshireHundredsA" },
-    "Herefordshire": { "Hundreds": "HerefordshireHundredsA" },
-    "Hertfordshire": { "Hundreds": "HertfordshireHundredsA" },
-    "Lanarkshire": { "Wards": "LanarkshireWards" },
-    "Lancashire": { "Hundreds": "LancashireHundredsA" },
-    "Leicestershire": { "Hundreds": "LeicestershireHundredsA" },
-    "Lindsey": { "Ridings": "LindseyRidingsA" },
-    "Merionethshire": { "Hundreds": "MerionethshireHundredsA" },
-    "Middlesex": { "Hundreds": "MiddlesexHundreds" },
-    "Monmouthshire": { "Hundreds": "MonmouthshireHundredsA" },
-    "Montgomeryshire": { "Hundreds": "MontgomeryshireHundredsA" },
-    "Norfolk": { "Hundreds": "NorfolkHundreds" },
-    "Suffolk": { "Hundreds": "SuffolkHundreds" },
-    "Northamptonshire": { "Hundreds": "NorthamptonshireHundredsA" },
-    "Nottinghamshire": { "Wapentakes": "NottinghamshireWapentakesA" },
-    "Oxfordshire": { "Hundreds": "OxfordshireHundredsA" },
-    "Pembrokeshire": { "Hundreds": "PembrokeshireHundreds" },
-    "Radnorshire": { "Hundreds": "RadnorshireHundredsA" },
-    "Rutland": { "Hundreds": "RutlandHundreds" },
-    "Shropshire": { "Hundreds": "ShropshireHundredsA" },
-    "Somerset": { "Hundreds": "SomersetHundredsA" },
-    "Staffordshire": { "Hundreds": "StaffordshireHundredsA" },
-    "Surrey": { "Hundreds": "SurreyHundreds" },
-    "Warwickshire": { "Hundreds": "WarwickshireHundredsA" },
-    "Wiltshire": { "Hundreds": "WiltshireHundredsA" },
-    "Worcestershire": { "Hundreds": "WorcestershireHundredsA" }
+  "Yorkshire": {
+    "Ridings": "YorkshireRidingsA",
+    "Wapentakes": "YorkshireWapentakesA"
+  },
+  "Lincolnshire": {
+    "Parts": "LincolnshirePartsA",
+    "Wapentakes": "LincolnshireWapentakesA",
+    "Lindsey Ridings": "LindseyRidingsA"
+  },
+  "Sussex": {
+    "Rapes": "SussexRapesA",
+    "Hundreds": "SussexHundredsA"
+  },
+  "Kent": {
+    "Lathes": "KentLathes",
+    "Hundreds": "KentHundreds"
+  },
+  "Cumberland": { "Wards": "CumberlandWards" },
+  "Durham": { "Wards": "DurhamWardsA" },
+  "Northumberland": { "Wards": "NorthumberlandWardsA" },
+  "Westmorland": { "Wards": "WestmorlandWardsA" },
+  // Hundreds by default
+  "Bedfordshire": { "Hundreds": "BedfordshireHundredsA" },
+  "Berkshire": { "Hundreds": "BerkshireHundredsA" },
+  "Buckinghamshire": { "Hundreds": "BuckinghamshireHundredsA" },
+  "Caernarfonshire": { "Hundreds": "CaernarfonshireHundredsA" },
+  "Cambridgeshire": { "Hundreds": "CambridgeshireHundreds" },
+  "Cardiganshire": { "Hundreds": "CardiganshireHundreds" },
+  "Carmarthenshire": { "Hundreds": "CarmarthenshireHundreds" },
+  "Cheshire": { "Hundreds": "CheshireHundreds" },
+  "Cornwall": { "Hundreds": "CornwallHundredsA" },
+  "Derbyshire": { "Hundreds": "DerbyshireHundredsA" },
+  "Devon": { "Hundreds": "DevonHundredsA" },
+  "Dorset": { "Hundreds": "DorsetHundredsA" },
+  "Essex": { "Hundreds": "EssexHundreds" },
+  "Flintshire": { "Hundreds": "FlintshireHundredsA" },
+  "Glamorgan": { "Hundreds": "GlamorganHundreds" },
+  "Gloucestershire": { "Hundreds": "GloucestershireHundredsA" },
+  "Hampshire": { "Hundreds": "HampshireHundredsA" },
+  "Herefordshire": { "Hundreds": "HerefordshireHundredsA" },
+  "Hertfordshire": { "Hundreds": "HertfordshireHundredsA" },
+  "Lanarkshire": { "Wards": "LanarkshireWards" },
+  "Lancashire": { "Hundreds": "LancashireHundredsA" },
+  "Leicestershire": { "Hundreds": "LeicestershireHundredsA" },
+  "Lindsey": { "Ridings": "LindseyRidingsA" },
+  "Merionethshire": { "Hundreds": "MerionethshireHundredsA" },
+  "Middlesex": { "Hundreds": "MiddlesexHundreds" },
+  "Monmouthshire": { "Hundreds": "MonmouthshireHundredsA" },
+  "Montgomeryshire": { "Hundreds": "MontgomeryshireHundredsA" },
+  "Norfolk": { "Hundreds": "NorfolkHundreds" },
+  "Suffolk": { "Hundreds": "SuffolkHundreds" },
+  "Northamptonshire": { "Hundreds": "NorthamptonshireHundredsA" },
+  "Nottinghamshire": { "Wapentakes": "NottinghamshireWapentakesA" },
+  "Oxfordshire": { "Hundreds": "OxfordshireHundredsA" },
+  "Pembrokeshire": { "Hundreds": "PembrokeshireHundreds" },
+  "Radnorshire": { "Hundreds": "RadnorshireHundredsA" },
+  "Rutland": { "Hundreds": "RutlandHundreds" },
+  "Shropshire": { "Hundreds": "ShropshireHundredsA" },
+  "Somerset": { "Hundreds": "SomersetHundredsA" },
+  "Staffordshire": { "Hundreds": "StaffordshireHundredsA" },
+  "Surrey": { "Hundreds": "SurreyHundreds" },
+  "Warwickshire": { "Hundreds": "WarwickshireHundredsA" },
+  "Wiltshire": { "Hundreds": "WiltshireHundredsA" },
+  "Worcestershire": { "Hundreds": "WorcestershireHundredsA" }
 };
-
   function showCountyFromPoint(lat, lon) {
     const point = turf.point([lon, lat]);
     let found = null;
