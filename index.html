@@ -968,16 +968,20 @@ async function loadSubdivisionLayer(fileName, type, button) {
           button.classList.remove('loading');
           button.disabled = true;
         }
-      }
-          const subdivisionFiles = {
+      }  // ← CLOSES onEachFeature
+    }  // ← CLOSES the geojson layer
+  }).addTo(map);  // ← CLOSES L.geoJSON
+
+  // ← NOW SAFE: TOP-LEVEL DECLARATION
+  const subdivisionFiles = {
     "Yorkshire": {
-        "Ridings": "YorkshireRidingsA",
-        "Wapentakes": "YorkshireWapentakesA"
+      "Ridings": "YorkshireRidingsA",
+      "Wapentakes": "YorkshireWapentakesA"
     },
     "Lincolnshire": {
-        "Parts": "LincolnshirePartsA",
-        "Wapentakes": "LincolnshireWapentakesA",
-        "Lindsey Ridings": "LindseyRidingsA"
+      "Parts": "LincolnshirePartsA",
+      "Wapentakes": "LincolnshireWapentakesA",
+      "Lindsey Ridings": "LindseyRidingsA"
     },
     "Sussex": {
         "Rapes": "SussexRapesA",
