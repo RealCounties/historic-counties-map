@@ -884,27 +884,52 @@ async function loadSubdivisionLayer(fileName, type, button) {
         const center = layer.getBounds().getCenter();
 
         try {
-          const avgCharWidth = 7.2;
+          // === CANVAS TEXT MEASUREMENT (REUSABLE) ===
+          if (!window._labelCanvas) window._labelCanvas = document.createElement('canvas');
+          const ctx = window._labelCanvas.getContext('2d');
+          ctx.font = '600 0.78rem sans-serif';
+
+          const maxWidth = 180;
           const padding = 16;
           const minWidth = 60;
-          const maxWidth = 180;
           const baseHeight = 30;
           const lineHeight = 16;
 
-          let lines = name.split(' ');
-          let longestLine = lines.reduce((a, b) => a.length > b.length ? a : b, '');
-          let width = Math.min(Math.max(longestLine.length * avgCharWidth + padding, minWidth), maxWidth);
-          let height = baseHeight + (Math.ceil(name.length / 18) - 1) * lineHeight;
+          let textWidth = ctx.measureText(name).width + padding;
+          let width = Math.min(Math.max(textWidth, minWidth), maxWidth);
+          let height = baseHeight;
+          let displayName = name;
 
-          const labelHtml = '<div style="' +
-            'background:#f3e9da;color:#9B2C2C;border:1px solid #9B2C2C;' +
-            'padding:4px 8px;border-radius:6px;font-weight:600;font-size:0.78rem;' +
-            'text-align:center;white-space:normal;line-height:1.3;max-width:' + maxWidth + 'px;' +
-            'word-wrap:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:all 0.2s ease;' +
-            '" onmouseover="this.style.background=\'#9B2C2C\';this.style.color=\'#f3e9da\';this.style.transform=\'scale(1.03)\';"' +
-            ' onmouseout="this.style.background=\'#f3e9da\';this.style.color=\'#9B2C2C\';this.style.transform=\'scale(1)\';">' +
-            name + '</div>';
+          if (textWidth > maxWidth) {
+            const words = name.split(' ');
+            let line1 = '', i = 0;
+            while (i < words.length) {
+              const test = line1 + (line1 ? ' ' : '') + words[i];
+              if (ctx.measureText(test).width + padding > maxWidth - 20) break;
+              line1 = test;
+              i++;
+            }
+            const line2 = words.slice(i).join(' ');
+            const w1 = ctx.measureText(line1).width + padding;
+            const w2 = line2 ? ctx.measureText(line2).width + padding : 0;
+            width = Math.min(Math.max(Math.max(w1, w2), minWidth), maxWidth);
+            height = baseHeight + lineHeight;
+            displayName = name.replace(/ (.+)/, '<br>$1');
+          }
 
+          const labelHtml = `
+            <div style="
+              background:#f3e9da;color:#9B2C2C;border:1px solid #9B2C2C;
+              padding:4px 8px;border-radius:6px;font-weight:600;font-size:0.78rem;
+              text-align:center;line-height:1.3;max-width:${maxWidth}px;
+              width:${width}px;height:${height}px;display:flex;align-items:center;justify-content:center;
+              box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:all 0.2s ease;word-wrap:break-word;
+              white-space:normal;
+            "
+            onmouseover="this.style.background='#9B2C2C';this.style.color='#f3e9da';this.style.transform='scale(1.03)';"
+            onmouseout="this.style.background='#f3e9da';this.style.color='#9B2C2C';this.style.transform='scale(1)';">
+              ${displayName}
+            </div>`;
           const label = L.marker(center, {
             icon: L.divIcon({
               className: 'subdivision-label',
