@@ -346,65 +346,41 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .leaflet-control-search .search-button svg {
   fill: currentColor !important;
 }
-  /* ───── DROPPED PINS & PLACE LABELS – SAME STYLE AS SUBDIVISION LABELS ───── */
-.leaflet-marker-icon + .leaflet-popup .leaflet-popup-content-wrapper,
+/* ───── FINAL DROP-PIN POPUPS – PERFECT MATCH + FULL HOVER FLIP ───── */
 .leaflet-popup-content-wrapper {
-  background: #f3e9da !important;      /* cream background */
-  color: #9B2C2C !important;           /* red text */
+  background: #f3e9da !important;
+  color: #9B2C2C !important;
   border: 1.5px solid #9B2C2C !important;
   border-radius: 8px !important;
   box-shadow: 0 3px 12px rgba(0,0,0,0.25) !important;
   padding: 8px 12px !important;
   font-weight: 600 !important;
   font-size: 0.88rem !important;
+  line-height: 1.4 !important;
+  transition: all 0.2s ease !important;
 }
 
-.leaflet-popup-content-wrapper a {
-  color: #9B2C2C !important;
-  text-decoration: underline;
+/* Ensure all text inside (including links) inherits the colour */
+.leaflet-popup-content,
+.leaflet-popup-content * {
+  color: inherit !important;
+  font-weight: 600 !important;
 }
 
-/* Hover flip – exactly like subdivision labels */
-.leaflet-marker-icon + .leaflet-popup .leaflet-popup-content-wrapper:hover,
+/* Hover flip – identical to subdivision labels & county tooltips */
 .leaflet-popup-content-wrapper:hover {
   background: #9B2C2C !important;
   color: #f3e9da !important;
   transform: scale(1.04);
-  transition: all 0.2s ease;
 }
 
-/* Little triangle pointer underneath the popup */
+/* Tip arrow matches current state */
 .leaflet-popup-tip {
   background: #f3e9da !important;
   border: 1.5px solid #9B2C2C !important;
-  box-shadow: none !important;
 }
-
-/* When popup is hovered, make the tip match too */
 .leaflet-popup:hover .leaflet-popup-tip {
   background: #9B2C2C !important;
-}
-  /* Make pin/popup text exactly match county hover label weight */
-.leaflet-popup-content-wrapper,
-.leaflet-popup-content {
-  font-weight: 600 !important;   /* matches the 600 we use on county tooltips */
-  font-size: 0.88rem !important; /* keeps size identical too */
-  line-height: 1.4 !important;
-}
-/* NUCLEAR FIX – PIN/POPUP TEXT EXACTLY MATCHES COUNTY HOVER LABELS */
-.leaflet-popup-content-wrapper,
-.leaflet-popup-content,
-.leaflet-popup-content * {
-  font-weight: 600 !important;   /* exactly the same as county tooltips */
-  font-size: 0.88rem !important;
-  line-height: 1.4 !important;
-  color: #9B2C2C !important;     /* forces red text even on links */
-}
-
-/* And make sure links don’t override it */
-.leaflet-popup-content a {
-  color: #9B2C2C !important;
-  font-weight: 600 !important;
 }
   
 </style>
