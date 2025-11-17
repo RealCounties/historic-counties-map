@@ -1037,54 +1037,81 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
-  let popupText = `<b>${place.name}</b><br>${place.county}`;
+  // base label (we'll overwrite if we find a riding)
+  const baseName = (place.name || '').split(',')[0].trim();
+  let popupText = `<b>${baseName}</b><br>${place.county || ''}`;
 
-  // ────────────────────────────────────────────────
-  // ADD YORKSHIRE RIDING (ONLY IF WITHIN YORKSHIRE)
-  // ────────────────────────────────────────────────
+  // Only attempt riding lookup for Yorkshire places and if layer is available
   const isYorkshirePlace =
-    place.county === "Yorkshire" ||
-    place.name.toLowerCase().includes("yorkshire");
+    (place.county && place.county === 'Yorkshire') ||
+    (place.name && place.name.toLowerCase().includes('yorkshire'));
 
-  const yorkshireLayerLoaded =
-    typeof yorkshireRidingsLayer !== "undefined";
+  const yorkshireLayerLoaded = typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer;
 
   if (isYorkshirePlace && yorkshireLayerLoaded) {
-
-    const latlng = [place.lat, place.lon];
+    // leaflet-pip expects [lng, lat] (i.e. [lon, lat])
+    const pointForTest = [Number(place.lon), Number(place.lat)];
     let foundRiding = null;
 
-    // Only accept these 4 as valid Yorkshire riding names
-    const validRidings = new Set([
-      "East Riding",
-      "North Riding",
-      "West Riding",
-      "York"
-    ]);
+    // Valid canonical riding names (lowercased for robust comparison)
+    const validRidings = new Set(['east riding', 'north riding', 'west riding', 'york']);
 
+    // Iterate through features / layers and test containment
     yorkshireRidingsLayer.eachLayer(layer => {
-      if (leafletPip.pointInLayer(latlng, layer)) {
+      try {
+        // leafletPip.pointInLayer returns an array (truthy) if point is inside the given layer
+        const hit = leafletPip.pointInLayer(pointForTest, layer);
+        if (hit && hit.length) {
+          const props = layer.feature?.properties || {};
 
-        const props = layer.feature?.properties || {};
+          // gather candidate values from likely property names
+          const candidates = [
+            props.riding,
+            props.Riding,
+            props.RIDING,
+            props.riding_name,
+            props.ridingName,
+            props.name,
+            props.NAME,
+            props.Riding_Name
+          ];
 
-        // Try the possible fields
-        const candidate =
-          props.riding ??
-          props.Riding ??
-          props.RIDING ??
-          props.name ??
-          null;
-
-        // Accept only if it matches one of the 4 real ridings
-        if (validRidings.has(candidate)) {
-          foundRiding = candidate;
+          // find first candidate that matches one of the valid ridings
+          for (let val of candidates) {
+            if (!val && val !== 0) continue;
+            const normalized = String(val).trim().toLowerCase();
+            if (validRidings.has(normalized)) {
+              // map 'york' -> 'York' and others to Title Case as stored
+              if (normalized === 'york') foundRiding = 'York';
+              else foundRiding = normalized.split(' ').map(s => s[0].toUpperCase()+s.slice(1)).join(' ');
+              break;
+            }
+          }
         }
+      } catch (err) {
+        // ignore individual layer errors but keep going
+        console.warn('Riding test error for layer:', err);
       }
     });
 
     if (foundRiding) {
-      popupText = `<b>${place.name.split(',')[0]}</b><br>Yorkshire (${foundRiding})`;
+      popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
     }
+  }
+
+  // create marker + popup
+  searchMarker = L.marker([Number(place.lat), Number(place.lon)])
+    .addTo(map)
+    .bindPopup(popupText)
+    .openPopup();
+
+  map.setView([Number(place.lat), Number(place.lon)], 11);
+  searchDropdown.style.display = 'none';
+  searchInput.value = place.name || '';
+
+  // keep your existing county-from-point call
+  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+}
   }
 
   // ────────────────────────────────────────────────
