@@ -245,12 +245,16 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 <body>
 <div id="container">
   <div id="sidebar">
+    <!-- Mobile-only close button (×) – automatically hidden on desktop -->
     <button id="closeSidebar" title="Close panel" aria-label="Close panel"
-            style="position:absolute;top:12px;right:12px;background:none;border:none;
-                   font-size:28px;font-weight:bold;color:#999;cursor:pointer;
-                   width:40px;height:40px;border-radius:50%;display:flex;
-                   align-items:center;justify-content:center;transition:all .2s;
-                   display:none;">×
+            style="position:absolute;top:12px;right:12px;
+                   background:none;border:none;
+                   font-size:28px;font-weight:bold;color:#999;
+                   cursor:pointer;width:44px;height:44px;
+                   border-radius:50%;display:flex;
+                   align-items:center;justify-content:center;
+                   transition:all .2s;z-index:1000;">
+      ×
     </button>
     <div id="logo-container">
       <div id="logo-link" style="cursor:pointer;" onclick="resetMapAndSidebar()" title="Reset map">
@@ -279,16 +283,21 @@ window.onload = function() {
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
   
-  // Close ONLY the sidebar + clear the county card — nothing else is touched
-// Show × only on mobile/tablet, hide on desktop
-function updateCloseButtonVisibility() {
-  const closeBtn = document.getElementById('closeSidebar');
-  if (window.innerWidth <= 1024) {
-    closeBtn.style.display = 'flex';        // show on mobile/tablet
-  } else {
-    closeBtn.style.display = 'none';        // hide on desktop
-  }
-}
+   // Show × ONLY on mobile/tablet (≤1024px), hide on desktop
+// Mobile-only close button: show × only on ≤1024px screens
+const updateCloseButton = () => {
+  document.getElementById('closeSidebar').style.display =
+    window.innerWidth <= 1024 ? 'flex' : 'none';
+};
+
+window.addEventListener('load', updateCloseButton);
+window.addEventListener('resize', updateCloseButton);
+
+// Close action (only works when visible)
+document.getElementById('closeSidebar').addEventListener('click', () => {
+  document.getElementById('info').innerHTML = '<em>Click a county to explore.</em>';
+  document.getElementById('sidebar').classList.remove('visible');
+});
 
 // Run on load and when window is resized
 window.addEventListener('load', updateCloseButtonVisibility);
