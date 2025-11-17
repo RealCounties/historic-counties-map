@@ -384,6 +384,13 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .leaflet-popup:hover .leaflet-popup-tip {
   background: #9B2C2C !important;
 }
+  /* Make pin/popup text exactly match county hover label weight */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  font-weight: 600 !important;   /* matches the 600 we use on county tooltips */
+  font-size: 0.88rem !important; /* keeps size identical too */
+  line-height: 1.4 !important;
+}
   
 </style>
 </head>
