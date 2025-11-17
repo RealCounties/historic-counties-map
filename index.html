@@ -1037,32 +1037,28 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
-  // Start with the original name + county
   let popupText = `<b>${place.name}</b><br>${place.county}`;
 
-  // ───── YORKSHIRE RIDING AUTO-ADD (only runs if it's in Yorkshire) ─────
-  if (place.county === "Yorkshire" || place.name.includes("Yorkshire")) {
+  // ───── ADD RIDING IF PLACE IS IN HISTORIC YORKSHIRE ─────
+  if ((place.county === "Yorkshire" || place.name.toLowerCase().includes("yorkshire")) 
+      && typeof yorkshireRidingsLayer !== "undefined") {   // ← your actual layer variable
+
     const latlng = [place.lat, place.lon];
+    let foundRiding = null;
 
-    let riding = null;
-
-    // Check the three historic Yorkshire layers (adjust layer names if yours differ slightly)
-    [yorkshireWestLayer, yorkshireEastLayer, yorkshireNorthLayer].forEach(layer => {
-      if (layer && layer.eachLayer) {
-        layer.eachLayer(l => {
-          if (l.feature?.properties?.riding && leafletPip.pointInLayer(latlng, l)) {
-            riding = l.feature.properties.riding;   // e.g. "West Riding"
-          }
-        });
+    // Search inside the single YorkshireRidingsA.json layer
+    yorkshireRidingsLayer.eachLayer(layer => {
+      if (leafletPip.pointInLayer(latlng, layer)) {
+        foundRiding = layer.feature.properties.riding 
+                   || layer.feature.properties.Riding 
+                   || layer.feature.properties.name;   // fallback if named differently
       }
     });
 
-    if (riding) {
-      // Replace just the county line with the riding version
-      popupText = `<b>${place.name.split(',')[0]}</b><br>Yorkshire (${riding})`;
+    if (foundRiding) {
+      popupText = `<b>${place.name.split(',')[0]}</b><br>Yorkshire (${foundRiding})`;
     }
   }
-  // ───── END OF YORKSHIRE RIDING LOGIC ─────
 
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
