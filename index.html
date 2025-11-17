@@ -1050,7 +1050,7 @@ function selectPlace(place) {
     typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer;
 
   if (isYorkshirePlace && yorkshireLayerLoaded) {
-    const pointForTest = [Number(place.lon), Number(place.lat)];
+    const pointForTest = [Number(place.lat), Number(place.lon)];
     let foundRiding = null;
 
     const validRidings = new Set([
