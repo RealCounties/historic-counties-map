@@ -1112,15 +1112,6 @@ function selectPlace(place) {
   // keep your existing county-from-point call
   setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
 }
-  }
-
-  // ────────────────────────────────────────────────
-  // PLACE MARKER + POPUP
-  // ────────────────────────────────────────────────
-  searchMarker = L.marker([place.lat, place.lon])
-    .addTo(map)
-    .bindPopup(popupText)
-    .openPopup();
 
   map.setView([place.lat, place.lon], 11);
   searchDropdown.style.display = 'none';
@@ -1388,7 +1379,8 @@ fetch('places_clean.csv')
   });
   // ELIMINATE TOOLTIP FLICKER PERMANENTLY (one line!)
   map.getPane('tooltipPane').style.pointerEvents = 'none';
-
+    }
+  
 </script>
 </body>
 </html>
