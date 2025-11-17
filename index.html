@@ -154,38 +154,27 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .county-card a { color:#0066cc; text-decoration:none; } .county-card a:hover { text-decoration:underline; }
 .leaf-tooltip.county-tooltip { background:var(--tooltip-bg); border:1px solid var(--accent); color:var(--text); font-weight:bold; padding:2px 6px; border-radius:4px; }
  
-/* ───── COUNTY HOVER TOOLTIP – NOW MATCHES SUBDIVISION LABELS EXACTLY ───── */
-.leaf-tooltip.county-tooltip,
+/* COUNTY HOVER TOOLTIPS – PERFECT STYLE + ZERO FLICKER */
 .leaflet-tooltip {
-  background: #f3e9da !important;     /* cream background */
-  color: #9B2C2C !important;           /* red text */
+  background: #f3e9da !important;
+  color: #9B2C2C !important;
   border: 1.5px solid #9B2C2C !important;
   padding: 6px 10px !important;
   border-radius: 8px !important;
   font-weight: 600 !important;
   font-size: 0.88rem !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-  opacity: 1 !important;
+  opacity: 0 !important;               /* start hidden */
+  transition: opacity 0.15s ease !important;
   pointer-events: none !important;
 }
-
-/* Hover flip effect – identical to subdivision labels */
-.leaf-tooltip.county-tooltip:hover,
+.leaflet-tooltip.leaflet-tooltip--active {
+  opacity: 1 !important;                /* only visible when Leaflet says so */
+}
 .leaflet-tooltip:hover {
   background: #9B2C2C !important;
   color: #f3e9da !important;
   transform: scale(1.05);
-  transition: all 0.2s ease;
-}
-  /* ───── ELIMINATE TOOLTIP FLICKER WHEN MOVING BETWEEN COUNTIES ───── */
-.leaflet-tooltip {
-  transition: opacity 0.12s ease !important;
-}
-
-/* Hide the tooltip of the county you're leaving instantly */
-.leaflet-tooltip.leaflet-tooltip--disappear {
-  opacity: 0 !important;
-  transition: opacity 0.08s ease !important;
 }
 
 /* MOBILE: RESPONSIVENESS */
@@ -1206,22 +1195,8 @@ fetch('places_clean.csv')
       searchDropdown.style.display = 'none';
     }
   });
-  // Instant hide when leaving a county → no double-label flash
-map.on('mousemove', e => {
-  if (e.originalEvent.target._path) { // we're over a county
-    document.querySelectorAll('.leaflet-tooltip').forEach(tt => {
-      if (!tt._map._container.contains(e.originalEvent.relatedTarget)) {
-        tt.classList.add('leaflet-tooltip--disappear');
-      }
-    });
-  }
-});
-
-map.on('mouseout', () => {
-  document.querySelectorAll('.leaflet-tooltip').forEach(tt => {
-    tt.classList.remove('leaflet-tooltip--disappear');
-  });
-});
+  // ELIMINATE TOOLTIP FLICKER PERMANENTLY (one line!)
+  map.getPane('tooltipPane').style.pointerEvents = 'none';
 };
 </script>
 </body>
