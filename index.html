@@ -168,7 +168,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   #map { height:100vh !important; }
   #sidebar-logo { max-width:50%; }
 
-  /* ← THIS IS THE ONLY #closeSidebar RULE YOU NEED FROM NOW ON → */
+  /* ← THIS IS NOW THE ONLY CLOSE BUTTON STYLE IN THE ENTIRE FILE → */
   #closeSidebar {
     display: flex !important;
     position: absolute;
@@ -188,7 +188,10 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     z-index: 1000;
     transition: all .2s;
   }
-  #closeSidebar:hover { color: #555; background: rgba(0,0,0,0.05); }
+  #closeSidebar:hover {
+    color: #555;
+    background: rgba(0,0,0,0.05);
+  }
 }
 @media (max-width:480px) { 
   #sidebar { width:90vw; left:5vw; max-width:none; } 
