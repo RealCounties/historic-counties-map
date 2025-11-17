@@ -316,19 +316,18 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   margin-left: 12px !important;
 }
 
-/* ───── DEFAULT OSM MAGNIFYING GLASS SEARCH BUTTON (WORKS 2025) ───── */
+/* ───── MAGNIFYING GLASS SEARCH BUTTON (the real one under the 'i') ───── */
 .leaflet-control-search .search-button,
-.leaflet-control-search a,
-.leaflet-control-search button {
-  background: #f3e9da !important;          /* cream background */
-  color: #9B2C2C !important;               /* red magnifying glass */
+.leaflet-control-search a {
+  background: #f3e9da !important;       /* cream background */
+  color: #9B2C2C !important;            /* red magnifying glass */
   border: 1.5px solid #9B2C2C !important;
   border-radius: 6px !important;
   box-shadow: 0 3px 8px rgba(0,0,0,0.25) !important;
   width: 36px !important;
   height: 36px !important;
-  font-size: 18px !important;
   line-height: 36px !important;
+  font-size: 18px !important;
   transition: all .25s cubic-bezier(.4,0,.2,1) !important;
   display: flex !important;
   align-items: center;
@@ -336,17 +335,15 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 }
 
 .leaflet-control-search .search-button:hover,
-.leaflet-control-search a:hover,
-.leaflet-control-search button:hover {
-  background: #9B2C2C !important;          /* red on hover */
-  color: #f3e9da !important;               /* cream icon on hover */
+.leaflet-control-search a:hover {
+  background: #9B2C2C !important;
+  color: #f3e9da !important;
   transform: translateY(-3px) scale(1.08) !important;
   box-shadow: 0 8px 18px rgba(0,0,0,0.3) !important;
 }
 
-/* Make sure the little magnifying glass SVG picks up the colour */
-.leaflet-control-search .search-button svg,
-.leaflet-control-search svg {
+/* Makes the little magnifying-glass SVG take the colour */
+.leaflet-control-search .search-button svg {
   fill: currentColor !important;
 }
   
