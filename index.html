@@ -280,13 +280,24 @@ window.onload = function() {
   const searchDropdown = document.getElementById('searchDropdown');
   
   // Close ONLY the sidebar + clear the county card — nothing else is touched
+// Show × only on mobile/tablet, hide on desktop
+function updateCloseButtonVisibility() {
+  const closeBtn = document.getElementById('closeSidebar');
+  if (window.innerWidth <= 1024) {
+    closeBtn.style.display = 'flex';        // show on mobile/tablet
+  } else {
+    closeBtn.style.display = 'none';        // hide on desktop
+  }
+}
+
+// Run on load and when window is resized
+window.addEventListener('load', updateCloseButtonVisibility);
+window.addEventListener('resize', updateCloseButtonVisibility);
+
+// Close action (only works when button is visible anyway)
 document.getElementById('closeSidebar').addEventListener('click', () => {
-  const infoDiv = document.getElementById('info');
-  const sidebar = document.getElementById('sidebar');
-  
-  infoDiv.innerHTML = '<em>Click a county to explore.</em>';
-  infoDiv.scrollTop = 0;
-  sidebar.classList.remove('visible');   // closes sidebar on mobile & desktop
+  document.getElementById('info').innerHTML = '<em>Click a county to explore.</em>';
+  document.getElementById('sidebar').classList.remove('visible');
 });
 
   // Initialize Leaf map
