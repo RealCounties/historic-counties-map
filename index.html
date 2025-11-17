@@ -280,33 +280,15 @@ window.onload = function() {
   const infoDiv = document.getElementById('info');
   const searchInput = document.getElementById('placeSearch');
   const searchDropdown = document.getElementById('searchDropdown');
+
+  // Mobile-only close button – uses your existing CSS media query (super safe)
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('closeSidebar')?.addEventListener('click', () => {
+      document.getElementById('info').innerHTML = '<em>Click a county to explore.</em>';
+      document.getElementById('sidebar').classList.remove('visible');
+    });
+  });
   
-   // Show × ONLY on mobile/tablet (≤1024px), hide on desktop
-// Mobile-only close button: show × only on ≤1024px screens
-const updateCloseButton = () => {
-  document.getElementById('closeSidebar').style.display =
-    window.innerWidth <= 1024 ? 'flex' : 'none';
-};
-
-window.addEventListener('load', updateCloseButton);
-window.addEventListener('resize', updateCloseButton);
-
-// Close action (only works when visible)
-document.getElementById('closeSidebar').addEventListener('click', () => {
-  document.getElementById('info').innerHTML = '<em>Click a county to explore.</em>';
-  document.getElementById('sidebar').classList.remove('visible');
-});
-
-// Run on load and when window is resized
-window.addEventListener('load', updateCloseButtonVisibility);
-window.addEventListener('resize', updateCloseButtonVisibility);
-
-// Close action (only works when button is visible anyway)
-document.getElementById('closeSidebar').addEventListener('click', () => {
-  document.getElementById('info').innerHTML = '<em>Click a county to explore.</em>';
-  document.getElementById('sidebar').classList.remove('visible');
-});
-
   // Initialize Leaf map
   const map = L.map('map', { center: [54.5, -3], zoom: 6, minZoom: 5 });
   // === ADD LABEL VISIBILITY ON ZOOM ===
