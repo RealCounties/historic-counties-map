@@ -288,27 +288,29 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 #subdivision-buttons.has-4 .subdivision-btn:nth-child(3) { grid-area: 2 / 1; }
 #subdivision-buttons.has-4 .subdivision-btn:nth-child(4) { grid-area: 2 / 2; }
 
-  /* ───── ZOOM BUTTONS – MATCH YOUR RED THEME PERFECTLY ───── */
+/* ───── ZOOM BUTTONS – EXACTLY LIKE SUBDIVISION BUTTONS & LABELS ───── */
 .leaflet-control-zoom a {
-  background: var(--accent) !important;      /* same red as your buttons */
-  color: #FAF4E6 !important;                 /* cream text */
+  background: #f3e9da !important;      /* cream background */
+  color: #9B2C2C !important;           /* red + and – */
   font-weight: 600 !important;
-  font-size: 18px !important;
-  line-height: 36px !important;              /* perfect centering */
+  font-size: 20px !important;
+  line-height: 36px !important;
   width: 36px !important;
   height: 36px !important;
+  border: 1.5px solid #9B2C2C !important;
   border-radius: 6px !important;
   box-shadow: 0 3px 8px rgba(0,0,0,0.25) !important;
   transition: all .25s cubic-bezier(.4,0,.2,1) !important;
 }
 
 .leaflet-control-zoom a:hover {
-  background: #7a2222 !important;            /* darker red on hover */
+  background: #9B2C2C !important;      /* red background on hover */
+  color: #f3e9da !important;           /* cream + and – on hover */
   transform: translateY(-3px) scale(1.08) !important;
   box-shadow: 0 8px 18px rgba(0,0,0,0.3) !important;
 }
 
-/* Optional: tiny bit of separation from the edge */
+/* Optional small spacing from edge */
 .leaflet-control-zoom {
   margin-top: 12px !important;
   margin-left: 12px !important;
