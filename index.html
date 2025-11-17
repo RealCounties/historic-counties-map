@@ -346,35 +346,38 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .leaflet-control-search .search-button svg {
   fill: currentColor !important;
 }
-/* ───── FINAL DROP-PIN POPUPS – PERFECT MATCH + FULL HOVER FLIP ───── */
+/* ───── FINAL DROP-PIN POPUPS – TIGHT, DYNAMIC SIZE + PERFECT FLIP ───── */
 .leaflet-popup-content-wrapper {
   background: #f3e9da !important;
   color: #9B2C2C !important;
   border: 1.5px solid #9B2C2C !important;
   border-radius: 8px !important;
   box-shadow: 0 3px 12px rgba(0,0,0,0.25) !important;
-  padding: 8px 12px !important;
+  padding: 6px 9px !important;        /* ← reduced from 8px 12px */
   font-weight: 600 !important;
   font-size: 0.88rem !important;
-  line-height: 1.4 !important;
+  line-height: 1.35 !important;
   transition: all 0.2s ease !important;
+  max-width: none !important;          /* ← allows very long names to wrap */
+  width: auto !important;              /* ← this is the magic: size-to-content */
 }
 
-/* Ensure all text inside (including links) inherits the colour */
+/* Text inside inherits colour perfectly */
 .leaflet-popup-content,
 .leaflet-popup-content * {
   color: inherit !important;
   font-weight: 600 !important;
+  margin: 0 !important;                /* ← removes Leaflet’s default margins */
 }
 
-/* Hover flip – identical to subdivision labels & county tooltips */
+/* Hover flip – unchanged */
 .leaflet-popup-content-wrapper:hover {
   background: #9B2C2C !important;
   color: #f3e9da !important;
   transform: scale(1.04);
 }
 
-/* Tip arrow matches current state */
+/* Tip arrow */
 .leaflet-popup-tip {
   background: #f3e9da !important;
   border: 1.5px solid #9B2C2C !important;
