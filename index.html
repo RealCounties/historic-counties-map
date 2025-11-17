@@ -1206,6 +1206,22 @@ fetch('places_clean.csv')
       searchDropdown.style.display = 'none';
     }
   });
+  // Instant hide when leaving a county → no double-label flash
+map.on('mousemove', e => {
+  if (e.originalEvent.target._path) { // we're over a county
+    document.querySelectorAll('.leaflet-tooltip').forEach(tt => {
+      if (!tt._map._container.contains(e.originalEvent.relatedTarget)) {
+        tt.classList.add('leaflet-tooltip--disappear');
+      }
+    });
+  }
+});
+
+map.on('mouseout', () => {
+  document.querySelectorAll('.leaflet-tooltip').forEach(tt => {
+    tt.classList.remove('leaflet-tooltip--disappear');
+  });
+});
 };
 </script>
 </body>
