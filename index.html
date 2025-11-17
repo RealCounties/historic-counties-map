@@ -1099,18 +1099,6 @@ function selectPlace(place) {
     }
   }
 
-  // create marker + popup
-  searchMarker = L.marker([Number(place.lat), Number(place.lon)])
-    .addTo(map)
-    .bindPopup(popupText)
-    .openPopup();
-
-  map.setView([Number(place.lat), Number(place.lon)], 11);
-  searchDropdown.style.display = 'none';
-  searchInput.value = place.name || '';
-
-  // keep your existing county-from-point call
-  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
 }
 
   map.setView([place.lat, place.lon], 11);
