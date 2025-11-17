@@ -1041,7 +1041,7 @@ function selectPlace(place) {
 
   // ───── ADD RIDING IF PLACE IS IN HISTORIC YORKSHIRE ─────
   if ((place.county === "Yorkshire" || place.name.toLowerCase().includes("yorkshire")) 
-      && typeof yorkshireRidingsLayer !== "undefined") {   // ← your actual layer variable
+      && typeof yorkshireRidingsLayer !== "North Riding", "East Riding", "West Riding") {   // ← your actual layer variable
 
     const latlng = [place.lat, place.lon];
     let foundRiding = null;
