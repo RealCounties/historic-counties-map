@@ -1039,19 +1039,46 @@ function selectPlace(place) {
 
   let popupText = `<b>${place.name}</b><br>${place.county}`;
 
-  // ───── ADD RIDING IF PLACE IS IN HISTORIC YORKSHIRE ─────
-  if ((place.county === "Yorkshire" || place.name.toLowerCase().includes("yorkshire")) 
-      && typeof yorkshireRidingsLayer !== "North Riding", "East Riding", "West Riding") {   // ← your actual layer variable
+  // ────────────────────────────────────────────────
+  // ADD YORKSHIRE RIDING (ONLY IF WITHIN YORKSHIRE)
+  // ────────────────────────────────────────────────
+  const isYorkshirePlace =
+    place.county === "Yorkshire" ||
+    place.name.toLowerCase().includes("yorkshire");
+
+  const yorkshireLayerLoaded =
+    typeof yorkshireRidingsLayer !== "undefined";
+
+  if (isYorkshirePlace && yorkshireLayerLoaded) {
 
     const latlng = [place.lat, place.lon];
     let foundRiding = null;
 
-    // Search inside the single YorkshireRidingsA.json layer
+    // Only accept these 4 as valid Yorkshire riding names
+    const validRidings = new Set([
+      "East Riding",
+      "North Riding",
+      "West Riding",
+      "York"
+    ]);
+
     yorkshireRidingsLayer.eachLayer(layer => {
       if (leafletPip.pointInLayer(latlng, layer)) {
-        foundRiding = layer.feature.properties.riding 
-                   || layer.feature.properties.Riding 
-                   || layer.feature.properties.name;   // fallback if named differently
+
+        const props = layer.feature?.properties || {};
+
+        // Try the possible fields
+        const candidate =
+          props.riding ??
+          props.Riding ??
+          props.RIDING ??
+          props.name ??
+          null;
+
+        // Accept only if it matches one of the 4 real ridings
+        if (validRidings.has(candidate)) {
+          foundRiding = candidate;
+        }
       }
     });
 
@@ -1060,6 +1087,9 @@ function selectPlace(place) {
     }
   }
 
+  // ────────────────────────────────────────────────
+  // PLACE MARKER + POPUP
+  // ────────────────────────────────────────────────
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
     .bindPopup(popupText)
@@ -1068,6 +1098,7 @@ function selectPlace(place) {
   map.setView([place.lat, place.lon], 11);
   searchDropdown.style.display = 'none';
   searchInput.value = place.name;
+
   setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
 }
 
