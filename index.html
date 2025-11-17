@@ -245,7 +245,13 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 <body>
 <div id="container">
   <div id="sidebar">
-    <button id="closeSidebar">x</button>
+    <button id="closeSidebar" title="Close panel" aria-label="Close panel"
+            style="position:absolute;top:12px;right:12px;background:none;border:none;
+                   font-size:28px;font-weight:bold;color:#999;cursor:pointer;
+                   width:40px;height:40px;border-radius:50%;display:flex;
+                   align-items:center;justify-content:center;transition:all .2s;">
+      ×
+    </button>
     <div id="logo-container">
       <div id="logo-link" style="cursor:pointer;" onclick="resetMapAndSidebar()" title="Reset map">
         <img src="https://realcounties.wordpress.com/wp-content/uploads/2025/06/logo-full-trans-16-6-25.png" alt="Reset Map - Historic Counties" id="sidebar-logo">
