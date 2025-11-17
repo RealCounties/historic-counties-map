@@ -346,6 +346,44 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .leaflet-control-search .search-button svg {
   fill: currentColor !important;
 }
+  /* ───── DROPPED PINS & PLACE LABELS – SAME STYLE AS SUBDIVISION LABELS ───── */
+.leaflet-marker-icon + .leaflet-popup .leaflet-popup-content-wrapper,
+.leaflet-popup-content-wrapper {
+  background: #f3e9da !important;      /* cream background */
+  color: #9B2C2C !important;           /* red text */
+  border: 1.5px solid #9B2C2C !important;
+  border-radius: 8px !important;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.25) !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+}
+
+.leaflet-popup-content-wrapper a {
+  color: #9B2C2C !important;
+  text-decoration: underline;
+}
+
+/* Hover flip – exactly like subdivision labels */
+.leaflet-marker-icon + .leaflet-popup .leaflet-popup-content-wrapper:hover,
+.leaflet-popup-content-wrapper:hover {
+  background: #9B2C2C !important;
+  color: #f3e9da !important;
+  transform: scale(1.04);
+  transition: all 0.2s ease;
+}
+
+/* Little triangle pointer underneath the popup */
+.leaflet-popup-tip {
+  background: #f3e9da !important;
+  border: 1.5px solid #9B2C2C !important;
+  box-shadow: none !important;
+}
+
+/* When popup is hovered, make the tip match too */
+.leaflet-popup:hover .leaflet-popup-tip {
+  background: #9B2C2C !important;
+}
   
 </style>
 </head>
