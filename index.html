@@ -249,8 +249,8 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
             style="position:absolute;top:12px;right:12px;background:none;border:none;
                    font-size:28px;font-weight:bold;color:#999;cursor:pointer;
                    width:40px;height:40px;border-radius:50%;display:flex;
-                   align-items:center;justify-content:center;transition:all .2s;
-                   display:none;">×
+                   align-items:center;justify-content:center;transition:all .2s;">
+      ×
     </button>
     <div id="logo-container">
       <div id="logo-link" style="cursor:pointer;" onclick="resetMapAndSidebar()" title="Reset map">
@@ -280,24 +280,13 @@ window.onload = function() {
   const searchDropdown = document.getElementById('searchDropdown');
   
   // Close ONLY the sidebar + clear the county card — nothing else is touched
-// Show × only on mobile/tablet, hide on desktop
-function updateCloseButtonVisibility() {
-  const closeBtn = document.getElementById('closeSidebar');
-  if (window.innerWidth <= 1024) {
-    closeBtn.style.display = 'flex';        // show on mobile/tablet
-  } else {
-    closeBtn.style.display = 'none';        // hide on desktop
-  }
-}
-
-// Run on load and when window is resized
-window.addEventListener('load', updateCloseButtonVisibility);
-window.addEventListener('resize', updateCloseButtonVisibility);
-
-// Close action (only works when button is visible anyway)
 document.getElementById('closeSidebar').addEventListener('click', () => {
-  document.getElementById('info').innerHTML = '<em>Click a county to explore.</em>';
-  document.getElementById('sidebar').classList.remove('visible');
+  const infoDiv = document.getElementById('info');
+  const sidebar = document.getElementById('sidebar');
+  
+  infoDiv.innerHTML = '<em>Click a county to explore.</em>';
+  infoDiv.scrollTop = 0;
+  sidebar.classList.remove('visible');   // closes sidebar on mobile & desktop
 });
 
   // Initialize Leaf map
