@@ -315,6 +315,36 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   margin-top: 12px !important;
   margin-left: 12px !important;
 }
+
+  /* ───── LOCATE ME (MAGNIFYING GLASS / ARROW) BUTTON ───── */
+.leaflet-control-locate a {
+  background: #f3e9da !important;      /* cream background */
+  color: #9B2C2C !important;           /* red icon */
+  border: 1.5px solid #9B2C2C !important;
+  border-radius: 6px !important;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25) !important;
+  transition: all .25s cubic-bezier(.4,0,.2,1) !important;
+  font-size: 18px !important;          /* makes the arrow nicely sized */
+  line-height: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaflet-control-locate a:hover {
+  background: #9B2C2C !important;      /* red on hover */
+  color: #f3e9da !important;           /* cream icon on hover */
+  transform: translateY(-3px) scale(1.08) !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.3) !important;
+}
+
+.leaflet-control-locate a:active,
+.leaflet-control-locate.active a {
+  background: #7a2222 !important;      /* slightly darker when locating */
+  color: #f3e9da !important;
+}
   
 </style>
 </head>
