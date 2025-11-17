@@ -11,7 +11,8 @@
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="https://unpkg.com/@mapbox/leaflet-pip@latest/leaflet-pip.min.js"></script><script src="https://unpkg.com/@mapbox/leaflet-pip@latest/leaflet-pip.min.js"></script>
 <style>
 :root {
   --bg: #faf4e6; --card-bg: #f3e9da; --text: #333; --border: #ccc;
@@ -1033,14 +1034,46 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
     searchDropdown.style.display = 'block';
   }
 
-  function selectPlace(place) {
-    if (searchMarker) map.removeLayer(searchMarker);
-    searchMarker = L.marker([place.lat, place.lon]).addTo(map).bindPopup(`<b>${place.name}</b><br>${place.county}`).openPopup();
-    map.setView([place.lat, place.lon], 11);
-    searchDropdown.style.display = 'none';
-    searchInput.value = place.name;
-    setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+function selectPlace(place) {
+  if (searchMarker) map.removeLayer(searchMarker);
+
+  // Start with the original name + county
+  let popupText = `<b>${place.name}</b><br>${place.county}`;
+
+  // ───── YORKSHIRE RIDING AUTO-ADD (only runs if it's in Yorkshire) ─────
+  if (place.county === "Yorkshire" || place.name.includes("Yorkshire")) {
+    const latlng = [place.lat, place.lon];
+
+    let riding = null;
+
+    // Check the three historic Yorkshire layers (adjust layer names if yours differ slightly)
+    [yorkshireWestLayer, yorkshireEastLayer, yorkshireNorthLayer].forEach(layer => {
+      if (layer && layer.eachLayer) {
+        layer.eachLayer(l => {
+          if (l.feature?.properties?.riding && leafletPip.pointInLayer(latlng, l)) {
+            riding = l.feature.properties.riding;   // e.g. "West Riding"
+          }
+        });
+      }
+    });
+
+    if (riding) {
+      // Replace just the county line with the riding version
+      popupText = `<b>${place.name.split(',')[0]}</b><br>Yorkshire (${riding})`;
+    }
   }
+  // ───── END OF YORKSHIRE RIDING LOGIC ─────
+
+  searchMarker = L.marker([place.lat, place.lon])
+    .addTo(map)
+    .bindPopup(popupText)
+    .openPopup();
+
+  map.setView([place.lat, place.lon], 11);
+  searchDropdown.style.display = 'none';
+  searchInput.value = place.name;
+  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+}
 
 let activeSubdivision = null;
 
