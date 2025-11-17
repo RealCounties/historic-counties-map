@@ -154,7 +154,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .county-card a { color:#0066cc; text-decoration:none; } .county-card a:hover { text-decoration:underline; }
 .leaf-tooltip.county-tooltip { background:var(--tooltip-bg); border:1px solid var(--accent); color:var(--text); font-weight:bold; padding:2px 6px; border-radius:4px; }
  
-/* COUNTY HOVER TOOLTIPS – PERFECT STYLE + ZERO FLICKER */
+/* COUNTY HOVER TOOLTIPS – PERFECT STYLE + ALWAYS VISIBLE + ZERO FLICKER */
 .leaflet-tooltip {
   background: #f3e9da !important;
   color: #9B2C2C !important;
@@ -164,13 +164,11 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   font-weight: 600 !important;
   font-size: 0.88rem !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-  opacity: 0 !important;               /* start hidden */
-  transition: opacity 0.15s ease !important;
+  transition: all 0.15s ease !important;
   pointer-events: none !important;
 }
-.leaflet-tooltip.leaflet-tooltip--active {
-  opacity: 1 !important;                /* only visible when Leaflet says so */
-}
+
+/* Hover flip effect */
 .leaflet-tooltip:hover {
   background: #9B2C2C !important;
   color: #f3e9da !important;
