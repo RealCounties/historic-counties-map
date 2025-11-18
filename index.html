@@ -1076,20 +1076,20 @@ function selectPlace(place) {
   // Yorkshire riding lookup
   if (place.county === 'Yorkshire' && yorkshireRidingsLayer) {
     const point = [Number(place.lon), Number(place.lat)];
-    let foundRiding = null;
     const validRidings = new Set(['west riding','east riding','north riding','york']);
+    let foundRiding = null;
 
     yorkshireRidingsLayer.eachLayer(layer => {
       try {
-        const nameVal = layer.feature?.properties?.name || '';
-        const norm = nameVal.trim().toLowerCase();
-        if (validRidings.has(norm)) {
-          // Use leaflet-pip to test if the point is inside this riding
-          const hit = leafletPip.pointInLayer(point, layer);
-          if (hit && hit.length) {
+        const hit = leafletPip.pointInLayer(point, layer);
+        if (hit && hit.length) {
+          const nameVal = layer.feature?.properties?.name || '';
+          const norm = nameVal.trim().toLowerCase();
+          if (validRidings.has(norm)) {
             foundRiding = norm === 'york'
               ? 'York'
               : norm.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
+            return; // stop iterating once a match is found
           }
         }
       } catch (err) {
@@ -1102,19 +1102,13 @@ function selectPlace(place) {
 
   const popupText = makePopupHTML(baseName, countyText);
 
-  // Add marker & popup
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
     .bindPopup(popupText)
     .openPopup();
 
-  // Zoom to place
   map.setView([place.lat, place.lon], 11);
-
-  // Update county card after a short delay
   setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
-
-  // Update search input & hide dropdown
   searchInput.value = place.name;
   searchDropdown.style.display = 'none';
 }
