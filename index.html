@@ -50,7 +50,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   display: none;
 }
 
-/* Desktop & Tablet: Force one line */
+/* Desktop & Tab: Force one line */
 @media (min-width: 768px) {
   #subdivision-buttons {
     flex-wrap: nowrap !important;
@@ -420,6 +420,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 <script>
 window.onload = function() {
   let subdivisionLabels = []; // ← Make sure this is at the top with other lets
+  let yorkshireRidingsLayer = null;
   const sidebar = document.getElementById('sidebar');
   const closeBtn = document.getElementById('closeSidebar');
   const infoDiv = document.getElementById('info');
