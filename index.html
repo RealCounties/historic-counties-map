@@ -1037,22 +1037,21 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
-  // Base name & popup
   const baseName = (place.name || '').split(',')[0].trim();
   let popupText = `<b>${baseName}</b><br>${place.county || ''}`;
 
-  // Only check ridings if county is Yorkshire
   if (place.county === 'Yorkshire' && yorkshireRidingsLayer) {
     const pt = turf.point([place.lon, place.lat]); // Turf expects [lon, lat]
     let foundRiding = null;
 
     yorkshireRidingsLayer.eachLayer(layer => {
+      if (!layer.feature) return;
       try {
         if (turf.booleanPointInPolygon(pt, layer.feature)) {
-          foundRiding = layer.feature.properties.name; // "East Riding", "West Riding", etc.
+          foundRiding = layer.feature.properties.name; // "East Riding", etc.
         }
       } catch (err) {
-        console.warn('Riding check error:', err);
+        console.warn('Riding check error for layer:', err);
       }
     });
 
@@ -1061,18 +1060,16 @@ function selectPlace(place) {
     }
   }
 
-  // Add marker and popup
+  // Add marker & popup
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
     .bindPopup(popupText)
     .openPopup();
 
-  // Center map and hide dropdown
   map.setView([place.lat, place.lon], 11);
   searchDropdown.style.display = 'none';
   searchInput.value = place.name;
 
-  // Show county card after short delay
   setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
 }
 
