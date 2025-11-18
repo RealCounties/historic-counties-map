@@ -1042,20 +1042,31 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
    LOAD YORKSHIRE RIDINGS (INVISIBLE – USED ONLY FOR POINT TESTING)
    ──────────────────────────────────────────────────────────────── */
 
-let yorkshireRidingsLayer = null;
+let yorkshireRidingsData = null;
+let yorkshireRidingsReady = false;
 
 fetch('subdivisions/YorkshireRidingsA.json')
   .then(r => r.json())
   .then(json => {
-    // Create GeoJSON layer, but do NOT add to map
-    yorkshireRidingsLayer = L.geoJSON(json);
-    console.log("Yorkshire ridings loaded (for lookup only).");
+    yorkshireRidingsData = json;
+    yorkshireRidingsReady = true;
+    console.log("Yorkshire ridings loaded.");
   })
   .catch(err => console.error("Failed to load Yorkshire ridings:", err));
 
 /* ────────────────────────────────────────────────────────────────
-   SELECT PLACE — WITH YORKSHIRE RIDING DETECTION & POPUP STYLING
+   SELECT PLACE — WITH YORKSHIRE RIDING DETECTION
    ──────────────────────────────────────────────────────────────── */
+
+// === Helper to create consistent popup HTML ===
+function makePopupHTML(firstLine, secondLine) {
+  return `
+    <div style="text-align:center; line-height:1.2;">
+      <div style="color:#9B2C2C;">${firstLine}</div>
+      ${secondLine ? `<div style="color:#555;">${secondLine}</div>` : ''}
+    </div>
+  `;
+}
 
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
@@ -1068,7 +1079,7 @@ function selectPlace(place) {
   if (place.county === 'Yorkshire' && typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer) {
     const point = [Number(place.lon), Number(place.lat)];
     let foundRiding = null;
-    const validRidings = new Set(['west riding','east riding','north riding','york']);
+    const validRidings = new Set(['west riding', 'east riding', 'north riding', 'york']);
 
     yorkshireRidingsLayer.eachLayer(layer => {
       try {
@@ -1078,9 +1089,7 @@ function selectPlace(place) {
           const nameVal = props.name || '';
           const norm = String(nameVal).trim().toLowerCase();
           if (validRidings.has(norm)) {
-            foundRiding = norm === 'york'
-              ? 'York'
-              : norm.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
+            foundRiding = norm === 'york' ? 'York' : norm.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
           }
         }
       } catch (err) {
