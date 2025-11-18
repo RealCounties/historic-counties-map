@@ -1035,60 +1035,71 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
     searchDropdown.style.display = 'block';
   }
 
-// TOP-LEVEL DECLARATION
-let yorkshireRidingsLayer = null;  // ensures no ReferenceError
+/* ────────────────────────────────────────────────────────────────
+   LOAD YORKSHIRE RIDINGS (INVISIBLE – USED ONLY FOR POINT TESTING)
+   ──────────────────────────────────────────────────────────────── */
 
-// Load Yorkshire Ridings GeoJSON
-fetch('YorkshireRidingsA.json')
-  .then(res => res.json())
-  .then(data => {
-    yorkshireRidingsLayer = L.geoJSON(data, {
-      style: { color: '#f00', weight: 1, fillOpacity: 0 } // invisible fill
-    }).addTo(map);
+let yorkshireRidingsData = null;
+let yorkshireRidingsReady = false;
+
+fetch('subdivisions/YorkshireRidingsA.json')
+  .then(r => r.json())
+  .then(json => {
+    yorkshireRidingsData = json;
+    yorkshireRidingsReady = true;
+    console.log("Yorkshire ridings loaded.");
   })
-  .catch(err => console.error('Failed to load Yorkshire Ridings:', err));
+  .catch(err => console.error("Failed to load Yorkshire ridings:", err));
 
-// selectPlace function
+
+
+/* ────────────────────────────────────────────────────────────────
+   SELECT PLACE — WITH YORKSHIRE RIDING DETECTION
+   ──────────────────────────────────────────────────────────────── */
+
 function selectPlace(place) {
-  if (!place || !place.lat || !place.lon) return;
 
+  // Remove old marker
   if (searchMarker) map.removeLayer(searchMarker);
 
-  const baseName = (place.name || '').split(',')[0].trim();
-  let popupText = `<b>${baseName}</b><br>${place.county || ''}`;
+  const baseName = place.name.split(',')[0];
+  let popupText = `<b>${baseName}</b><br>${place.county}`;
 
-  // Check Yorkshire
-  if (place.county === 'Yorkshire' && yorkshireRidingsLayer) {
-    const pointForTest = [Number(place.lon), Number(place.lat)]; // [lon, lat] for leafletPip
-    let foundRiding = null;
+  // Detect whether search result is in Yorkshire
+  const isYorkshirePlace =
+    (place.county && place.county === "Yorkshire") ||
+    (place.name && place.name.toLowerCase().includes("yorkshire"));
 
-    const validRidings = new Set(['east riding', 'north riding', 'west riding', 'york']);
+  /* ─────────────────────────────────────────────
+     YORKSHIRE RIDING CHECK (TURF)
+     Uses only the GeoJSON boundaries invisibly
+     ───────────────────────────────────────────── */
+  if (isYorkshirePlace && yorkshireRidingsReady && yorkshireRidingsData) {
+    try {
+      const pt = turf.point([Number(place.lon), Number(place.lat)]);
+      let foundRiding = null;
 
-    yorkshireRidingsLayer.eachLayer(layer => {
-      try {
-        const hit = leafletPip.pointInLayer(pointForTest, layer);
-        if (hit && hit.length) {
-          const nameProp = layer.feature?.properties?.name;
-          if (nameProp) {
-            const norm = nameProp.trim().toLowerCase();
-            if (validRidings.has(norm)) {
-              foundRiding = norm === 'york'
-                ? 'York'
-                : norm.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
-            }
-          }
+      yorkshireRidingsData.features.forEach(feat => {
+        if (!feat.geometry) return;
+        if (turf.booleanPointInPolygon(pt, feat)) {
+          const rn = feat.properties?.name?.trim();
+          if (rn) foundRiding = rn;   // East Riding / North Riding / West Riding / York
         }
-      } catch (err) {
-        console.warn('Riding test error:', err);
-      }
-    });
+      });
 
-    if (foundRiding) {
-      popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
+      if (foundRiding) {
+        popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
+      }
+
+    } catch (err) {
+      console.warn("Yorkshire riding detection error:", err);
     }
   }
 
-  // Place marker and open popup
+  /* ─────────────────────────────────────────────
+     SHOW MARKER + POPUP
+     ───────────────────────────────────────────── */
+
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
     .bindPopup(popupText)
