@@ -1037,66 +1037,45 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
-  // Base popup text
   const baseName = (place.name || '').split(',')[0].trim();
   let popupText = `<b>${baseName}</b><br>${place.county || ''}`;
 
-// Check Yorkshire
-const isYorkshirePlace =
-  (place.county && place.county === 'Yorkshire') ||
-  (place.name && place.name.toLowerCase().includes('yorkshire'));
+  // Only attempt Yorkshire riding lookup for Yorkshire places
+  if (place.county === 'Yorkshire' && typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer) {
+    // leaflet-pip expects [lng, lat] (i.e. [lon, lat])
+    const pointForTest = [Number(place.lon), Number(place.lat)];
+    let foundRiding = null;
 
-const yorkshireLayerLoaded =
-  typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer;
-
-if (isYorkshirePlace && yorkshireLayerLoaded) {
-  // leaflet-pip requires [lon, lat]
-  const pointForTest = [Number(place.lon), Number(place.lat)];
-  let foundRiding = null;
-
-  const validRidings = new Set([
-    'east riding',
-    'north riding',
-    'west riding',
-    'york'
-  ]);
-
-  yorkshireRidingsLayer.eachLayer(layer => {
-    try {
-      const hit = leafletPip.pointInLayer(pointForTest, layer);
-      if (hit && hit.length) {
-        const props = layer.feature?.properties || {};
-
-        // Check ALL property values—your file uses props.name = "West Riding"
-        for (const key in props) {
-          if (!props[key]) continue;
-          const norm = String(props[key]).trim().toLowerCase();
-
-          if (validRidings.has(norm)) {
-            foundRiding =
-              norm === 'york'
-                ? 'York'
-                : norm.replace(/\b\w/g, c => c.toUpperCase());
-            break;
+    yorkshireRidingsLayer.eachLayer(layer => {
+      try {
+        const hit = leafletPip.pointInLayer(pointForTest, layer);
+        if (hit && hit.length) {
+          const name = layer.feature?.properties?.name;
+          if (name) {
+            // Normalize to title case
+            foundRiding = name
+              .split(' ')
+              .map(s => s[0].toUpperCase() + s.slice(1))
+              .join(' ');
           }
         }
+      } catch (err) {
+        console.warn('Riding test error:', err);
       }
-    } catch (err) {
-      console.warn('Riding test error:', err);
+    });
+
+    if (foundRiding) {
+      popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
     }
-  });
-
-  if (foundRiding) {
-    popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
   }
-}
 
-  // NOW the marker code — INSIDE the function
+  // Add marker to map
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
     .bindPopup(popupText)
     .openPopup();
 
+  // Center map on place
   map.setView([place.lat, place.lon], 11);
   searchDropdown.style.display = 'none';
   searchInput.value = place.name;
