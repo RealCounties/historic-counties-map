@@ -1055,10 +1055,9 @@ fetch('subdivisions/YorkshireRidingsA.json')
   .catch(err => console.error("Failed to load Yorkshire ridings:", err));
 
 /* ────────────────────────────────────────────────────────────────
-   SELECT PLACE — WITH YORKSHIRE RIDING DETECTION
+   SELECT PLACE — WITH YORKSHIRE RIDING DETECTION & POPUP STYLING
    ──────────────────────────────────────────────────────────────── */
 
-// === Helper to create consistent popup HTML ===
 function makePopupHTML(firstLine, secondLine) {
   return `
     <div style="text-align:center; line-height:1.2;">
@@ -1071,25 +1070,25 @@ function makePopupHTML(firstLine, secondLine) {
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
-  // base name
   const baseName = (place.name || '').split(',')[0].trim();
-
-  // Determine Yorkshire riding if applicable
   let countyText = place.county || '';
-  if (place.county === 'Yorkshire' && typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer) {
+
+  // Yorkshire riding lookup
+  if (place.county === 'Yorkshire' && yorkshireRidingsLayer) {
     const point = [Number(place.lon), Number(place.lat)];
     let foundRiding = null;
-    const validRidings = new Set(['west riding', 'east riding', 'north riding', 'york']);
+    const validRidings = new Set(['west riding','east riding','north riding','york']);
 
     yorkshireRidingsLayer.eachLayer(layer => {
       try {
         const hit = leafletPip.pointInLayer(point, layer);
         if (hit && hit.length) {
-          const props = layer.feature?.properties || {};
-          const nameVal = props.name || '';
-          const norm = String(nameVal).trim().toLowerCase();
+          const nameVal = layer.feature?.properties?.name || '';
+          const norm = nameVal.trim().toLowerCase();
           if (validRidings.has(norm)) {
-            foundRiding = norm === 'york' ? 'York' : norm.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
+            foundRiding = norm === 'york'
+              ? 'York'
+              : norm.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
           }
         }
       } catch (err) {
@@ -1100,24 +1099,23 @@ function selectPlace(place) {
     if (foundRiding) countyText = `Yorkshire (${foundRiding})`;
   }
 
-  // Generate popup HTML
   const popupText = makePopupHTML(baseName, countyText);
 
-  // Place marker
+  // Add marker & popup
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
     .bindPopup(popupText)
     .openPopup();
 
-  // Update county card
-  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
-
-  // Update search input & close dropdown
-  searchInput.value = place.name;
-  searchDropdown.style.display = 'none';
-
   // Zoom to place
   map.setView([place.lat, place.lon], 11);
+
+  // Update county card after a short delay
+  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+
+  // Update search input & hide dropdown
+  searchInput.value = place.name;
+  searchDropdown.style.display = 'none';
 }
 
 let activeSubdivision = null;
