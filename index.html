@@ -1042,15 +1042,14 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
    LOAD YORKSHIRE RIDINGS (INVISIBLE – USED ONLY FOR POINT TESTING)
    ──────────────────────────────────────────────────────────────── */
 
-let yorkshireRidingsData = null;
-let yorkshireRidingsReady = false;
+let yorkshireRidingsLayer = null;
 
 fetch('subdivisions/YorkshireRidingsA.json')
   .then(r => r.json())
   .then(json => {
-    yorkshireRidingsData = json;
-    yorkshireRidingsReady = true;
-    console.log("Yorkshire ridings loaded.");
+    // Create GeoJSON layer, but do NOT add to map
+    yorkshireRidingsLayer = L.geoJSON(json);
+    console.log("Yorkshire ridings loaded (for lookup only).");
   })
   .catch(err => console.error("Failed to load Yorkshire ridings:", err));
 
@@ -1058,6 +1057,7 @@ fetch('subdivisions/YorkshireRidingsA.json')
    SELECT PLACE — WITH YORKSHIRE RIDING DETECTION & POPUP STYLING
    ──────────────────────────────────────────────────────────────── */
 
+// Helper to create consistent popup HTML
 function makePopupHTML(firstLine, secondLine) {
   return `
     <div style="text-align:center; line-height:1.2;">
@@ -1081,11 +1081,12 @@ function selectPlace(place) {
 
     yorkshireRidingsLayer.eachLayer(layer => {
       try {
-        const hit = leafletPip.pointInLayer(point, layer);
-        if (hit && hit.length) {
-          const nameVal = layer.feature?.properties?.name || '';
-          const norm = nameVal.trim().toLowerCase();
-          if (validRidings.has(norm)) {
+        const nameVal = layer.feature?.properties?.name || '';
+        const norm = nameVal.trim().toLowerCase();
+        if (validRidings.has(norm)) {
+          // Use leaflet-pip to test if the point is inside this riding
+          const hit = leafletPip.pointInLayer(point, layer);
+          if (hit && hit.length) {
             foundRiding = norm === 'york'
               ? 'York'
               : norm.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
