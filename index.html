@@ -1041,64 +1041,55 @@ function selectPlace(place) {
   const baseName = (place.name || '').split(',')[0].trim();
   let popupText = `<b>${baseName}</b><br>${place.county || ''}`;
 
-  // Check Yorkshire
-  const isYorkshirePlace =
-    (place.county && place.county === 'Yorkshire') ||
-    (place.name && place.name.toLowerCase().includes('yorkshire'));
+// Check Yorkshire
+const isYorkshirePlace =
+  (place.county && place.county === 'Yorkshire') ||
+  (place.name && place.name.toLowerCase().includes('yorkshire'));
 
-  const yorkshireLayerLoaded =
-    typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer;
+const yorkshireLayerLoaded =
+  typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer;
 
-  if (isYorkshirePlace && yorkshireLayerLoaded) {
-    const pointForTest = [Number(place.lat), Number(place.lon)];
-    let foundRiding = null;
+if (isYorkshirePlace && yorkshireLayerLoaded) {
+  // leaflet-pip requires [lon, lat]
+  const pointForTest = [Number(place.lon), Number(place.lat)];
+  let foundRiding = null;
 
-    const validRidings = new Set([
-      'east riding',
-      'north riding',
-      'west riding',
-      'york'
-    ]);
+  const validRidings = new Set([
+    'east riding',
+    'north riding',
+    'west riding',
+    'york'
+  ]);
 
-    yorkshireRidingsLayer.eachLayer(layer => {
-      try {
-        const hit = leafletPip.pointInLayer(pointForTest, layer);
-        if (hit && hit.length) {
-          const props = layer.feature?.properties || {};
-          const candidates = [
-            props.riding,
-            props.Riding,
-            props.RIDING,
-            props.riding_name,
-            props.ridingName,
-            props.name,
-            props.NAME
-          ];
+  yorkshireRidingsLayer.eachLayer(layer => {
+    try {
+      const hit = leafletPip.pointInLayer(pointForTest, layer);
+      if (hit && hit.length) {
+        const props = layer.feature?.properties || {};
 
-          for (let val of candidates) {
-            if (!val) continue;
-            const norm = String(val).trim().toLowerCase();
-            if (validRidings.has(norm)) {
-              foundRiding =
-                norm === 'york'
-                  ? 'York'
-                  : norm
-                      .split(' ')
-                      .map(s => s[0].toUpperCase() + s.slice(1))
-                      .join(' ');
-              break;
-            }
+        // Check ALL property values—your file uses props.name = "West Riding"
+        for (const key in props) {
+          if (!props[key]) continue;
+          const norm = String(props[key]).trim().toLowerCase();
+
+          if (validRidings.has(norm)) {
+            foundRiding =
+              norm === 'york'
+                ? 'York'
+                : norm.replace(/\b\w/g, c => c.toUpperCase());
+            break;
           }
         }
-      } catch (err) {
-        console.warn('Riding test error:', err);
       }
-    });
-
-    if (foundRiding) {
-      popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
+    } catch (err) {
+      console.warn('Riding test error:', err);
     }
+  });
+
+  if (foundRiding) {
+    popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
   }
+}
 
   // NOW the marker code — INSIDE the function
   searchMarker = L.marker([place.lat, place.lon])
