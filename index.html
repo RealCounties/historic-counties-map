@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1038,7 +1039,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 let yorkshireRidingsLayer = null;  // ensures no ReferenceError
 
 // Load Yorkshire Ridings GeoJSON
-fetch('subdivisions/YorkshireRidingsA.json')
+fetch('YorkshireRidingsA.json')
   .then(res => res.json())
   .then(data => {
     yorkshireRidingsLayer = L.geoJSON(data, {
