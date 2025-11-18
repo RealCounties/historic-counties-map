@@ -1037,34 +1037,40 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
+  // Base name & popup
   const baseName = (place.name || '').split(',')[0].trim();
   let popupText = `<b>${baseName}</b><br>${place.county || ''}`;
 
-  if (place.county === 'Yorkshire' && yorkshireRidingsLayer) {
-    const pt = turf.point([place.lon, place.lat]); // Turf expects [lon, lat]
+  // Add search marker
+  searchMarker = L.marker([place.lat, place.lon])
+    .addTo(map)
+    .bindPopup(popupText)
+    .openPopup();
+
+  // Check Yorkshire ridings
+  if (place.county === 'Yorkshire' && typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer) {
+    const point = turf.point([Number(place.lon), Number(place.lat)]); // GeoJSON: [lon, lat]
     let foundRiding = null;
 
     yorkshireRidingsLayer.eachLayer(layer => {
-      if (!layer.feature) return;
       try {
-        if (turf.booleanPointInPolygon(pt, layer.feature)) {
-          foundRiding = layer.feature.properties.name; // "East Riding", etc.
+        const polygon = layer.feature;
+        if (polygon && turf.booleanPointInPolygon(point, polygon)) {
+          const name = polygon.properties?.name?.trim();
+          if (name && ['East Riding', 'North Riding', 'West Riding', 'York'].includes(name)) {
+            foundRiding = name;
+          }
         }
       } catch (err) {
-        console.warn('Riding check error for layer:', err);
+        console.warn('Riding test error:', err);
       }
     });
 
     if (foundRiding) {
       popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
+      searchMarker.setPopupContent(popupText);
     }
   }
-
-  // Add marker & popup
-  searchMarker = L.marker([place.lat, place.lon])
-    .addTo(map)
-    .bindPopup(popupText)
-    .openPopup();
 
   map.setView([place.lat, place.lon], 11);
   searchDropdown.style.display = 'none';
