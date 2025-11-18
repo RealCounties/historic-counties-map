@@ -1060,21 +1060,23 @@ fetch('subdivisions/YorkshireRidingsA.json')
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
+  // base name
   const baseName = (place.name || '').split(',')[0].trim();
-  let countyText = place.county || '';
 
-  // Yorkshire riding lookup
-  if (place.county === 'Yorkshire' && yorkshireRidingsLayer) {
+  // Determine Yorkshire riding if applicable
+  let countyText = place.county || '';
+  if (place.county === 'Yorkshire' && typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer) {
     const point = [Number(place.lon), Number(place.lat)];
     let foundRiding = null;
     const validRidings = new Set(['west riding','east riding','north riding','york']);
 
     yorkshireRidingsLayer.eachLayer(layer => {
       try {
-        const hit = leafletPip.pointInLayer([place.lon, place.lat], layer);
+        const hit = leafletPip.pointInLayer(point, layer);
         if (hit && hit.length) {
-          const nameVal = layer.feature?.properties?.name || '';
-          const norm = nameVal.trim().toLowerCase();
+          const props = layer.feature?.properties || {};
+          const nameVal = props.name || '';
+          const norm = String(nameVal).trim().toLowerCase();
           if (validRidings.has(norm)) {
             foundRiding = norm === 'york'
               ? 'York'
@@ -1089,7 +1091,8 @@ function selectPlace(place) {
     if (foundRiding) countyText = `Yorkshire (${foundRiding})`;
   }
 
-  const popupText = `<div style="text-align:center;">${baseName}<br>${countyText}</div>`;
+  // Generate popup HTML
+  const popupText = makePopupHTML(baseName, countyText);
 
   // Place marker
   searchMarker = L.marker([place.lat, place.lon])
@@ -1097,11 +1100,15 @@ function selectPlace(place) {
     .bindPopup(popupText)
     .openPopup();
 
-  map.setView([place.lat, place.lon], 11);
+  // Update county card
+  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+
+  // Update search input & close dropdown
   searchInput.value = place.name;
   searchDropdown.style.display = 'none';
 
-  setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+  // Zoom to place
+  map.setView([place.lat, place.lon], 11);
 }
 
 let activeSubdivision = null;
