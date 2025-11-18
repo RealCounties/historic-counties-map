@@ -1054,65 +1054,70 @@ fetch('subdivisions/YorkshireRidingsA.json')
   })
   .catch(err => console.error("Failed to load Yorkshire ridings:", err));
 
-
-
 /* ────────────────────────────────────────────────────────────────
    SELECT PLACE — WITH YORKSHIRE RIDING DETECTION
    ──────────────────────────────────────────────────────────────── */
 
-function selectPlace(place) {
+// === Helper to create consistent popup HTML ===
+function makePopupHTML(firstLine, secondLine) {
+  return `
+    <div style="text-align:center; line-height:1.2;">
+      <div style="color:#9B2C2C;">${firstLine}</div>
+      ${secondLine ? `<div style="color:#555;">${secondLine}</div>` : ''}
+    </div>
+  `;
+}
 
-  // Remove old marker
+function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
-  const baseName = place.name.split(',')[0];
-  let popupText = `<b>${baseName}</b><br>${place.county}`;
+  // base name
+  const baseName = (place.name || '').split(',')[0].trim();
 
-  // Detect whether search result is in Yorkshire
-  const isYorkshirePlace =
-    (place.county && place.county === "Yorkshire") ||
-    (place.name && place.name.toLowerCase().includes("yorkshire"));
+  // Determine Yorkshire riding if applicable
+  let countyText = place.county || '';
+  if (place.county === 'Yorkshire' && typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer) {
+    const point = [Number(place.lon), Number(place.lat)];
+    let foundRiding = null;
+    const validRidings = new Set(['west riding', 'east riding', 'north riding', 'york']);
 
-  /* ─────────────────────────────────────────────
-     YORKSHIRE RIDING CHECK (TURF)
-     Uses only the GeoJSON boundaries invisibly
-     ───────────────────────────────────────────── */
-  if (isYorkshirePlace && yorkshireRidingsReady && yorkshireRidingsData) {
-    try {
-      const pt = turf.point([Number(place.lon), Number(place.lat)]);
-      let foundRiding = null;
-
-      yorkshireRidingsData.features.forEach(feat => {
-        if (!feat.geometry) return;
-        if (turf.booleanPointInPolygon(pt, feat)) {
-          const rn = feat.properties?.name?.trim();
-          if (rn) foundRiding = rn;   // East Riding / North Riding / West Riding / York
+    yorkshireRidingsLayer.eachLayer(layer => {
+      try {
+        const hit = leafletPip.pointInLayer(point, layer);
+        if (hit && hit.length) {
+          const props = layer.feature?.properties || {};
+          const nameVal = props.name || '';
+          const norm = String(nameVal).trim().toLowerCase();
+          if (validRidings.has(norm)) {
+            foundRiding = norm === 'york' ? 'York' : norm.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
+          }
         }
-      });
-
-      if (foundRiding) {
-        popupText = `<b>${baseName}</b><br>Yorkshire (${foundRiding})`;
+      } catch (err) {
+        console.warn('Riding test error:', err);
       }
+    });
 
-    } catch (err) {
-      console.warn("Yorkshire riding detection error:", err);
-    }
+    if (foundRiding) countyText = `Yorkshire (${foundRiding})`;
   }
 
-  /* ─────────────────────────────────────────────
-     SHOW MARKER + POPUP
-     ───────────────────────────────────────────── */
+  // Generate popup HTML
+  const popupText = makePopupHTML(baseName, countyText);
 
+  // Place marker
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
     .bindPopup(popupText)
     .openPopup();
 
-  map.setView([place.lat, place.lon], 11);
-  searchDropdown.style.display = 'none';
-  searchInput.value = place.name;
-
+  // Update county card
   setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
+
+  // Update search input & close dropdown
+  searchInput.value = place.name;
+  searchDropdown.style.display = 'none';
+
+  // Zoom to place
+  map.setView([place.lat, place.lon], 11);
 }
 
 let activeSubdivision = null;
@@ -1376,6 +1381,19 @@ fetch('places_clean.csv')
   // ELIMINATE TOOLTIP FLICKER PERMANENTLY (one line!)
   map.getPane('tooltipPane').style.pointerEvents = 'none';
     }
+  function makePopupHTML(placeName, countyOrRiding) {
+  return `
+    <div style="
+      text-align:center;
+      font-weight:normal;
+      font-size:0.95rem;
+      line-height:1.3;
+    ">
+      <span style="color:#9B2C2C;">${placeName}</span><br>
+      <span style="color:#555;">${countyOrRiding || ''}</span>
+    </div>
+  `;
+}
   
 </script>
 </body>
