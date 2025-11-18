@@ -1037,25 +1037,22 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
 function selectPlace(place) {
   if (searchMarker) map.removeLayer(searchMarker);
 
+  // Base name & popup
   const baseName = (place.name || '').split(',')[0].trim();
   let popupText = `<b>${baseName}</b><br>${place.county || ''}`;
 
-  // Yorkshire riding check
-  if (place.county === 'Yorkshire' && typeof yorkshireRidingsLayer !== 'undefined' && yorkshireRidingsLayer) {
-    const pointForTest = [Number(place.lon), Number(place.lat)]; // ✅ [lon, lat] order
+  // Only check ridings if county is Yorkshire
+  if (place.county === 'Yorkshire' && yorkshireRidingsLayer) {
+    const pt = turf.point([place.lon, place.lat]); // Turf expects [lon, lat]
     let foundRiding = null;
 
     yorkshireRidingsLayer.eachLayer(layer => {
       try {
-        const hit = leafletPip.pointInLayer(pointForTest, layer);
-        if (hit && hit.length) {
-          const name = layer.feature?.properties?.name;
-          if (name) {
-            foundRiding = name; // already properly capitalized in your data
-          }
+        if (turf.booleanPointInPolygon(pt, layer.feature)) {
+          foundRiding = layer.feature.properties.name; // "East Riding", "West Riding", etc.
         }
       } catch (err) {
-        console.warn('Riding test error:', err);
+        console.warn('Riding check error:', err);
       }
     });
 
@@ -1064,17 +1061,18 @@ function selectPlace(place) {
     }
   }
 
-  // Add marker with popup
+  // Add marker and popup
   searchMarker = L.marker([place.lat, place.lon])
     .addTo(map)
     .bindPopup(popupText)
     .openPopup();
 
-  // Center map
+  // Center map and hide dropdown
   map.setView([place.lat, place.lon], 11);
   searchDropdown.style.display = 'none';
   searchInput.value = place.name;
 
+  // Show county card after short delay
   setTimeout(() => showCountyFromPoint(place.lat, place.lon), 500);
 }
 
