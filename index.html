@@ -391,21 +391,25 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     text-align: center;
 }
 
-  .wp-block-post-template {
-  display: flex;
-  flex-wrap: wrap;
+/* Make the post template a 3-column grid */
+.wp-block-post-template {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
   gap: 2rem; /* spacing between cards */
 }
 
-.wp-block-post-template > li {
-  display: flex;
-}
-
+/* Ensure each news card stacks content vertically */
 .news-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* pushes excerpt/read more down */
-  flex: 1 1 0; /* allows cards to grow equally */
+  justify-content: space-between; /* optional: align "Read More" links at the bottom */
+}
+
+/* Optional: make images cover the card width and keep aspect ratio */
+.news-card img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
   
 </style>
