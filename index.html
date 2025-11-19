@@ -391,27 +391,36 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     text-align: center;
 }
 
-/* Remove the old multi-column layout */
-.wp-block-post-template.columns-3 {
-  column-count: unset !important;
-  column-gap: unset !important;
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+/* Ensure the query grid is truly a CSS grid */
+.news-grid .news-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  gap: 2rem; /* spacing between cards */
 }
 
 /* Make each news card stretch to full height of the grid row */
-.wp-block-post-template li .news-card {
+.news-grid .news-card {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-/* Optional: make the image scale nicely */
-.wp-block-post-template li .news-card img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
+/* Optional: make the excerpt area expand to fill remaining space */
+.news-grid .news-card .wp-block-post-excerpt {
+  flex: 1;
+}
+
+/* Optional: for responsive design */
+@media screen and (max-width: 900px) {
+  .news-grid .news-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .news-grid .news-container {
+    grid-template-columns: 1fr; /* 1 column on mobile */
+  }
 }
   
 </style>
