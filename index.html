@@ -390,6 +390,23 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
 .leaflet-popup-content {
     text-align: center;
 }
+
+  .wp-block-post-template {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem; /* spacing between cards */
+}
+
+.wp-block-post-template > li {
+  display: flex;
+}
+
+.news-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* pushes excerpt/read more down */
+  flex: 1 1 0; /* allows cards to grow equally */
+}
   
 </style>
 </head>
