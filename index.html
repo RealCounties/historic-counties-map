@@ -391,30 +391,44 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     text-align: center;
 }
 
-/* Ensure the query grid is truly a CSS grid */
-.news-grid .news-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columns */
-  gap: 2rem; /* spacing between cards */
+/* Container: make it flex with wrapping */
+.news-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem; /* adjust spacing between cards */
 }
 
-/* Make each news card stretch to full height of the grid row */
-.news-grid .news-card {
+/* News card: make it a flex column and stretch */
+.news-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  box-sizing: border-box;
 }
 
-/* Optional: make the excerpt area expand to fill remaining space */
-.news-grid .news-card .wp-block-post-excerpt {
-  flex: 1;
-}
-
-/* Optional: for responsive design */
-@media screen and (max-width: 900px) {
-  .news-grid .news-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
+/* Desktop: 4 columns */
+@media (min-width: 1025px) {
+  .news-card {
+    flex: 1 1 calc(25% - 1.5rem); /* 25% width minus gap */
   }
+}
+
+/* Tablet: 2 columns */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .news-card {
+    flex: 1 1 calc(50% - 1rem); /* 2 columns */
+  }
+}
+
+/* Mobile: 1 column */
+@media (max-width: 767px) {
+  .news-card {
+    flex: 1 1 100%; /* full width */
+  }
+}
+
+/* Optional: make excerpt fill remaining space so "Read More" aligns at bottom */
+.news-card .wp-block-post-excerpt {
+  flex-grow: 1;
 }
 
 @media screen and (max-width: 600px) {
