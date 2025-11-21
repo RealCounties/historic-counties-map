@@ -416,19 +416,6 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
   }
 }
 
-  .landmark {
-  width: 16px;
-  height: 16px;
-  background: #9b2c2c;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform .2s ease;
-}
-
-.landmark:hover {
-  transform: scale(1.3);
-}
-  
 </style>
 </head>
 <body>
@@ -1414,73 +1401,6 @@ fetch('places_clean.csv')
   // ELIMINATE TOOLTIP FLICKER PERMANENTLY (one line!)
   map.getPane('tooltipPane').style.pointerEvents = 'none';
     }
-
-  let photoTimeout;
-let lastLandmark = '';
-let photoImg = null;
-
-// Preload frequently used landmarks (optional)
-const preloadLandmarks = ['Big Ben', 'Stonehenge'];
-preloadLandmarks.forEach(name => {
-  const img = new Image();
-  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(name + ' UK')}`;
-});
-
-function showPhoto(landmark, e) {
-  if (lastLandmark === landmark) return; // prevent duplicate requests
-  lastLandmark = landmark;
-
-  clearTimeout(photoTimeout);
-
-  // Remove previous image if exists
-  if (photoImg) {
-    photoImg.remove();
-    photoImg = null;
-  }
-
-  // Create new image
-  const img = document.createElement('img');
-  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
-  img.alt = landmark;
-  img.style.cssText = `
-    position: fixed;
-    top: ${Math.min(e.clientY + 10, window.innerHeight - 210)}px;
-    left: ${Math.min(e.clientX + 10, window.innerWidth - 210)}px;
-    width: 200px;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 99999;
-    pointer-events: none;
-    transition: transform 0.2s ease;
-  `;
-
-  document.body.appendChild(img);
-  photoImg = img;
-}
-
-// Hide image after small delay
-function hidePhoto() {
-  photoTimeout = setTimeout(() => {
-    if (photoImg) {
-      photoImg.remove();
-      photoImg = null;
-    }
-    lastLandmark = '';
-  }, 300);
-}
-
-// Track mouse over landmarks
-document.querySelectorAll('.landmark').forEach(el => {
-  el.addEventListener('mouseenter', e => showPhoto(el.dataset.landmark, e));
-  el.addEventListener('mousemove', e => {
-    if (photoImg) {
-      photoImg.style.top = `${Math.min(e.clientY + 10, window.innerHeight - 210)}px`;
-      photoImg.style.left = `${Math.min(e.clientX + 10, window.innerWidth - 210)}px`;
-    }
-  });
-  el.addEventListener('mouseleave', hidePhoto);
-});
   
 </script>
 </body>
