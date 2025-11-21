@@ -676,6 +676,23 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
       return null;
     }
   }
+  let currentLayer = null;
+  let subdivisionLayer = null;
+  let photoTimeout;
+  function showPhoto(landmark, e) {
+    clearTimeout(photoTimeout);
+    if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+    const img = document.createElement('img');
+    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
+    img.style.cssText = 'position:fixed; top:'+(e.clientY+10)+'px; left:'+(e.clientX+10)+'px; width:200px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10000; pointer-events:none;';
+    document.body.appendChild(img);
+    window.photoImg = img;
+  }
+  function hidePhoto() {
+    photoTimeout = setTimeout(() => {
+      if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+    }, 300);
+  }
 
   // Load county data
   fetch('./counties_simplified8.json')
@@ -833,7 +850,28 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
       };
 
 // Update card function
+      function showPhoto(landmark, e) {
+  clearTimeout(photoTimeout);
+  hidePhoto(); // remove old image if any
 
+  const img = document.createElement('img');
+  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
+  img.alt = landmark;
+  img.style.cssText = `
+    position: fixed;
+    top: ${e.clientY + 10}px;
+    left: ${e.clientX + 10}px;
+    width: 200px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 99999;
+    pointer-events: none;
+  `;
+
+  document.body.appendChild(img); // append immediately
+  window.photoImg = img;
+}
 window.updateCountyCard = function(englishName, layer, lat, lon) {
         const details = countyData[englishName] || {};
         const langEntry = countyLanguages[englishName];
@@ -1376,74 +1414,6 @@ fetch('places_clean.csv')
   // ELIMINATE TOOLTIP FLICKER PERMANENTLY (one line!)
   map.getPane('tooltipPane').style.pointerEvents = 'none';
     }
-
-  // CARD PHOTO HOVER
-let photoTimeout;
-let lastLandmark = '';
-let photoImg = null;
-
-// Preload frequently used landmarks (optional)
-const preloadLandmarks = ['Big Ben', 'Stonehenge'];
-preloadLandmarks.forEach(name => {
-  const img = new Image();
-  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(name + ' UK')}`;
-});
-
-function showPhoto(landmark, e) {
-  if (lastLandmark === landmark) return; // prevent duplicate requests
-  lastLandmark = landmark;
-
-  clearTimeout(photoTimeout);
-
-  // Remove previous image if exists
-  if (photoImg) {
-    photoImg.remove();
-    photoImg = null;
-  }
-
-  // Create new image
-  const img = document.createElement('img');
-  img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
-  img.alt = landmark;
-  img.style.cssText = `
-    position: fixed;
-    top: ${Math.min(e.clientY + 10, window.innerHeight - 210)}px;
-    left: ${Math.min(e.clientX + 10, window.innerWidth - 210)}px;
-    width: 200px;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 99999;
-    pointer-events: none;
-    transition: transform 0.2s ease;
-  `;
-
-  document.body.appendChild(img);
-  photoImg = img;
-}
-
-// Hide image after small delay
-function hidePhoto() {
-  photoTimeout = setTimeout(() => {
-    if (photoImg) {
-      photoImg.remove();
-      photoImg = null;
-    }
-    lastLandmark = '';
-  }, 300);
-}
-
-// Track mouse over landmarks
-document.querySelectorAll('.landmark').forEach(el => {
-  el.addEventListener('mouseenter', e => showPhoto(el.dataset.landmark, e));
-  el.addEventListener('mousemove', e => {
-    if (photoImg) {
-      photoImg.style.top = `${Math.min(e.clientY + 10, window.innerHeight - 210)}px`;
-      photoImg.style.left = `${Math.min(e.clientX + 10, window.innerWidth - 210)}px`;
-    }
-  });
-  el.addEventListener('mouseleave', hidePhoto);
-});
   
 </script>
 </body>
