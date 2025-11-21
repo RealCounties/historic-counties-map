@@ -666,7 +666,19 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
   let currentLayer = null;
   let subdivisionLayer = null;
   let photoTimeout;
-
+  function showPhoto(landmark, e) {
+    clearTimeout(photoTimeout);
+    if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+    const img = document.createElement('img');
+    img.src = `https://source.unsplash.com/400x300/?${encodeURIComponent(landmark + ' UK')}&${Date.now()}`;
+    img.style.cssText = 'position:fixed; top:'+(e.clientY+10)+'px; left:'+(e.clientX+10)+'px; width:200px; height:auto; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:10000; pointer-events:none;';
+    document.body.appendChild(img);
+    window.photoImg = img;
+  }
+  function hidePhoto() {
+    photoTimeout = setTimeout(() => {
+      if (window.photoImg) { document.body.removeChild(window.photoImg); delete window.photoImg; }
+    }, 300);
   }
 
   // Load county data
@@ -903,7 +915,7 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
                     <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
                     <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
                       ${details.landmarks.map(l => `
-                        <li style="color:#0066cc;">
+                        <li onmouseover="showPhoto('${l}', event)" onmouseout="hidePhoto()" style="cursor:pointer; color:#0066cc; text-decoration:underline;">
                           ${l}
                         </li>`).join('')}
                     </ul>
@@ -1388,7 +1400,8 @@ fetch('places_clean.csv')
   });
   // ELIMINATE TOOLTIP FLICKER PERMANENTLY (one line!)
   map.getPane('tooltipPane').style.pointerEvents = 'none';
-    
+    }
+  
 </script>
 </body>
 </html>
