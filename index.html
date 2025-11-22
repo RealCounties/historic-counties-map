@@ -1434,6 +1434,41 @@ fetch('places_clean.csv')
   // ELIMINATE TOOLTIP FLICKER PERMANENTLY (one line!)
   map.getPane('tooltipPane').style.pointerEvents = 'none';
     }
+          // === SHARE THIS COUNTY BUTTON ===
+        document.getElementById('shareCountyBtn')?.addEventListener('click', () => {
+          const cleanName = englishName.replace(/ /g, '-').replace(/[^a-zA-Z-]/g, '');
+          const shareUrl = window.location.origin + window.location.pathname + '#' + cleanName;
+
+          if (navigator.share) {
+            // Native mobile share sheet (Android/iOS)
+            navigator.share({
+              title: `Historic ${englishName}`,
+              url: shareUrl
+            }).catch(() => {}); // user cancelled → silent
+          } else {
+            // Desktop + fallback: copy to clipboard
+            navigator.clipboard.writeText(shareUrl).then(() => {
+              const feedback = document.getElementById('shareFeedback');
+              feedback.textContent = 'Link copied!';
+              feedback.style.color = '#9B2C2C';
+              setTimeout(() => feedback.textContent = '', 3000);
+            });
+          }
+        });
+
+        // Also open the correct county when page has a hash on load
+        if (window.location.hash) {
+          const hashName = decodeURIComponent(window.location.hash.substring(1)).replace(/-/g, ' ');
+          map.eachLayer(l => {
+            if (l instanceof L.GeoJSON) {
+              l.eachLayer(poly => {
+                if (poly.feature?.properties?.NAME === hashName) {
+                  setTimeout(() => poly.fire('click'), 800); // wait for map ready
+                }
+              });
+            }
+          });
+        }
   
 </script>
 </body>
