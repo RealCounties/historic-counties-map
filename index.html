@@ -892,84 +892,133 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
         "Tyrone": { name: "Tír Eoghain", lang: "Irish Gaelic" }
       };
 
-// Update card function
-window.updateCountyCard = function(englishName, layer, lat, lon) {
-        const details = countyData[englishName] || {};
-        const langEntry = countyLanguages[englishName];
-        const area = details.area || 0;
-        const pop = details.population || 0;
-        const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
+  // SHARE THIS COUNTY BUTTON + DEEP-LINKING SUPPORT
+  window.updateCountyCard = function(englishName, layer, lat, lon) {
+    const details = countyData[englishName] || {};
+    const langEntry = countyLanguages[englishName];
+    const area = details.area || 0;
+    const pop = details.population || 0;
+    const density = area > 0 ? (pop / area).toFixed(1) : 'N/A';
 
-        let badgeStyle = '';
-        if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
-        else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
-        else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
-        else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
-        else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
-        else badgeStyle = 'background:#66BB6A; color:white;';
+    let badgeStyle = '';
+    if (density > 1000) badgeStyle = 'background:#9B2C2C; color:white;';
+    else if (density > 500) badgeStyle = 'background:#D32F2F; color:white;';
+    else if (density > 200) badgeStyle = 'background:#FF7043; color:white;';
+    else if (density > 100) badgeStyle = 'background:#FFB300; color:white;';
+    else if (density > 50) badgeStyle = 'background:#8BC34A; color:white;';
+    else badgeStyle = 'background:#66BB6A; color:white;';
 
-        fetchWeather(lat, lon).then(weather => {
-          const weatherBlock = weather ? `
-            <div style="text-align:center; margin:14px 0 8px;">
-              <div class="weather-underline" style="margin:0 auto 14px;"></div>
-              <div class="weather-badge">
-                ${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph
-              </div>
-            </div>` : '';
+    fetchWeather(lat, lon).then(weather => {
+      const weatherBlock = weather ? `
+        <div style="text-align:center; margin:14px 0 8px;">
+          <div class="weather-underline" style="margin:0 auto 14px;"></div>
+          <div class="weather-badge">
+            ${weather.temp}°C • ${weather.desc} • Wind ${weather.wind} mph
+          </div>
+        </div>` : '';
 
-          const flagUrl = countyFlags[englishName];
-          const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
+      const flagUrl = countyFlags[englishName];
+      const flagHTML = flagUrl ? `<img src="${flagUrl}" alt="${englishName} flag" class="flag" onerror="this.style.display='none'">` : '';
 
-          const cardHTML = `
-            <div class="county-card" style="margin-bottom:16px;">
-              ${flagHTML}
-              <div class="card-body">
-                <h3>${englishName}</h3>
-                ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
-                <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
-                  <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
-                  <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
-                </div>
-                <div style="text-align:center; margin:12px 0;">
-                  <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
-                    Density: ${density} people/sq mi
-                  </span>
-                </div>
+      const cardHTML = `
+        <div class="county-card" style="margin-bottom:16px;">
+          ${flagHTML}
+          <div class="card-body">
+            <h3>${englishName}</h3>
+            ${langEntry ? `<p style="margin:6px 0; font-size:0.9rem; text-align:center;"><strong>${langEntry.lang}:</strong> ${langEntry.name}</p>` : ''}
+            <div style="display:flex; justify-content:space-between; margin:12px 0; font-size:0.95rem;">
+              <div><strong>Area:</strong> ${area.toLocaleString()} sq mi</div>
+              <div><strong>Pop:</strong> ${pop.toLocaleString()}</div>
+            </div>
+            <div style="text-align:center; margin:12px 0;">
+              <span style="${badgeStyle} padding:6px 16px; border-radius:20px; font-weight:600; font-size:0.9rem; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                Density: ${density} people/sq mi
+              </span>
+            </div>
 
-                ${details.events?.length ? `
-                  <div style="margin:14px 0 8px;">
-                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Key Events</h4>
-                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-                      ${details.events.map(e => `<li>${e}</li>`).join('')}
-                    </ul>
-                  </div>` : ''}
+            ${details.events?.length ? `
+              <div style="margin:14px 0 8px;">
+                <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Key Events</h4>
+                <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                  ${details.events.map(e => `<li>${e}</li>`).join('')}
+                </ul>
+              </div>` : ''}
 
-                ${details.landmarks?.length ? `
-                  <div style="margin:14px 0 8px;">
-                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
-                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-                      ${details.landmarks.map(l => `
-                              <li>${l}</li>
-                            `).join('')}
-                    </ul>
-                  </div>` : ''}
+            ${details.landmarks?.length ? `
+              <div style="margin:14px 0 8px;">
+                <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
+                <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                  ${details.landmarks.map(l => `<li>${l}</li>`).join('')}
+                </ul>
+              </div>` : ''}
 
-                ${details.notablePersons?.length ? `
-                  <div style="margin:14px 0 8px;">
-                    <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Persons</h4>
-                    <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
-                      ${details.notablePersons.slice(0, 3).map(p => `<li>${p}</li>`).join('')}
-                    </ul>
-                  </div>` : ''}
+            ${details.notablePersons?.length ? `
+              <div style="margin:14px 0 8px;">
+                <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Persons</h4>
+                <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
+                  ${details.notablePersons.slice(0, 3).map(p => `<li>${p}</li>`).join('')}
+                </ul>
+              </div>` : ''}
 
-                ${weatherBlock}
-              </div>
-            </div>`;
+            ${weatherBlock}
 
-          infoDiv.innerHTML = cardHTML;
-          infoDiv.scrollTop = 0;
-        });
-      };
+            <!-- SHARE BUTTON -->
+            <div style="text-align:center; margin:20px 0 8px;">
+              <button id="shareCountyBtn" style="
+                background:#9B2C2C; color:#FAF4E6; border:none; padding:10px 22px;
+                border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer;
+                box-shadow:0 3px 8px rgba(0,0,0,0.2); transition:all 0.25s;
+              " onmouseover="this.style.background='#7a2222'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.3)'"
+                onmouseout="this.style.background='#9B2C2C'; this.style.transform='none'; this.style.boxShadow='0 3px 8px rgba(0,0,0,0.2)'">
+                Share this county
+              </button>
+              <div id="shareFeedback" style="margin-top:8px; font-size:0.85rem; color:#666; height:20px;"></div>
+            </div>
+          </div>
+        </div>`;
+
+      infoDiv.innerHTML = cardHTML;
+      infoDiv.scrollTop = 0;
+
+      // ——— SHARE BUTTON LOGIC ———
+      document.getElementById('shareCountyBtn')?.addEventListener('click', () => {
+        const cleanName = englishName.replace(/ /g, '-').replace(/[^a-zA-Z-]/g, '');
+        const shareUrl = window.location.origin + window.location.pathname + '#' + cleanName;
+
+        if (navigator.share) {
+          // Native share sheet on mobile
+          navigator.share({
+            title: `Historic ${englishName}`,
+            url: shareUrl
+          }).catch(() => {});
+        } else {
+          // Copy to clipboard (desktop + fallback)
+          navigator.clipboard.writeText(shareUrl).then(() => {
+            const fb = document.getElementById('shareFeedback');
+            fb.textContent = 'Link copied to clipboard!';
+            fb.style.color = '#9B2C2C';
+            setTimeout(() => fb.textContent = '', 3000);
+          });
+        }
+      });
+    });
+  };
+
+  // ——— OPEN COUNTY FROM URL HASH ON PAGE LOAD ———
+  if (window.location.hash) {
+    const hashName = decodeURIComponent(window.location.hash.substring(1)).replace(/-/g, ' ');
+    setTimeout(() => {
+      map.eachLayer(l => {
+        if (l instanceof L.GeoJSON) {
+          l.eachLayer(poly => {
+            if (poly.feature?.properties?.NAME === hashName) {
+              poly.fire('click');
+            }
+          });
+        }
+      });
+    }, 1000); // small delay to ensure everything is loaded
+  }
 
       const pastelColors = ["#ffdede","#dedefd","#deffde","#fff0de","#fdefff","#dfffee","#ffe7de","#f0deff","#defff5","#fdeeee","#e6f7ff","#f9ffe6","#fff6e6","#e6e6ff","#ffe6f2"];
       data.features.forEach((f, i) => f.properties.color = pastelColors[i % pastelColors.length]);
@@ -1434,42 +1483,7 @@ fetch('places_clean.csv')
   // ELIMINATE TOOLTIP FLICKER PERMANENTLY (one line!)
   map.getPane('tooltipPane').style.pointerEvents = 'none';
     }
-          // === SHARE THIS COUNTY BUTTON ===
-        document.getElementById('shareCountyBtn')?.addEventListener('click', () => {
-          const cleanName = englishName.replace(/ /g, '-').replace(/[^a-zA-Z-]/g, '');
-          const shareUrl = window.location.origin + window.location.pathname + '#' + cleanName;
-
-          if (navigator.share) {
-            // Native mobile share sheet (Android/iOS)
-            navigator.share({
-              title: `Historic ${englishName}`,
-              url: shareUrl
-            }).catch(() => {}); // user cancelled → silent
-          } else {
-            // Desktop + fallback: copy to clipboard
-            navigator.clipboard.writeText(shareUrl).then(() => {
-              const feedback = document.getElementById('shareFeedback');
-              feedback.textContent = 'Link copied!';
-              feedback.style.color = '#9B2C2C';
-              setTimeout(() => feedback.textContent = '', 3000);
-            });
-          }
-        });
-
-        // Also open the correct county when page has a hash on load
-        if (window.location.hash) {
-          const hashName = decodeURIComponent(window.location.hash.substring(1)).replace(/-/g, ' ');
-          map.eachLayer(l => {
-            if (l instanceof L.GeoJSON) {
-              l.eachLayer(poly => {
-                if (poly.feature?.properties?.NAME === hashName) {
-                  setTimeout(() => poly.fire('click'), 800); // wait for map ready
-                }
-              });
-            }
-          });
-        }
-  
+            
 </script>
 </body>
 </html>
