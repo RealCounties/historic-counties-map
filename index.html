@@ -584,7 +584,7 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
       sidebar.classList.remove('visible');
     }
   };
-  // ========== AUTO-DETECT VISITOR'S HISTORIC COUNTY – MOBILE-FRIENDLY ==========
+  // AUTO-DETECT VISITOR'S HISTORIC COUNTY – MOBILE-FRIENDLY + NO BOLD
   const tryDetectLocation = () => {
     if ('geolocation' in navigator) {
       const detectMsg = L.control({position: 'bottomright'});
@@ -620,46 +620,39 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
             const toast = L.control({position: 'bottomright'});
             toast.onAdd = () => {
               const div = L.DomUtil.create('div', 'leaflet-control');
-              div.innerHTML = `You are in<br><strong style="font-size:1.25em;color:#9B2C2C;">${countyName}</strong>`;
-              div.style.cssText = 'background:#f3e9da; border:2px solid #9B2C2C; color:#333; padding:12px 16px; border-radius:10px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.3); margin:12px; font-weight:600;';
+              div.innerHTML = `You are in historic<br><span style="color:#9B2C2C;font-size:1.15em;">${countyName}</span>`;
+              div.style.cssText = 'background:#f3e9da; border:2px solid #9B2C2C; color:#333; padding:12px 16px; border-radius:10px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.3); margin:12px; font-weight:600; line-height:1.4;';
               setTimeout(() => map.removeControl(toast), 8000);
               return div;
             };
             toast.addTo(map);
-            foundLayer.fire('click');  // auto-open card & zoom
+            foundLayer.fire('click');
           } else {
             const toast = L.control({position: 'bottomright'});
             toast.onAdd = () => {
               const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
               div.innerHTML = 'Outside the<br>historic counties';
-              div.style.cssText = 'background:#f3e9da; color:#666; padding:8px 12px; border-radius:8px; margin:12px;';
+              div.style.cssText = 'background:#f3e9da; color:#666; padding:8px 12px; border-radius:8px; margin:12px; font-weight:600;';
               setTimeout(() => map.removeControl(toast), 5000);
               return div;
             };
             toast.addTo(map);
           }
         },
-        () => map.removeControl(detectMsg),   // permission denied or error → just remove message
+        () => map.removeControl(detectMsg),
         { timeout: 12000, maximumAge: 300000, enableHighAccuracy: true }
       );
     }
   };
 
-  // On desktop: try immediately
-  if (window.innerWidth > 1024) {
-    tryDetectLocation();
-  }
+  // Desktop: run immediately
+  if (window.innerWidth > 1024) tryDetectLocation();
 
-  // On mobile/tablet: add a friendly button the first time they open the sidebar/info panel
-  document.getElementById('toggleSidebarBtn')?.addEventListener('click', tryDetectLocation); // if you ever add one
-  document.querySelector('#sidebar .i-btn, #sidebar h2, #logo-link')?.addEventListener('click', tryDetectLocation);
-
-  // Or simply run it the first time they tap the big "i" button (you already have this button!)
+  // Mobile/tablet: run the first time they tap the "i" button
   toggleButton.getContainer().addEventListener('click', function runOnce() {
     tryDetectLocation();
     toggleButton.getContainer().removeEventListener('click', runOnce);
   }, { once: true });
-  // =====================================================================
 
   // County flags
   const countyFlags = {
