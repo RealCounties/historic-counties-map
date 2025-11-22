@@ -415,6 +415,7 @@ html, body { height:100%; margin:0; font-family:Arial,sans-serif; }
     grid-template-columns: 1fr; /* 1 column on mobile */
   }
 }
+  .leaflet-control a { cursor: pointer; }
 
 </style>
 </head>
@@ -583,6 +584,84 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
       sidebar.classList.remove('visible');
     }
   };
+    // ========== AUTO-DETECT VISITOR'S HISTORIC COUNTY ==========
+  if ('geolocation' in navigator) {
+    // Optional: show a tiny pulsing indicator while detecting
+    const detectMsg = L.control({position: 'bottomright'});
+    detectMsg.onAdd = function() {
+      const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+      div.innerHTML = 'Locating…';
+      div.style.cssText = 'background:#f3e9da; color:#9B2C2C; padding:4px 10px; border-radius:6px; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+      div.style.opacity = '0';
+      div.style.transition = 'opacity 0.4s';
+      setTimeout(() => div.style.opacity = '1', 300);
+      return div;
+    };
+    detectMsg.addTo(map);
+
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        // Find which historic county polygon contains this point
+        let foundLayer = null;
+        map.eachLayer(layer => {
+          if (layer instanceof L.GeoJSON) {
+            layer.eachLayer(poly => {
+              if (poly.getBounds && poly.getBounds().contains([lat, lon])) {
+                if (turf.booleanPointInPolygon(turf.point([lon, lat]), poly.feature)) {
+                  foundLayer = poly;
+                }
+              }
+            });
+          }
+        });
+
+        if (foundLayer) {
+          const countyName = foundLayer.feature.properties.NAME;
+          // Show a nice toast
+          const toast = L.control({position: 'bottomright'});
+          toast.onAdd = function() {
+            const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+            div.innerHTML = `You are in <br><strong style="font-size:1.2em;color:#9B2C2C;">${countyName}</strong>`;
+            div.style.cssText = `
+              background:#f3e9da; color:#333; padding:10px 16px; border-radius:8px;
+              font-weight:600; text-align:center; box-shadow:0 4px 16px rgba(0,0,0,0.25);
+              border:2px solid #9B2C2C; margin:10px; max-width:200px;
+            `;
+            // Auto-remove after 7 seconds
+            setTimeout(() => { if (map.hasLayer(toast)) map.removeControl(toast); }, 7000);
+            return div;
+          };
+          toast.addTo(map);
+
+          // Also highlight the county and open the sidebar (optional but nice)
+          foundLayer.fire('click'); // triggers your existing click handler → opens card + zooms
+        } else {
+          // Outside historic England/Scotland/Wales – still polite
+          const toast = L.control({position: 'bottomright'});
+          toast.onAdd = () => {
+            const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+            div.innerHTML = 'You are outside<br>the historic counties';
+            div.style.cssText = 'background:#f3e9da; color:#666; padding:10px 16px; border-radius:8px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.2); margin:10px;';
+            setTimeout(() => map.removeControl(toast), 5000);
+            return div;
+          };
+          toast.addTo(map);
+        }
+
+        // Remove the "Locating…" message
+        map.removeControl(detectMsg);
+      },
+      err => {
+        // User denied permission or timeout → silently remove indicator
+        map.removeControl(detectMsg);
+      },
+      { timeout: 10000, maximumAge: 600000, enableHighAccuracy: false }
+    );
+  }
+  // ==========================================================
 
   // County flags
   const countyFlags = {
