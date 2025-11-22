@@ -591,7 +591,7 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
       detectMsg.onAdd = function() {
         const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
         div.innerHTML = 'Locating…';
-        div.style.cssText = 'background:#f3e9da; color:#9B2C2C; padding:6px 12px; border-radius:8px; font-weight:600; box-shadow:0 3px 10px rgba(0,0,0,0.25); font-size:0.9rem;';
+        div.style.cssText = 'background:#f3e9da; color:#9B2C2C; padding:6px 12px; border-radius:8px; font-weight:500; box-shadow:0 3px 10px rgba(0,0,0,0.25); font-size:0.9rem;';
         return div;
       };
       detectMsg.addTo(map);
