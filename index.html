@@ -878,11 +878,8 @@ window.updateCountyCard = function(englishName, layer, lat, lon) {
                     <h4 style="margin:0 0 6px; color:var(--accent); font-size:1rem; text-align:left; border-bottom:1px solid #eee; padding-bottom:4px;">Notable Landmarks</h4>
                     <ul style="margin:6px 0; padding-left:20px; font-size:0.88rem; line-height:1.5; text-align:left;">
                       ${details.landmarks.map(l => `
-                        <li>
-                          ${l}
-                        </li>
-                          ${l}
-                        </li>`).join('')}
+                              <li>${l}</li>
+                            `).join('')}
                     </ul>
                   </div>` : ''}
 
