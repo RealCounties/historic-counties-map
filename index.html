@@ -962,22 +962,49 @@ document.getElementById('closeSidebar').addEventListener('click', () => {
 
             ${weatherBlock}
 
-            <!-- SHARE BUTTON -->
-            <div style="text-align:center; margin:20px 0 8px;">
-              <button id="shareCountyBtn" style="
-                background:#9B2C2C; color:#FAF4E6; border:none; padding:10px 22px;
-                border-radius:6px; font-weight:500; font-size:0.9rem; cursor:pointer;
-                box-shadow:0 3px 8px rgba(0,0,0,0.2); transition:all 0.25s;
-              " onmouseover="this.style.background='#7a2222'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.3)'"
-                onmouseout="this.style.background='#9B2C2C'; this.style.transform='none'; this.style.boxShadow='0 3px 8px rgba(0,0,0,0.2)'">
-                Share this county
-              </button>
-              <div id="shareFeedback" style="margin-top:8px; font-size:0.85rem; color:#666; height:20px;"></div>
-            </div>
           </div>
         </div>`;
 
       infoDiv.innerHTML = cardHTML;
+            // ——— SHARE THIS COUNTY BUTTON (outside the card, above subdivisions) ———
+      let shareContainer = document.getElementById('permanentShareContainer');
+      if (!shareContainer) {
+        shareContainer = document.createElement('div');
+        shareContainer.id = 'permanentShareContainer';
+        shareContainer.style.cssText = 'text-align:center; margin:18px 0 12px;';
+        shareContainer.innerHTML = `
+          <button id="shareCountyBtn" style="
+            background:#9B2C2C; color:#FAF4E6; border:none; padding:10px 22px;
+            border-radius:6px; font-weight:500; font-size:0.9rem; cursor:pointer;
+            box-shadow:0 3px 8px rgba(0,0,0,0.2); transition:all 0.25s;
+          " onmouseover="this.style.background='#7a2222'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.3)'"
+            onmouseout="this.style.background='#9B2C2C'; this.style.transform='none'; this.style.boxShadow='0 3px 8px rgba(0,0,0,0.2)'">
+            Share this county
+          </button>
+          <div id="shareFeedback" style="margin-top:8px; font-size:0.85rem; color:#666; height:20px;"></div>
+        `;
+        infoDiv.appendChild(shareContainer);
+      }
+
+      // Update the button logic for the current county
+      document.getElementById('shareCountyBtn').onclick = () => {
+        const cleanName = englishName.replace(/ /g, '-').replace(/[^a-zA-Z-]/g, '');
+        const shareUrl = window.location.origin + window.location.pathname + '#' + cleanName;
+
+        if (navigator.share) {
+          navigator.share({
+            title: englishName,
+            url: shareUrl
+          }).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(shareUrl).then(() => {
+            const fb = document.getElementById('shareFeedback');
+            fb.textContent = 'Link copied to clipboard!';
+            fb.style.color = '#9B2C2C';
+            setTimeout(() => fb.textContent = '', 3000);
+          });
+        }
+      };
       infoDiv.scrollTop = 0;
 
       // ——— SHARE BUTTON LOGIC ———
